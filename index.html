@@ -1,154 +1,724 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Charles Perrault - Resume</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-            color: #333;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            padding: 20px;
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-            border-radius: 8px 8px 0 0;
-        }
-        .section {
-            margin: 20px 0;
-            padding: 10px 0;
-        }
-        .section h2 {
-            font-size: 20px;
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-            margin-bottom: 15px;
-        }
-        ul {
-            list-style-type: disc;
-            padding-left: 20px;
-        }
-        li {
-            margin: 8px 0;
-        }
-        p {
-            margin: 10px 0;
-        }
-        .skills, .technical-skills, .certifications {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        @media (max-width: 600px) {
-            .container {
-                width: 90%;
-                padding: 20px;
-            }
-            .header {
-                font-size: 22px;
-                padding: 15px;
-            }
-            .section h2 {
-                font-size: 18px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charles Perrault</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: #008080;
+    font-family: Tahoma, "MS Sans Serif", "Segoe UI", sans-serif;
+    color: #000000;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 48px 16px 80px;
+  }
+
+  /* ---- WINDOW CHROME ---- */
+  .window {
+    width: 100%;
+    max-width: 660px;
+    background: #C0C0C0;
+    border: 2px solid #DFDFDF;
+    border-right-color: #000000;
+    border-bottom-color: #000000;
+    box-shadow: 1px 1px 0 #000, 3px 3px 8px rgba(0,0,0,0.4);
+  }
+
+  .titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 3px 3px 6px;
+    background: linear-gradient(90deg, #000080, #1084d0 65%, #1084d0);
+    color: #fff;
+  }
+  .titlebar .title {
+    font-weight: bold;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.2px;
+  }
+  .titlebar .title .icon {
+    width: 14px; height: 14px;
+    background: #C0C0C0;
+    border: 1px solid #000;
+    display: inline-block;
+  }
+  .titlebar .winbtns { display: flex; gap: 2px; }
+  .titlebar .winbtns span {
+    width: 16px; height: 14px;
+    background: #C0C0C0;
+    border: 1px solid #fff;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    font-size: 10px;
+    line-height: 12px;
+    text-align: center;
+    color: #000;
+    font-weight: bold;
+    font-family: Tahoma, sans-serif;
+  }
+
+  .menubar {
+    display: flex;
+    gap: 2px;
+    background: #C0C0C0;
+    padding: 3px 8px;
+    border-bottom: 1px solid #808080;
+    font-size: 12px;
+    position: relative;
+  }
+  .menu { position: relative; }
+  .menu-label {
+    padding: 2px 6px;
+    cursor: default;
+    user-select: none;
+  }
+  .menu-label u { text-decoration: underline; }
+  .menu-label:hover,
+  .menu.open .menu-label {
+    background: #000080;
+    color: #fff;
+  }
+  .menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: #C0C0C0;
+    border: 1px solid #fff;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    z-index: 50;
+    padding: 2px;
+  }
+  .menu.open .menu-dropdown { display: block; }
+  .menu-item {
+    display: block;
+    padding: 4px 10px 4px 14px;
+    font-size: 12px;
+    color: #000;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: default;
+  }
+  .menu-item:hover {
+    background: #000080;
+    color: #fff;
+  }
+
+  /* ---- MODALS ---- */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+  }
+  .overlay.show { display: flex; }
+  .dialog {
+    width: 100%;
+    max-width: 360px;
+    background: #C0C0C0;
+    border: 2px solid #DFDFDF;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+  }
+  .dialog .titlebar {
+    padding: 3px 3px 3px 6px;
+  }
+  .dialog .body {
+    padding: 18px 16px;
+    font-size: 12px;
+    color: #000;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .dialog .body .glyph {
+    font-size: 30px;
+    line-height: 1;
+  }
+  .dialog .body .text p { margin: 0 0 8px; line-height: 1.5; }
+  .dialog .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+  .winbtn {
+    background: #C0C0C0;
+    border: 1px solid #fff;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    padding: 5px 18px;
+    font-size: 12px;
+    font-family: Tahoma, sans-serif;
+    cursor: default;
+  }
+  .winbtn:active { border-color: #000 #fff #fff #000; }
+
+  pre.source-view {
+    background: #fff;
+    border: 1px solid #808080;
+    border-top-color: #404040;
+    border-left-color: #404040;
+    max-height: 260px;
+    overflow: auto;
+    padding: 10px;
+    font-size: 11px;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0 0 8px;
+  }
+
+  .crash-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000080;
+    color: #fff;
+    font-family: "Courier New", monospace;
+    font-size: 14px;
+    padding: 40px;
+    z-index: 300;
+    line-height: 1.7;
+  }
+  .crash-screen.show { display: block; }
+  .crash-screen .blocktext { background: #fff; color: #000080; padding: 0 4px; }
+
+  .toolbar {
+    display: flex;
+    gap: 6px;
+    background: #C0C0C0;
+    padding: 4px 8px;
+    border-bottom: 1px solid #808080;
+    flex-wrap: wrap;
+  }
+  .toolbar a {
+    font-size: 11px;
+    color: #000;
+    text-decoration: none;
+    background: #C0C0C0;
+    border: 1px solid #fff;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    padding: 3px 10px;
+    display: inline-block;
+  }
+  .toolbar a:active,
+  .toolbar a:hover {
+    border-color: #000 #fff #fff #000;
+    background: #d4d4d4;
+  }
+
+  .addressbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #C0C0C0;
+    padding: 4px 8px 6px;
+    font-size: 11px;
+    border-bottom: 1px solid #808080;
+  }
+  .addressbar .lbl { font-weight: bold; }
+  .addressbar .field {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #808080;
+    border-top-color: #404040;
+    border-left-color: #404040;
+    padding: 3px 6px;
+    font-family: "Courier New", monospace;
+    color: #000;
+  }
+
+  /* ---- CONTENT ---- */
+  .content {
+    background: #FFFFFF;
+    margin: 8px;
+    border: 1px solid #808080;
+    border-top-color: #404040;
+    border-left-color: #404040;
+    padding: 20px 24px 12px;
+  }
+
+  h1 {
+    font-family: Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    margin: 0 0 4px;
+    color: #000080;
+  }
+  h1 .accent { color: #000; }
+
+  p.lede {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #202020;
+    margin: 8px 0;
+  }
+  p.lede b { color: #000080; }
+
+  hr.sep {
+    border: none;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #fff;
+    margin: 16px 0;
+  }
+
+  fieldset {
+    border: 1px solid #808080;
+    border-top-color: #404040;
+    border-left-color: #404040;
+    box-shadow: 1px 1px 0 #fff inset;
+    margin: 0 0 18px;
+    padding: 14px 16px 14px;
+  }
+  fieldset:last-of-type { margin-bottom: 4px; }
+  legend {
+    font-weight: bold;
+    font-size: 12.5px;
+    color: #000080;
+    padding: 0 6px;
+    background: #FFFFFF;
+  }
+
+  .entry { margin-bottom: 12px; }
+  .entry:last-child { margin-bottom: 0; }
+
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .entry-title {
+    font-weight: bold;
+    font-size: 12.5px;
+    color: #000;
+  }
+  .entry-sub {
+    font-size: 11.5px;
+    color: #404040;
+    margin-top: 1px;
+    font-style: italic;
+  }
+  .entry-date {
+    font-size: 11px;
+    color: #000;
+    white-space: nowrap;
+    background: #C0C0C0;
+    border: 1px solid #808080;
+    border-top-color: #fff;
+    border-left-color: #fff;
+    padding: 1px 6px;
+  }
+  .entry-desc {
+    font-size: 12px;
+    line-height: 1.55;
+    color: #303030;
+    margin: 5px 0 0;
+  }
+
+  ul.award-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #808080;
+    border-top-color: #404040;
+    border-left-color: #404040;
+  }
+  ul.award-list li {
+    position: relative;
+    padding: 6px 10px 6px 26px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #202020;
+    border-bottom: 1px dotted #C0C0C0;
+  }
+  ul.award-list li:last-child { border-bottom: none; }
+  ul.award-list li:nth-child(even) { background: #F3F3F9; }
+  ul.award-list li::before {
+    content: "\2605";
+    position: absolute;
+    left: 8px;
+    top: 5px;
+    color: #808000;
+    font-size: 12px;
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .pill {
+    font-size: 11.5px;
+    padding: 4px 10px;
+    background: #C0C0C0;
+    color: #000;
+    border: 1px solid #fff;
+    border-right-color: #404040;
+    border-bottom-color: #404040;
+  }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #C0C0C0;
+    border-top: 1px solid #fff;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  .statusbar .cell {
+    border: 1px solid #808080;
+    border-top-color: #404040;
+    border-left-color: #404040;
+    padding: 2px 10px;
+    background: #C0C0C0;
+  }
+  .statusbar a { color: #000; }
+
+  @media (max-width: 480px) {
+    .content { padding: 16px 14px 10px; }
+    h1 { font-size: 20px; }
+    .toolbar, .addressbar { flex-wrap: wrap; }
+    .statusbar { flex-direction: column; gap: 6px; align-items: flex-start; }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">Charles Perrault</div>
-        <p>
-            Email: <a href="mailto:cbperrault@gmail.com">cbperrault@gmail.com</a> | 
-            Phone: <a href="tel:+16232388116">(623)-238-8116</a> | 
-            LinkedIn: <a href="https://www.linkedin.com/in/charles-perrault-b4a933327" target="_blank">linkedin.com/in/charles-perrault</a>
-        </p>
-        
-        <div class="section about">
-            <h2>About Me</h2>
-            <p>I am a motivated high school student with strong academic performance and leadership experience, seeking a part-time opportunity on weekends or after school. Passionate about developing strong interpersonal and problem-solving skills, with experience in teamwork, communication, and adaptability. I am a fast learner with a strong work ethic, eager to contribute to a dynamic environment while gaining valuable experience.</p>
-        </div>
-        
-        <div class="section education">
-            <h2>Education</h2>
-            <p><strong>Bioscience High School – Phoenix, Arizona</strong></p>
-            <p>Expected Graduation: May, 2026</p>
-            <p>Relevant Honors coursework: Engineering design, Physics, Biology, Chemistry, Spanish 1-6</p>
-        </div>
-        
-        <div class="section extracurricular">
-            <h2>Extracurricular Activities</h2>
-            <ul>
-                <li><strong>STARS Club – Historian, 2024-present</strong></li>
-                <li>Managed the club’s public presence and recruited new members.</li>
-                <li>Planned hikes and other experiences for our members.</li>
-                
-                <li><strong>E-tech Club – Member, 2022-present</strong></li>
-                <li>Participated in hikes and field trips.</li>
-                <li>Built a go-kart for the APS Light Parade.</li>
-                
-                <li><strong>School FIRST Robotics Team - Member, 2023-present</strong></li>
-                <li>Programmed and wired the robot for competitions.</li>
-                <li>Competed in the 2024 FRC Championships in Houston with team 2375.</li>
-                
-                <li><strong>Venture Crew Troop 41 - Member, 2022-present</strong></li>
-                <li>Developed leadership skills through planning and leading activities.</li>
-                <li>Participated in outdoor adventures, such as hiking, camping, and community service projects.</li>
-                <li>Collaborated with team members to achieve shared goals and complete service projects.</li>
-                <li>Gained experience in team-building, communication, and problem-solving.</li>
-                <li>Took on responsibility for organizing events and managing resources.</li>
-                <li>Strengthened commitment to personal growth and service to the community.</li>
-            </ul>
-        </div>
-        
-        <div class="section skills">
-            <h2>Skills</h2>
-            <ul>
-                <li>Hard-Working</li>
-                <li>Number-Oriented</li>
-                <li>Problem Solving</li>
-                <li>Intuitive Learner</li>
-                <li>Quick Learner</li>
-                <li>Driven</li>
-                <li>Passionate</li>
-                <li>Resourceful</li>
-            </ul>
-        </div>
 
-        <div class="section technical-skills">
-            <h2>Technical Skills</h2>
-            <ul>
-                <li>Autodesk Fusion</li>
-                <li>Microsoft Office</li>
-                <li>Google Suite</li>
-                <li>Java, Python</li>
-                <li>Web Development</li>
-            </ul>
-        </div>
-        
-        <div class="section certifications">
-            <h2>Certifications & Awards</h2>
-            <ul>
-                <li>National Merit Semifinalist with a 1520/1520 PSAT</li>
-                <li>Wilderness First Aid trained</li>
-            </ul>
-        </div>
+<div class="window">
+
+  <div class="titlebar">
+    <div class="title"><span class="icon"></span> Charles Perrault — Home Page</div>
+    <div class="winbtns"><span>_</span><span>□</span><span>×</span></div>
+  </div>
+
+  <div class="menubar">
+    <div class="menu">
+      <span class="menu-label" data-menu="file"><u>F</u>ile</span>
+      <div class="menu-dropdown" id="menu-file">
+        <div class="menu-item" data-action="print">🖨 Print This Page</div>
+        <div class="menu-item" data-action="close">✕ Close</div>
+      </div>
     </div>
+    <div class="menu">
+      <span class="menu-label" data-menu="edit"><u>E</u>dit</span>
+      <div class="menu-dropdown" id="menu-edit">
+        <div class="menu-item" data-action="copy-email">📋 Copy Email Address</div>
+        <div class="menu-item" data-action="select-all">🔤 Select All</div>
+      </div>
+    </div>
+    <div class="menu">
+      <span class="menu-label" data-menu="view"><u>V</u>iew</span>
+      <div class="menu-dropdown" id="menu-view">
+        <div class="menu-item" data-action="refresh">🔄 Refresh</div>
+        <div class="menu-item" data-action="source">📄 View Source</div>
+      </div>
+    </div>
+    <div class="menu">
+      <span class="menu-label" data-menu="favorites">F<u>a</u>vorites</span>
+      <div class="menu-dropdown" id="menu-favorites">
+        <a class="menu-item" href="mailto:cbperrault@gmail.com">✉ Email Charles</a>
+        <a class="menu-item" href="https://www.linkedin.com/in/charles-perrault-b4a933327" target="_blank">🔗 LinkedIn Profile</a>
+        <a class="menu-item" href="tel:+16232388116">☎ Call Charles</a>
+      </div>
+    </div>
+    <div class="menu">
+      <span class="menu-label" data-menu="help"><u>H</u>elp</span>
+      <div class="menu-dropdown" id="menu-help">
+        <div class="menu-item" data-action="about">ℹ About Charles Perrault...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <a href="mailto:cbperrault@gmail.com">✉ Email</a>
+    <a href="https://www.linkedin.com/in/charles-perrault-b4a933327" target="_blank">🔗 LinkedIn</a>
+    <a href="tel:+16232388116">☎ Phone</a>
+  </div>
+
+  <div class="addressbar">
+    <span class="lbl">Address</span>
+    <span class="field">C:\Users\Charles\about-me.htm</span>
+  </div>
+
+  <div class="content">
+
+    <h1>Charles <span class="accent">Perrault</span></h1>
+
+    <p class="lede">
+      I study <b>First-Year Engineering</b> at <b>Purdue University</b>, with plans to major in
+      <b>Aerospace Engineering</b>, Class of 2030.
+    </p>
+    <p class="lede">
+      Recently: AI research at YDSL alongside Stanford faculty, launch operations on a
+      high-altitude weather balloon program, and social media lead for a rookie-award-winning
+      FIRST Robotics team.
+    </p>
+
+    <hr class="sep">
+
+    <fieldset>
+      <legend>Education</legend>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Purdue University</span>
+          <span class="entry-date">Class of 2030</span>
+        </div>
+        <div class="entry-sub">First-Year Engineering — Aerospace Engineering intended · West Lafayette, IN</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Bioscience High School</span>
+          <span class="entry-date">Graduated 2026</span>
+        </div>
+        <div class="entry-sub">Phoenix, AZ</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Experience</legend>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">AI Research Assistant, YDSL</span>
+          <span class="entry-date">2025</span>
+        </div>
+        <div class="entry-sub">Phoenix, AZ · in collaboration with Stanford University faculty</div>
+        <p class="entry-desc">Conducted applied AI research and contributed to workflows spanning data preparation, experimentation, and analysis.</p>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Launch Operations &amp; Payload Retrieval</span>
+          <span class="entry-date">2026</span>
+        </div>
+        <div class="entry-sub">High-Altitude Weather Balloon Program · Arizona</div>
+        <p class="entry-desc">Ran pre-launch checks and coordinated release; led post-flight tracking and recovery of the payload.</p>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Intern, College Depot</span>
+          <span class="entry-date">2025</span>
+        </div>
+        <div class="entry-sub">Phoenix, AZ</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Robotics &amp; Leadership</legend>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Social Media Coordinator, Team Epsilon 11100</span>
+          <span class="entry-date">2025 – 2026</span>
+        </div>
+        <div class="entry-sub">FIRST Robotics Competition · Phoenix, AZ</div>
+        <p class="entry-desc">Team won Rookie All-Star (Utah) and was named Best Rookie Team (Arizona).</p>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Robotics Team Member, Team 2375</span>
+          <span class="entry-date">2023 – 2025</span>
+        </div>
+        <div class="entry-sub">Programmed and wired the robot · Competed at 2024 FRC Worlds, Houston</div>
+      </div>
+      <div class="entry">
+        <div class="entry-head">
+          <span class="entry-title">Social Media Coordinator, Venture Crew 2041</span>
+          <span class="entry-date">2025 – 2026</span>
+        </div>
+        <div class="entry-sub">2 years of community service and event organizing</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Awards &amp; Achievements</legend>
+      <ul class="award-list">
+        <li>1st Place, Makers of Change — 2024–2025 season (competing again in 2025–2026)</li>
+        <li>Rookie All-Star Award (Utah) &amp; Best Rookie Team (Arizona) — FIRST Robotics, Team Epsilon 11100</li>
+        <li>National Merit Semifinalist</li>
+        <li>1570 SAT / 36 ACT</li>
+        <li>Arizona CTE Certificate of Technical Skill Attainment</li>
+      </ul>
+    </fieldset>
+
+    <fieldset>
+      <legend>Skills &amp; Certifications</legend>
+      <div class="pill-row">
+        <span class="pill">Java</span>
+        <span class="pill">Python</span>
+        <span class="pill">LaTeX</span>
+        <span class="pill">Autodesk Fusion 360</span>
+        <span class="pill">Engineering Design</span>
+        <span class="pill">Wilderness First Aid</span>
+      </div>
+    </fieldset>
+
+  </div>
+
+  <div class="statusbar">
+    <span class="cell">Ready</span>
+    <span class="cell">© 2026 Charles Perrault</span>
+    <span class="cell"><a href="mailto:cbperrault@gmail.com">cbperrault@gmail.com</a></span>
+  </div>
+
+</div>
+
+<!-- ABOUT DIALOG -->
+<div class="overlay" id="overlay-about">
+  <div class="dialog">
+    <div class="titlebar">
+      <div class="title"><span class="icon"></span> About Charles Perrault</div>
+      <div class="winbtns"><span data-close="overlay-about">×</span></div>
+    </div>
+    <div class="body">
+      <div class="glyph">🚀</div>
+      <div class="text">
+        <p><b>Charles Perrault — Home Page</b><br>Version 1.0 (Purdue Build)</p>
+        <p>First-Year Engineering student at Purdue University, aiming for Aerospace Engineering, Class of 2030.</p>
+        <p>This page is 100% hand-coded HTML and CSS. No frameworks were harmed in its making.</p>
+      </div>
+    </div>
+    <div class="buttons"><button class="winbtn" data-close="overlay-about">OK</button></div>
+  </div>
+</div>
+
+<!-- CLOSE CONFIRM DIALOG -->
+<div class="overlay" id="overlay-close">
+  <div class="dialog">
+    <div class="titlebar">
+      <div class="title"><span class="icon"></span> Charles Perrault — Home Page</div>
+      <div class="winbtns"><span data-close="overlay-close">×</span></div>
+    </div>
+    <div class="body">
+      <div class="glyph">❓</div>
+      <div class="text"><p>Are you sure you want to close this program?</p></div>
+    </div>
+    <div class="buttons">
+      <button class="winbtn" id="confirm-close">Yes</button>
+      <button class="winbtn" data-close="overlay-close">No</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW SOURCE DIALOG -->
+<div class="overlay" id="overlay-source">
+  <div class="dialog" style="max-width: 460px;">
+    <div class="titlebar">
+      <div class="title"><span class="icon"></span> about-me.htm - Notepad</div>
+      <div class="winbtns"><span data-close="overlay-source">×</span></div>
+    </div>
+    <div class="body" style="display:block;">
+      <pre class="source-view">&lt;h1&gt;Charles Perrault&lt;/h1&gt;
+&lt;p&gt;I study First-Year Engineering at Purdue University,
+with plans to major in Aerospace Engineering,
+Class of 2030...&lt;/p&gt;
+
+&lt;!-- you found the source viewer. hi! --&gt;
+&lt;!-- built by hand, no frameworks --&gt;</pre>
+    </div>
+    <div class="buttons"><button class="winbtn" data-close="overlay-source">OK</button></div>
+  </div>
+</div>
+
+<!-- FAKE CRASH SCREEN -->
+<div class="crash-screen" id="crash-screen">
+  <p>CHARLES.EXE has performed an illegal operation and will be shut down.</p>
+  <p>If the problem persists, contact <span class="blocktext">cbperrault@gmail.com</span></p>
+  <p>&nbsp;</p>
+  <p>Press any key to reopen this page...</p>
+</div>
+
+<script>
+  // ---- MENU DROPDOWNS ----
+  const menus = document.querySelectorAll('.menu');
+  function closeAllMenus() {
+    menus.forEach(m => m.classList.remove('open'));
+  }
+  menus.forEach(menu => {
+    const label = menu.querySelector('.menu-label');
+    label.addEventListener('click', (e) => {
+      const wasOpen = menu.classList.contains('open');
+      closeAllMenus();
+      if (!wasOpen) menu.classList.add('open');
+      e.stopPropagation();
+    });
+  });
+  document.addEventListener('click', closeAllMenus);
+
+  // ---- OVERLAY HELPERS ----
+  function openOverlay(id) { document.getElementById(id).classList.add('show'); }
+  function closeOverlay(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('[data-close]').forEach(el => {
+    el.addEventListener('click', () => closeOverlay(el.getAttribute('data-close')));
+  });
+
+  // ---- MENU ACTIONS ----
+  document.querySelectorAll('.menu-item[data-action]').forEach(item => {
+    item.addEventListener('click', () => {
+      const action = item.getAttribute('data-action');
+      if (action === 'print') {
+        window.print();
+      } else if (action === 'close') {
+        openOverlay('overlay-close');
+      } else if (action === 'copy-email') {
+        navigator.clipboard.writeText('cbperrault@gmail.com').then(() => {
+          item.textContent = '✅ Copied!';
+          setTimeout(() => { item.textContent = '📋 Copy Email Address'; }, 1500);
+        });
+      } else if (action === 'select-all') {
+        const range = document.createRange();
+        range.selectNodeContents(document.querySelector('.content'));
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else if (action === 'refresh') {
+        location.reload();
+      } else if (action === 'source') {
+        openOverlay('overlay-source');
+      } else if (action === 'about') {
+        openOverlay('overlay-about');
+      }
+    });
+  });
+
+  // ---- CLOSE / CRASH SCREEN ----
+  document.getElementById('confirm-close').addEventListener('click', () => {
+    closeOverlay('overlay-close');
+    document.getElementById('crash-screen').classList.add('show');
+  });
+  document.getElementById('crash-screen').addEventListener('click', () => {
+    document.getElementById('crash-screen').classList.remove('show');
+  });
+  document.addEventListener('keydown', () => {
+    document.getElementById('crash-screen').classList.remove('show');
+  });
+</script>
+
 </body>
 </html>
