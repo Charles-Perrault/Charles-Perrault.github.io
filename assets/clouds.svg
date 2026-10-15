@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#376caa"/><stop offset=".6" stop-color="#70a7d1"/><stop offset="1" stop-color="#aacada"/></linearGradient>
+    <filter id="soft" x="-30%" y="-50%" width="160%" height="200%"><feGaussianBlur stdDeviation="11"/></filter>
+    <g id="cloud" fill="#fff" filter="url(#soft)"><ellipse cx="0" cy="0" rx="145" ry="26"/><ellipse cx="-50" cy="-17" rx="70" ry="35"/><ellipse cx="30" cy="-36" rx="62" ry="48"/><ellipse cx="96" cy="-12" rx="61" ry="29"/></g>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1440v1000H0z"/>
+  <g opacity=".83"><use href="#cloud" x="160" y="170" transform="rotate(-8 160 170)"/><use href="#cloud" x="1090" y="120" transform="scale(1.25 1)"/><use href="#cloud" x="640" y="390" transform="rotate(-7 640 390)"/><use href="#cloud" x="1320" y="535"/><use href="#cloud" x="90" y="620"/></g>
+  <g opacity=".64"><use href="#cloud" transform="translate(460 755) scale(1.8 .7)"/><use href="#cloud" transform="translate(1100 830) scale(2 .65)"/><use href="#cloud" transform="translate(600 85) scale(.65 .35)"/><use href="#cloud" transform="translate(1070 320) scale(.8 .5)"/></g>
+</svg>
