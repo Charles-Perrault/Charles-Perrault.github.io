@@ -10,20 +10,25 @@
   let instance;
   let paused = true;
   let failed = false;
+  let started = false;
   const notifyHost = type => { if (window.parent !== window) window.parent.postMessage({ type }, window.location.origin); };
   function setPaused(value) {
     paused = value;
     if (!instance || failed) return;
+    if (!value) started = true;
     instance.SendMessage('BrowserBridge', 'SetPaused', value ? '1' : '0');
     cover.hidden = !value;
+    cover.dataset.mode = started ? 'paused' : 'ready';
     status.textContent = 'Game paused. Resume when you are ready.';
-    resume.textContent = 'Resume game';
+    resume.textContent = started ? 'GAME PAUSED' : 'Click to play';
+    resume.setAttribute('aria-label', started ? 'Game paused. Click to resume.' : 'Click to play');
     resume.hidden = !value;
     pauseButton.textContent = value ? 'Resume' : 'Pause';
     if (!value) { canvas.focus(); notifyHost('tony-eagle:focus'); }
   }
   function fail(message) {
     failed = true;
+    cover.dataset.mode = 'error';
     cover.hidden = false;
     progress.hidden = true;
     resume.hidden = true;
@@ -43,13 +48,28 @@
   // Keep movement keys inside the game; Escape also gives keyboard focus back to the page.
   canvas.addEventListener('keydown', event => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault();
-    if (event.key === 'Escape') { setPaused(true); resume.focus(); }
+  });
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && instance && started) {
+      event.preventDefault();
+      setPaused(!paused);
+      if (paused) resume.focus();
+    }
   });
   document.getElementById('fullscreen').addEventListener('click', async () => {
     try { await document.getElementById('stage').requestFullscreen(); }
     catch { status.textContent = 'Fullscreen is unavailable in this browser. Open the game standalone for more space.'; }
   });
   async function load() {
+    const phone = navigator.userAgentData?.mobile || /iPhone|iPod|Android.*Mobile|Windows Phone|IEMobile|BlackBerry|Opera Mini/i.test(navigator.userAgent);
+    if (phone) {
+      cover.dataset.mode = 'phone';
+      cover.querySelector('h1').textContent = 'COME BACK LATER WHEN YOU HAVE ACCESS TO A COMPUTER!!!';
+      status.hidden = progress.hidden = resume.hidden = canvas.hidden = true;
+      document.getElementById('controls').hidden = true;
+      pauseButton.hidden = document.getElementById('fullscreen').hidden = true;
+      return;
+    }
     if (window.location.protocol === 'file:') { fail('Open this page through a web server. Unity cannot load its data directly from a local file URL.'); return; }
     const build = new URL('Build/', document.baseURI);
     const loaderUrl = new URL('tony-eagle.loader.js', build).href;

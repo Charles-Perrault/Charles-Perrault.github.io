@@ -9,7 +9,8 @@ Unity 2022.3.62f3. The original in-game creator credit is preserved.
 
 Open `index.html` through a web server. The complete uncompressed WebGL build is
 included in `Build/`; no browser plugin or separate installation is needed.
-Keyboard required: arrows / WASD to move; hold and release Space / B to jump.
+Controls: arrows / WASD to move; hold and release Space / B to jump.
+Phones show a computer-access message without downloading the game.
 
 To embed the hosted version:
 
@@ -24,4 +25,5 @@ To embed the hosted version:
 ```
 
 The website's Windows 95 desktop also opens the game in its own window. Minimize,
-switch windows, or press Escape to pause; click Resume to continue.
+switch windows, or press Escape to pause. The gray overlay shows GAME PAUSED;
+click the text or press Escape to continue.

@@ -17,6 +17,10 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 button, a { color: inherit; } button { border: 1px solid #9eb8bf; padding: 8px 16px; color: #111; background: #dbefea; font: inherit; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: 2px solid #ffda6b; outline-offset: 3px; }
 #resume { justify-self: center; margin-top: 14px; }
+#cover[data-mode="paused"] { background: #808080a8; }
+#cover[data-mode="paused"] h1, #cover[data-mode="paused"] #status { display: none; }
+#cover[data-mode="paused"] #resume { margin: 0; padding: 0; border: 0; background: transparent; color: white; font-size: clamp(40px, 9vw, 110px); font-weight: 900; line-height: 1; }
+#cover[data-mode="phone"] h1 { font-size: clamp(26px, 7vw, 48px); max-width: 850px; }
 footer { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 8px 12px; background: #202c34; font-size: 11px; }
 footer p { margin: 0; } .actions { display: flex; align-items: center; gap: 12px; }
 footer button { font-size: 11px; padding: 3px 9px; }
@@ -35,9 +39,9 @@ footer button { font-size: 11px; padding: 3px 9px; }
 </section>
 </main>
 <footer>
-<div><p>Original game by <a href="https://gamejolt.com/games/tony-eagle-amateur-skateboarding/24295" target="_blank" rel="noopener noreferrer">GloveGames</a> · Preservation / port by Charles Perrault</p><p>Arrows / WASD: move · Hold Space / B, release to jump · Keyboard required</p></div>
+<div><p>Original game by <a href="https://gamejolt.com/games/tony-eagle-amateur-skateboarding/24295" target="_blank" rel="noopener noreferrer">GloveGames</a>, this is just a preservation I did of a childhood favorite because you can't play it anywhere online in 2026</p><p id="controls">Arrows / WASD: move · Hold Space / B, release to jump</p></div>
 <div class="actions"><button type="button" id="pause" disabled>Pause</button><button type="button" id="fullscreen">Fullscreen</button></div>
 </footer>
-<script src="player.js"></script>
+<script src="player.js?v=2"></script>
 </body>
 </html>

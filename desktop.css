@@ -10,6 +10,8 @@ button { font: inherit; color: inherit; }
 .desktop-icon:hover, .desktop-icon:focus-visible { background: #00008055; border: 1px dotted white; outline: none; }
 .desktop-icon:active { background: #000080; }
 .pixel-icon { width: 34px; height: 34px; flex: none; image-rendering: pixelated; filter: drop-shadow(1px 1px 0 #0005); }
+.game-icon { object-fit: contain; image-rendering: auto; }
+.desktop-icon .game-icon { width: 64px; height: 36px; }
 .desktop-caption { position: absolute; right: 24px; bottom: 20px; color: #fff; font-size: 11px; text-shadow: 1px 1px #24415f; letter-spacing: 1px; pointer-events: none; }
 .window { position: fixed; top: 36px; left: max(115px, calc(50% - 300px)); width: min(760px, calc(100% - 145px)); max-width: none; height: calc(100dvh - 110px); display: flex; flex-direction: column; z-index: 10; }
 .window > .titlebar { flex-shrink: 0; cursor: move; touch-action: none; user-select: none; }

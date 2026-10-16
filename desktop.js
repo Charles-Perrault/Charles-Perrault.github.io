@@ -11,7 +11,7 @@
     skateboard: '<path fill="#202020" d="M2 18h28v5H2z"/><path fill="#ffdf30" d="M2 16h4v2h20v-2h4v5H2z"/><path fill="#808080" d="M7 22h4v3H7zm14 0h4v3h-4z"/><path fill="#fff" stroke="#202020" d="M6 25h6v5H6zm14 0h6v5h-6z"/><path fill="#008080" d="m14 3 7 2-3 4-5-1-2 5H7l4-8z"/><path fill="#404040" d="m12 11 7-1 4 6h-4l-3-3-3 3H9z"/>',
     speaker: '<path fill="#808080" stroke="#000" d="M3 12h7l9-8v24l-9-8H3z"/><path fill="#dfdfdf" d="m12 12 5-5v18l-5-5z"/><path fill="none" stroke="#000" stroke-width="2" d="M22 10q6 6 0 12m4-16q10 10 0 20"/>'
   };
-  const icon = name => `<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges">${drawings[name] || drawings.document}</svg>`;
+  const icon = name => name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges">${drawings[name] || drawings.document}</svg>`;
   const portfolio = document.querySelector('body > .window');
   portfolio.id = 'portfolio';
   portfolio.setAttribute('aria-label', 'Charles Perrault — Home Page');
