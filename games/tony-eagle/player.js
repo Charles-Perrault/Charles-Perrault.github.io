@@ -72,21 +72,26 @@
     }
     if (window.location.protocol === 'file:') { fail('Open this page through a web server. Unity cannot load its data directly from a local file URL.'); return; }
     const build = new URL('Build/', document.baseURI);
-    const loaderUrl = new URL('tony-eagle.loader.js', build).href;
+    const assetUrl = name => {
+      const url = new URL(name, build);
+      url.searchParams.set('v', '20261015-2');
+      return url.href;
+    };
+    const loaderUrl = assetUrl('tony-eagle.loader.js');
     // Catch missing deployment files before a 404 HTML page is treated as JavaScript or WebAssembly.
     const names = ['tony-eagle.loader.js', 'tony-eagle.data', 'tony-eagle.framework.js', 'tony-eagle.wasm'];
     try {
       await Promise.all(names.map(async name => {
-        const response = await fetch(new URL(name, build), { method: 'HEAD', cache: 'no-cache' });
+        const response = await fetch(assetUrl(name), { method: 'HEAD', cache: 'no-cache' });
         if (!response.ok) throw new Error(`Missing Build/${name} (HTTP ${response.status}).`);
       }));
       const loader = document.createElement('script');
       loader.src = loaderUrl;
       await new Promise((resolve, reject) => { loader.onload = resolve; loader.onerror = () => reject(new Error('The Unity loader could not be downloaded.')); document.head.appendChild(loader); });
       instance = await createUnityInstance(canvas, {
-        dataUrl: new URL('tony-eagle.data', build).href,
-        frameworkUrl: new URL('tony-eagle.framework.js', build).href,
-        codeUrl: new URL('tony-eagle.wasm', build).href,
+        dataUrl: assetUrl('tony-eagle.data'),
+        frameworkUrl: assetUrl('tony-eagle.framework.js'),
+        codeUrl: assetUrl('tony-eagle.wasm'),
         streamingAssetsUrl: new URL('StreamingAssets/', document.baseURI).href,
         companyName: 'GloveGames', productName: 'Tony Eagle: Amateur Skateboarding', productVersion: '1.0',
         showBanner: (message, type) => { if (type === 'error') fail(String(message)); }
