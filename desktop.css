@@ -144,3 +144,6 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .photo-thumb[aria-current="true"] { border-color: #000080; outline: 2px solid #000080; }
 .photo-thumb img { display: block; width: 100%; height: 58px; object-fit: cover; background: #202020; }
 .photo-thumb span { display: block; overflow: hidden; padding-top: 3px; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+
+.gurt-icon { object-fit: contain; }
+#gurt-takeover { position: fixed; inset: 0; z-index: 2147483647; background: url("assets/photos/portrait-01.png") repeat 0 0 / 112px 199px; image-rendering: pixelated; cursor: default; }

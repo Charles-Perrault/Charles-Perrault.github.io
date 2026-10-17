@@ -13,7 +13,7 @@
     skateboard: '<path fill="#202020" d="M2 18h28v5H2z"/><path fill="#ffdf30" d="M2 16h4v2h20v-2h4v5H2z"/><path fill="#808080" d="M7 22h4v3H7zm14 0h4v3h-4z"/><path fill="#fff" stroke="#202020" d="M6 25h6v5H6zm14 0h6v5h-6z"/><path fill="#008080" d="m14 3 7 2-3 4-5-1-2 5H7l4-8z"/><path fill="#404040" d="m12 11 7-1 4 6h-4l-3-3-3 3H9z"/>',
     speaker: '<path fill="#808080" stroke="#000" d="M3 12h7l9-8v24l-9-8H3z"/><path fill="#dfdfdf" d="m12 12 5-5v18l-5-5z"/><path fill="none" stroke="#000" stroke-width="2" d="M22 10q6 6 0 12m4-16q10 10 0 20"/>'
   };
-  const icon = name => name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges">${drawings[name] || drawings.document}</svg>`;
+  const icon = name => name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges">${drawings[name] || drawings.document}</svg>`;
   const portfolio = document.querySelector('body > .window');
   portfolio.id = 'portfolio';
   portfolio.setAttribute('aria-label', 'Charles Perrault — Home Page');
@@ -26,14 +26,14 @@
     ['globe', 'GitHub', 'https://github.com/charles-perrault'],
     ['recycle', 'Recycle Bin', 'recycle'], ['skateboard', 'Tony Eagle', 'tony-eagle'],
     ['bench', 'Bench Press Study', 'bench-press-study'],
-    ['napster', 'Napster', 'napster'], ['photos', 'Photos', 'photo-carousel']
+    ['napster', 'Napster', 'napster'], ['photos', 'Photos', 'photo-carousel'], ['gurt', 'gurt', 'gurt']
   ];
   function shortcut([image, label, action], className) {
     const link = /^(https:|mailto:)|\.pdf$/.test(action);
     return link ? `<a class="${className}" href="${action}" ${action.startsWith('mailto:') ? '' : 'target="_blank" rel="noopener noreferrer"'}>${icon(image)}<span>${label}</span></a>` : `<button type="button" class="${className}" data-open="${action}">${icon(image)}<span>${label}</span></button>`;
   }
   document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav></main>`);
-  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['gurt', 'gurt', 'gurt'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
   document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=3" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
   document.getElementById('utility-task').insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="game-task" aria-pressed="false" hidden>${icon('skateboard')}<span>Tony Eagle</span></button>`);
   const game = document.getElementById('tony-eagle');
@@ -102,7 +102,7 @@
     else { bench.hidden = true; benchTask.setAttribute('aria-pressed', 'false'); }
   });
   const photos = [
-    {src: 'assets/photos/portrait-01.png', alt: 'Portrait photo', year: null, label: 'Portrait'},
+    {src: 'assets/photos/portrait-01.png', alt: 'gurt', year: 2025, label: 'gurt'},
     {src: 'assets/photos/gallery/1681573395125987102.jpeg', alt: 'Person standing on a boulder above a foggy forest', year: 2025, label: 'Photo 1'},
     {src: 'assets/photos/gallery/7247057647173750472.jpeg', alt: 'Stream in a mossy forest', year: 2025, label: 'Photo 2'},
     {src: 'assets/photos/gallery/FullSizeRender.jpeg', alt: 'Person leaning beside a car at night', year: 2025, label: 'Photo 3'},
@@ -123,7 +123,7 @@
     {src: 'assets/photos/gallery/IMG_9734.jpeg', alt: 'Person standing on a bench outdoors', year: 2026, label: 'Photo 18'},
     {src: 'assets/photos/gallery/P1070303_Original.jpeg', alt: 'Person standing outside in falling snow at night', year: 2025, label: 'Photo 19'},
     {src: 'assets/photos/gallery/PXL_20250612_192359493_Original.jpeg', alt: 'Person looking at a waterfall in a green forest', year: 2025, label: 'Photo 20'}
-  ].sort((a, b) => (a.year ?? Infinity) - (b.year ?? Infinity));
+  ].sort((a, b) => (b.year ?? -Infinity) - (a.year ?? -Infinity));
   let photoIndex = 0;
   const photoYears = [...new Set(photos.map(photo => photo.year ?? 'Year unknown'))];
   const photoGallery = photoYears.map(year => `<section class="photo-year-group"><h3>${year}</h3><div class="photo-gallery-grid">${photos.map((photo, index) => ({photo, index})).filter(({photo}) => (photo.year ?? 'Year unknown') === year).map(({photo, index}) => `<button class="photo-thumb" type="button" data-photo-index="${index}" aria-label="${photo.label}, ${photo.year ?? 'year unknown'}" aria-current="${index === photoIndex}"><img src="${photo.src}" alt=""><span>${photo.label}</span></button>`).join('')}</div></section>`).join('');
@@ -172,6 +172,19 @@
     closeStart();
     const name = launcher.dataset.open;
     if (name === 'portfolio') { focusWindow(portfolio); task.hidden = false; task.setAttribute('aria-pressed', 'true'); return; }
+    if (name === 'gurt') {
+      if (!document.getElementById('gurt-takeover')) {
+        const takeover = document.createElement('div');
+        takeover.id = 'gurt-takeover';
+        takeover.setAttribute('role', 'img');
+        takeover.setAttribute('aria-label', 'gurt. Refresh the page to return to the desktop.');
+        takeover.tabIndex = -1;
+        document.body.append(takeover);
+        for (const child of document.body.children) if (child !== takeover) child.inert = true;
+        takeover.focus();
+      }
+      return;
+    }
     if (name === 'tony-eagle') { openGame(); return; }
     if (name === 'bench-press-study') { openBench(); return; }
     if (placeholderApps.has(name)) { placeholderApps.get(name).open(); return; }
