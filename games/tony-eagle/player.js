@@ -52,6 +52,10 @@
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault();
   });
   window.addEventListener('keydown', event => {
+    if (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]')) {
+      cheatKeys = [];
+      return;
+    }
     if (instance && !failed && !event.repeat && !event.isComposing && !event.ctrlKey && !event.metaKey && !event.altKey && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
       cheatKeys.push(key);
@@ -93,7 +97,7 @@
     const build = new URL('Build/', document.baseURI);
     const assetUrl = name => {
       const url = new URL(name, build);
-      url.searchParams.set('v', '20261015-3');
+      url.searchParams.set('v', '20261016-1');
       return url.href;
     };
     const loaderUrl = assetUrl('tony-eagle.loader.js');
