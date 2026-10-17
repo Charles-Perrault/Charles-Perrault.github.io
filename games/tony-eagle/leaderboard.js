@@ -1,23 +1,58 @@
 (() => {
   'use strict';
   const api = 'https://tony-eagle-leaderboard.new-plum-8104.chatgpt.site';
+  const snapshotUrl = new URL('leaderboard-snapshot.json', document.currentScript.src).href;
+  const cacheKey = 'tony-eagle-shared-rankings';
   let run = null, generation = 0, lastState = null, blocked = false, resetting = false;
   const get = id => document.getElementById(id);
   async function request(path, input) {
-    const response = await fetch(api + path, input === undefined ? {cache:'no-store'} : {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input)
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Leaderboard unavailable. Try again.');
-    return result;
+    const attempts = input === undefined ? 2 : 1;
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const response = await fetch(api + path, input === undefined ? {cache:'no-store', signal:controller.signal} : {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(input), signal:controller.signal
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Leaderboard unavailable. Try again.');
+        return result;
+      } catch (error) {
+        if (attempt === attempts - 1) throw error;
+      } finally { clearTimeout(timeout); }
+    }
+  }
+  function validRankings(value) {
+    return value && Array.isArray(value.entries) && value.entries.every(entry =>
+      typeof entry.name === 'string' && Number.isSafeInteger(entry.score) && entry.score >= 0
+    ) && Number.isFinite(value.fetchedAt);
+  }
+  function formatNote(rankings, saved) {
+    const header = 'TONY EAGLE: AMATEUR SKATEBOARDING\nSHARED LEADERBOARD — TOP 20\n\n';
+    const rows = rankings.entries.map((entry, index) => `${String(index + 1).padStart(2)}. ${entry.name.padEnd(24)} ${Number(entry.score).toLocaleString()}`).join('\n');
+    return header + (saved ? 'Live refresh unavailable — showing saved rankings.\n\n' : '') +
+      (rows || 'No scores yet. Go skate and set the first record!') +
+      '\n\n------------------------------------------\nKonami-code runs do not qualify.\nScores are shared by everyone visiting this site.\n' +
+      (saved ? 'Last updated ' : 'Updated ') + new Date(rankings.fetchedAt).toLocaleString() +
+      (saved ? '\nClick Refresh to try the live leaderboard again.' : '');
   }
   async function note() {
-    const header = 'TONY EAGLE: AMATEUR SKATEBOARDING\nSHARED LEADERBOARD — TOP 20\n\n';
     try {
-      const {entries} = await request('/api/leaderboard');
-      const rows = entries.map((entry, index) => `${String(index + 1).padStart(2)}. ${entry.name.padEnd(24)} ${Number(entry.score).toLocaleString()}`).join('\n');
-      return header + (rows || 'No scores yet. Go skate and set the first record!') + '\n\n------------------------------------------\nKonami-code runs do not qualify.\nScores are shared by everyone visiting this site.\nUpdated ' + new Date().toLocaleString();
-    } catch { return header + 'Could not connect to the leaderboard.\nClick Refresh to try again.'; }
+      const rankings = {...await request('/api/leaderboard'), fetchedAt:Date.now()};
+      if (!validRankings(rankings)) throw new Error('Invalid rankings');
+      try { localStorage.setItem(cacheKey, JSON.stringify(rankings)); } catch { /* Storage can be disabled. */ }
+      return formatNote(rankings, false);
+    } catch {
+      let cached = null, snapshot = null;
+      try { cached = JSON.parse(localStorage.getItem(cacheKey)); } catch { /* Storage can be disabled. */ }
+      try {
+        const response = await fetch(snapshotUrl, {cache:'no-cache', signal:AbortSignal.timeout(5000)});
+        if (response.ok) snapshot = await response.json();
+      } catch { /* A previously loaded copy can still be available offline. */ }
+      const saved = [cached, snapshot].filter(validRankings).sort((a, b) => b.fetchedAt - a.fetchedAt)[0];
+      if (saved) return formatNote(saved, true);
+      return 'TONY EAGLE: AMATEUR SKATEBOARDING\nSHARED LEADERBOARD — TOP 20\n\nThe live leaderboard is temporarily unavailable.\nClick Refresh to try again.';
+    }
   }
   async function refreshNote() {
     const target = get('leaderboard-note');
