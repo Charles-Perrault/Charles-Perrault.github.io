@@ -97,7 +97,7 @@
     const build = new URL('Build/', document.baseURI);
     const assetUrl = name => {
       const url = new URL(name, build);
-      url.searchParams.set('v', '20261016-1');
+      url.searchParams.set('v', '20261016-2');
       return url.href;
     };
     const loaderUrl = assetUrl('tony-eagle.loader.js');
