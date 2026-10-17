@@ -26,14 +26,14 @@
     ['globe', 'GitHub', 'https://github.com/charles-perrault'],
     ['recycle', 'Recycle Bin', 'recycle'], ['skateboard', 'Tony Eagle', 'tony-eagle'],
     ['bench', 'Bench Press Study', 'bench-press-study'],
-    ['napster', 'Napster', 'napster'], ['photos', 'Photo Carousel', 'photo-carousel']
+    ['napster', 'Napster', 'napster'], ['photos', 'Photos', 'photo-carousel']
   ];
   function shortcut([image, label, action], className) {
     const link = /^(https:|mailto:)|\.pdf$/.test(action);
     return link ? `<a class="${className}" href="${action}" ${action.startsWith('mailto:') ? '' : 'target="_blank" rel="noopener noreferrer"'}>${icon(image)}<span>${label}</span></a>` : `<button type="button" class="${className}" data-open="${action}">${icon(image)}<span>${label}</span></button>`;
   }
   document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav></main>`);
-  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['folder', 'Documents', 'documents'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photo Carousel', 'photo-carousel'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['folder', 'Documents', 'documents'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
   document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=3" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
   document.getElementById('utility-task').insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="game-task" aria-pressed="false" hidden>${icon('skateboard')}<span>Tony Eagle</span></button>`);
   const game = document.getElementById('tony-eagle');
@@ -102,15 +102,36 @@
     if (bench.hidden) openBench();
     else { bench.hidden = true; benchTask.setAttribute('aria-pressed', 'false'); }
   });
+  const photos = [{src: 'assets/photos/portrait-01.png', alt: 'Portrait photo'}];
+  let photoIndex = 0;
+  const photoViewer = `<div class="photo-stage"><img id="photo-image" src="${photos[0].src}" alt="${photos[0].alt}"></div><div class="photo-controls"><button type="button" id="previous-photo" aria-label="Previous photo">&larr; Previous</button><span id="photo-position" aria-live="polite">1 of ${photos.length}</span><button type="button" id="next-photo" aria-label="Next photo">Next &rarr;</button></div>`;
   const placeholderApps = new Map();
-  for (const [id, image, title] of [['napster', 'napster', 'Napster'], ['photo-carousel', 'photos', 'Photo Carousel']]) {
-    document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window placeholder-window" id="${id}" aria-labelledby="${id}-title" hidden><div class="titlebar"><div class="title" id="${id}-title">${icon(image)}${title}</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize ${title}">_</button><button type="button" data-window-action="maximize" aria-label="Maximize ${title}">□</button><button type="button" data-window-action="close" aria-label="Close ${title}">×</button></div></div><div class="utility-content placeholder-content">${icon(image)}<p>Work in progress</p></div></section>`);
+  for (const [id, image, title] of [['napster', 'napster', 'Napster'], ['photo-carousel', 'photos', 'Photos']]) {
+    document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window placeholder-window ${id === 'photo-carousel' ? 'photos-window' : ''}" id="${id}" aria-labelledby="${id}-title" hidden><div class="titlebar"><div class="title" id="${id}-title">${icon(image)}${title}</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize ${title}">_</button><button type="button" data-window-action="maximize" aria-label="Maximize ${title}">□</button><button type="button" data-window-action="close" aria-label="Close ${title}">×</button></div></div><div class="utility-content ${id === 'photo-carousel' ? 'photos-content' : 'placeholder-content'}">${id === 'photo-carousel' ? photoViewer : icon(image) + '<p>Work in progress</p>'}</div></section>`);
     benchTask.insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="${id}-task" aria-pressed="false" hidden>${icon(image)}<span>${title}</span></button>`);
     const win = document.getElementById(id), taskButton = document.getElementById(id + '-task');
     const open = () => { taskButton.hidden = false; taskButton.setAttribute('aria-pressed', 'true'); focusWindow(win); };
     taskButton.addEventListener('click', () => { if (win.hidden) open(); else { win.hidden = true; taskButton.setAttribute('aria-pressed', 'false'); } });
     placeholderApps.set(id, {win, taskButton, title, open});
   }
+  function showPhoto(step) {
+    photoIndex = (photoIndex + step + photos.length) % photos.length;
+    const photo = document.getElementById('photo-image');
+    photo.src = photos[photoIndex].src;
+    photo.alt = photos[photoIndex].alt;
+    document.getElementById('photo-position').textContent = `${photoIndex + 1} of ${photos.length}`;
+  }
+  for (const [id, step] of [['previous-photo', -1], ['next-photo', 1]]) {
+    const button = document.getElementById(id);
+    button.disabled = photos.length < 2;
+    button.addEventListener('click', () => showPhoto(step));
+  }
+  document.getElementById('photo-carousel').addEventListener('keydown', event => {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      showPhoto(event.key === 'ArrowLeft' ? -1 : 1);
+    }
+  });
   const windows = [portfolio, utility, game, bench, ...Array.from(placeholderApps.values(), app => app.win)];
   const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
   let notes = '';
