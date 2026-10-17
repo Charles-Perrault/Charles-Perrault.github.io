@@ -1,5 +1,7 @@
 (() => {
   const drawings = {
+    napster: '<path fill="#2872c8" stroke="#000" d="M5 14V7l7 4h8l7-4v7c4 16-26 16-22 0z"/><path fill="none" stroke="#000" stroke-width="3" d="M3 18v-5a13 13 0 0 1 26 0v5"/><path fill="#c0c0c0" stroke="#000" d="M1 14h5v10H1zm25 0h5v10h-5z"/><path fill="#fff" d="m9 16 5 2-4 2zm14 0-5 2 4 2z"/>',
+    photos: '<path fill="#c0c0c0" stroke="#000" d="M2 8h28v22H2z"/><path fill="#fff" d="M4 10h24v17H4z"/><path fill="#75bfe8" d="M6 12h20v13H6z"/><circle fill="#ffe860" cx="21" cy="15" r="2"/><path fill="#287944" d="m6 25 7-9 5 6 3-3 5 6z"/>',
     computer: '<path fill="#c0c0c0" d="M3 2h26v21H3zM12 23h8v4h-8zM6 27h20v3H6z"/><path fill="#fff" d="M4 3h24v2H6v16H4z"/><path fill="#404040" d="M7 6h18v14H7z"/><path fill="#008080" d="M9 8h14v10H9z"/><path fill="#000" d="M3 22h26v2H3zM6 30h20v1H6z"/>',
     folder: '<path fill="#808000" d="M2 8h11l3 4h14v17H2z"/><path fill="#ffff80" d="M3 7h10l3 4h13v3H3z"/><path fill="#ffdf60" d="M5 14h26l-5 14H1z"/><path fill="#fff" d="M5 14h26v2H5z"/>',
     document: '<path fill="#404040" d="M7 2h15l6 6v23H7z"/><path fill="#fff" d="M6 1h15l5 6v22H6z"/><path fill="#c0c0c0" d="M21 1v7h5z"/><path stroke="#000080" d="M10 12h12M10 16h12M10 20h12M10 24h8"/>',
@@ -23,14 +25,15 @@
     ['document', 'Resume', 'Charles_Perrault_Resume_v1.2.2.pdf'],
     ['globe', 'GitHub', 'https://github.com/charles-perrault'],
     ['recycle', 'Recycle Bin', 'recycle'], ['skateboard', 'Tony Eagle', 'tony-eagle'],
-    ['bench', 'Bench Press Study', 'bench-press-study']
+    ['bench', 'Bench Press Study', 'bench-press-study'],
+    ['napster', 'Napster', 'napster'], ['photos', 'Photo Carousel', 'photo-carousel']
   ];
   function shortcut([image, label, action], className) {
     const link = /^(https:|mailto:)|\.pdf$/.test(action);
     return link ? `<a class="${className}" href="${action}" ${action.startsWith('mailto:') ? '' : 'target="_blank" rel="noopener noreferrer"'}>${icon(image)}<span>${label}</span></a>` : `<button type="button" class="${className}" data-open="${action}">${icon(image)}<span>${label}</span></button>`;
   }
-  document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav><div class="desktop-caption">CHARLES PERRAULT · PERSONAL COMPUTER</div></main>`);
-  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['folder', 'Documents', 'documents'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
+  document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav></main>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['folder', 'Documents', 'documents'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photo Carousel', 'photo-carousel'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
   document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=3" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
   document.getElementById('utility-task').insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="game-task" aria-pressed="false" hidden>${icon('skateboard')}<span>Tony Eagle</span></button>`);
   const game = document.getElementById('tony-eagle');
@@ -68,7 +71,7 @@
   const start = document.getElementById('start-button');
   const startMenu = document.getElementById('start-menu');
   let layer = 10;
-  function focusWindow(win) { win.hidden = false; win.style.zIndex = Math.min(++layer, 90); if (win !== game) pauseGame(); }
+  function focusWindow(win) { win.hidden = false; if (layer >= 89) { document.querySelectorAll('body > .window').forEach((window, index) => { window.style.zIndex = 10 + index; }); layer = 10 + document.querySelectorAll('body > .window').length; } win.style.zIndex = ++layer; if (win !== game) pauseGame(); }
   function closeStart() { startMenu.hidden = true; start.setAttribute('aria-expanded', 'false'); }
   start.addEventListener('click', e => { e.stopPropagation(); startMenu.hidden = !startMenu.hidden; start.setAttribute('aria-expanded', String(!startMenu.hidden)); });
   document.addEventListener('click', e => { if (!startMenu.contains(e.target)) closeStart(); });
@@ -79,12 +82,37 @@
     `<section><h2>${numeral}. ${title}</h2><ul>${bullets.map(text => `<li>${text}</li>`).join('')}</ul></section>`
   ).join('');
   const pages = {
-    'bench-press-study': ['bench', 'Bench Press Study — Microsoft Word', `<div class="word-toolbar"><span>Times New Roman</span><span>12</span><a href="documents/Bench%20Press%20Study.docx" download="Bench Press Study.docx">Download Word document</a></div><div class="word-workspace"><article class="word-paper" aria-label="Bench Press Study document">${benchContent}</article></div><div class="word-status">Bench Press Study</div>`],
+    'bench-press-study': ['bench', 'Bench Press Study — Microsoft Word', `<div class="word-toolbar"><span>Times New Roman</span><span>12</span><a href="documents/Bench%20Press%20Study.docx" download="Bench Press Study.docx">Download Word document</a></div><div class="word-workspace"><article class="word-paper" aria-label="Bench Press Study document">${benchContent}<p class="results-announcement">Results coming November 22nd!</p></article></div><div class="word-status">Bench Press Study</div>`],
     computer: ['computer', 'My Computer', `<div class="file-grid">${[shortcuts[1], shortcuts[2], ['notepad', 'Notepad', 'notepad']].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
     documents: ['folder', 'My Documents', `<h2>My Documents</h2><div class="file-grid">${[shortcuts[4], shortcuts[5], ['bench', 'Bench Press Study', 'bench-press-study'], ['globe', 'LinkedIn', 'https://www.linkedin.com/in/charles-perrault-b4a933327']].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
     recycle: ['recycle', 'Recycle Bin', '<h2>Recycle Bin is empty.</h2><p>0 objects · 0 bytes</p>'],
     notepad: ['notepad', 'Leaderboard.txt — Notepad', '<div class="notepad-files"><button type="button" data-note="leaderboard" aria-pressed="true">Leaderboard.txt</button><button type="button" data-note="scratch" aria-pressed="false">Untitled</button><button type="button" id="refresh-leaderboard">Refresh</button></div><textarea class="notepad" id="leaderboard-note" aria-label="Leaderboard.txt" readonly></textarea><textarea class="notepad" id="notes" aria-label="Untitled note" hidden></textarea>'],
   };
+  // Keep the study independent of the shared desktop utility window.
+  document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
+  const bench = document.getElementById('bench-study');
+  utilityTask.insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="bench-task" aria-pressed="false" hidden>${icon('bench')}<span>Bench Press Study</span></button>`);
+  const benchTask = document.getElementById('bench-task');
+  function openBench() {
+    benchTask.hidden = false;
+    benchTask.setAttribute('aria-pressed', 'true');
+    focusWindow(bench);
+  }
+  benchTask.addEventListener('click', () => {
+    if (bench.hidden) openBench();
+    else { bench.hidden = true; benchTask.setAttribute('aria-pressed', 'false'); }
+  });
+  const placeholderApps = new Map();
+  for (const [id, image, title] of [['napster', 'napster', 'Napster'], ['photo-carousel', 'photos', 'Photo Carousel']]) {
+    document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window placeholder-window" id="${id}" aria-labelledby="${id}-title" hidden><div class="titlebar"><div class="title" id="${id}-title">${icon(image)}${title}</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize ${title}">_</button><button type="button" data-window-action="maximize" aria-label="Maximize ${title}">□</button><button type="button" data-window-action="close" aria-label="Close ${title}">×</button></div></div><div class="utility-content placeholder-content">${icon(image)}<p>Work in progress</p></div></section>`);
+    benchTask.insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="${id}-task" aria-pressed="false" hidden>${icon(image)}<span>${title}</span></button>`);
+    const win = document.getElementById(id), taskButton = document.getElementById(id + '-task');
+    const open = () => { taskButton.hidden = false; taskButton.setAttribute('aria-pressed', 'true'); focusWindow(win); };
+    taskButton.addEventListener('click', () => { if (win.hidden) open(); else { win.hidden = true; taskButton.setAttribute('aria-pressed', 'false'); } });
+    placeholderApps.set(id, {win, taskButton, title, open});
+  }
+  const windows = [portfolio, utility, game, bench, ...Array.from(placeholderApps.values(), app => app.win)];
+  const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
   let notes = '';
   document.addEventListener('input', e => { if (e.target.id === 'notes') notes = e.target.value; });
   document.addEventListener('click', e => {
@@ -94,9 +122,10 @@
     const name = launcher.dataset.open;
     if (name === 'portfolio') { focusWindow(portfolio); task.hidden = false; task.setAttribute('aria-pressed', 'true'); return; }
     if (name === 'tony-eagle') { openGame(); return; }
+    if (name === 'bench-press-study') { openBench(); return; }
+    if (placeholderApps.has(name)) { placeholderApps.get(name).open(); return; }
     if (!pages[name]) return;
     const [image, title, html] = pages[name];
-    utility.classList.toggle('word-window', name === 'bench-press-study');
     document.getElementById('utility-title').innerHTML = icon(image) + title;
     document.getElementById('utility-content').innerHTML = html;
     if (name === 'notepad') {
@@ -118,16 +147,47 @@
     utilityTask.hidden = false; utilityTask.setAttribute('aria-pressed', 'true');
     focusWindow(utility);
   });
-  [portfolio, utility, game].forEach(win => {
+  windows.forEach(win => {
     win.addEventListener('pointerdown', () => focusWindow(win));
     win.querySelectorAll('[data-window-action]').forEach(button => button.addEventListener('click', () => {
       const action = button.dataset.windowAction;
-      const taskButton = win === portfolio ? task : win === game ? gameTask : utilityTask;
+      const taskButton = windowTasks.get(win);
       if (action === 'maximize') {
         win.classList.toggle('maximized');
-        button.setAttribute('aria-label', `${win.classList.contains('maximized') ? 'Restore' : 'Maximize'} ${win === portfolio ? 'Home Page' : win === game ? 'Tony Eagle' : 'utility window'}`);
+        button.setAttribute('aria-label', `${win.classList.contains('maximized') ? 'Restore' : 'Maximize'} ${win === portfolio ? 'Home Page' : win === game ? 'Tony Eagle' : win === bench ? 'Bench Press Study' : placeholderApps.get(win.id)?.title || 'utility window'}`);
       } else { win.hidden = true; taskButton.setAttribute('aria-pressed', 'false'); if (win === game) { pauseGame(); if (action === 'close') gameFrame.removeAttribute('src'); } if (action === 'close') taskButton.hidden = true; }
     }));
+    // Pointer capture keeps edge dragging working over the game iframe.
+    for (const direction of ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']) {
+      const handle = document.createElement('div');
+      handle.className = 'resize-handle resize-' + direction;
+      handle.setAttribute('aria-hidden', 'true');
+      win.append(handle);
+      handle.addEventListener('pointerdown', event => {
+        if (event.button !== 0 || win.classList.contains('maximized')) return;
+        event.preventDefault();
+        const rect = win.getBoundingClientRect();
+        const startX = event.clientX, startY = event.clientY;
+        const minWidth = Math.min(280, innerWidth), minHeight = Math.min(160, innerHeight - 38);
+        win.classList.add('resizing');
+        handle.setPointerCapture(event.pointerId);
+        const move = e => {
+          let left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom;
+          if (direction.includes('e')) right = Math.max(left + minWidth, Math.min(innerWidth, rect.right + e.clientX - startX));
+          if (direction.includes('s')) bottom = Math.max(top + minHeight, Math.min(innerHeight - 38, rect.bottom + e.clientY - startY));
+          if (direction.includes('w')) left = Math.max(0, Math.min(right - minWidth, rect.left + e.clientX - startX));
+          if (direction.includes('n')) top = Math.max(0, Math.min(bottom - minHeight, rect.top + e.clientY - startY));
+          Object.assign(win.style, {left: left + 'px', top: top + 'px', width: (right - left) + 'px', height: (bottom - top) + 'px', maxHeight: 'none'});
+        };
+        const stop = () => {
+          win.classList.remove('resizing');
+          handle.removeEventListener('pointermove', move);
+          handle.removeEventListener('lostpointercapture', stop);
+        };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('lostpointercapture', stop);
+      });
+    }
     const bar = win.querySelector('.titlebar');
     bar.addEventListener('dblclick', e => { if (!e.target.closest('button')) win.querySelector('[data-window-action="maximize"]').click(); });
     bar.addEventListener('pointerdown', e => {
@@ -144,8 +204,10 @@
     });
   });
   // Keep title bars reachable when a device rotates or the viewport changes.
-  window.addEventListener('resize', () => [portfolio, utility, game].forEach(win => {
+  window.addEventListener('resize', () => windows.forEach(win => {
     if (win.hidden || win.classList.contains('maximized')) return;
+    if (win.style.width) win.style.width = Math.min(win.offsetWidth, innerWidth) + 'px';
+    if (win.style.height) win.style.height = Math.min(win.offsetHeight, innerHeight - 38) + 'px';
     const bounds = win.getBoundingClientRect();
     win.style.left = Math.max(0, Math.min(bounds.left, innerWidth - win.offsetWidth)) + 'px';
     win.style.top = Math.max(0, Math.min(bounds.top, innerHeight - 68)) + 'px';
