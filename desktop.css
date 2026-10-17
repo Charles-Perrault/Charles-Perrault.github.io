@@ -84,3 +84,17 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 #game-frame { display: block; width: 100%; flex: 1; min-height: 0; border: 2px inset #dfdfdf; background: #151b21; }
 @media (max-width: 600px) { .game-window { top: 16px; left: 4px; width: calc(100% - 8px); height: calc(100dvh - 58px); } .game-toolbar span { flex-basis: 100%; } .task-button { min-width: 0; } }
 @media print { .game-window { display: none !important; } }
+
+/* Bench Press Study document. */
+.bench-icon { object-fit: contain; image-rendering: auto; }
+.desktop-icon .bench-icon { width: 50px; height: 36px; }
+.word-window { top: 64px; left: max(12px, calc(50% - 340px)); width: min(680px, calc(100% - 24px)); height: calc(100dvh - 120px); max-height: none; }
+.word-window .utility-content { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
+.word-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 6px; border-bottom: 1px solid #808080; }
+.word-toolbar span { background: white; border: 2px inset #dfdfdf; padding: 1px 8px; }
+.word-toolbar a { margin-left: auto; padding: 2px 6px; }
+.word-workspace { flex: 1; overflow: auto; min-height: 0; padding: 20px; background: #808080; }
+.word-paper { box-sizing: border-box; min-height: 650px; width: 100%; padding: clamp(24px, 8vw, 72px); background: white; color: black; box-shadow: 2px 2px 0 #404040; font: 16px/1.5 'Times New Roman', serif; }
+.word-paper p { margin: 0; }
+.word-status { padding: 2px 8px; border-top: 1px solid white; font-size: 11px; }
+@media (max-width: 600px) { .word-window { top: 24px; height: calc(100dvh - 78px); } .word-workspace { padding: 12px; } }
