@@ -101,9 +101,33 @@
     if (bench.hidden) openBench();
     else { bench.hidden = true; benchTask.setAttribute('aria-pressed', 'false'); }
   });
-  const photos = [{src: 'assets/photos/portrait-01.png', alt: 'Portrait photo'}];
+  const photos = [
+    {src: 'assets/photos/portrait-01.png', alt: 'Portrait photo', year: null, label: 'Portrait'},
+    {src: 'assets/photos/gallery/1681573395125987102.jpeg', alt: 'Person standing on a boulder above a foggy forest', year: 2025, label: 'Photo 1'},
+    {src: 'assets/photos/gallery/7247057647173750472.jpeg', alt: 'Stream in a mossy forest', year: 2025, label: 'Photo 2'},
+    {src: 'assets/photos/gallery/FullSizeRender.jpeg', alt: 'Person leaning beside a car at night', year: 2025, label: 'Photo 3'},
+    {src: 'assets/photos/gallery/IMG_1371.jpeg', alt: 'Silhouette standing on an indoor platform', year: 2025, label: 'Photo 4'},
+    {src: 'assets/photos/gallery/IMG_1908.jpeg', alt: 'Rocky desert landscape with cacti', year: 2025, label: 'Photo 5'},
+    {src: 'assets/photos/gallery/IMG_1999.jpeg', alt: 'A close-up selfie', year: 2019, label: 'Photo 6'},
+    {src: 'assets/photos/gallery/IMG_2018.jpeg', alt: 'Person looking across a construction site at night', year: 2025, label: 'Photo 7'},
+    {src: 'assets/photos/gallery/IMG_2020.jpeg', alt: 'A door marked “These doors must remain closed”', year: 2025, label: 'Photo 8'},
+    {src: 'assets/photos/gallery/IMG_2243.jpeg', alt: 'Person beside a snowy mountain lake', year: 2023, label: 'Photo 9'},
+    {src: 'assets/photos/gallery/IMG_4276.jpeg', alt: 'Friends taking a close-up selfie', year: 2025, label: 'Photo 10'},
+    {src: 'assets/photos/gallery/IMG_6208.jpeg', alt: 'Selfie with a friend', year: 2026, label: 'Photo 11'},
+    {src: 'assets/photos/gallery/IMG_7051.jpeg', alt: 'Mountain landscape at sunset', year: 2024, label: 'Photo 12'},
+    {src: 'assets/photos/gallery/IMG_7089.jpeg', alt: 'Friends with Gold Medal Burger certificates', year: 2024, label: 'Photo 13'},
+    {src: 'assets/photos/gallery/IMG_7143.jpeg', alt: 'Person giving a thumbs-up in a green mountain landscape', year: 2023, label: 'Photo 14'},
+    {src: 'assets/photos/gallery/IMG_8313.jpeg', alt: 'Two friends posing in front of a brick wall', year: 2026, label: 'Photo 15'},
+    {src: 'assets/photos/gallery/IMG_8737.jpeg', alt: 'Pink sunset behind silhouetted trees', year: 2025, label: 'Photo 16'},
+    {src: 'assets/photos/gallery/IMG_9618.jpeg', alt: 'Person standing in a rocky stream', year: 2025, label: 'Photo 17'},
+    {src: 'assets/photos/gallery/IMG_9734.jpeg', alt: 'Person standing on a bench outdoors', year: 2026, label: 'Photo 18'},
+    {src: 'assets/photos/gallery/P1070303_Original.jpeg', alt: 'Person standing outside in falling snow at night', year: 2025, label: 'Photo 19'},
+    {src: 'assets/photos/gallery/PXL_20250612_192359493_Original.jpeg', alt: 'Person looking at a waterfall in a green forest', year: 2025, label: 'Photo 20'}
+  ].sort((a, b) => (a.year ?? Infinity) - (b.year ?? Infinity));
   let photoIndex = 0;
-  const photoViewer = `<div class="photo-stage"><img id="photo-image" src="${photos[0].src}" alt="${photos[0].alt}"></div><div class="photo-controls"><button type="button" id="previous-photo" aria-label="Previous photo">&larr; Previous</button><span id="photo-position" aria-live="polite">1 of ${photos.length}</span><button type="button" id="next-photo" aria-label="Next photo">Next &rarr;</button></div>`;
+  const photoYears = [...new Set(photos.map(photo => photo.year ?? 'Year unknown'))];
+  const photoGallery = photoYears.map(year => `<section class="photo-year-group"><h3>${year}</h3><div class="photo-gallery-grid">${photos.map((photo, index) => ({photo, index})).filter(({photo}) => (photo.year ?? 'Year unknown') === year).map(({photo, index}) => `<button class="photo-thumb" type="button" data-photo-index="${index}" aria-label="${photo.label}, ${photo.year ?? 'year unknown'}" aria-current="${index === photoIndex}"><img src="${photo.src}" alt=""><span>${photo.label}</span></button>`).join('')}</div></section>`).join('');
+  const photoViewer = `<div class="photo-stage"><img id="photo-image" src="${photos[0].src}" alt="${photos[0].alt}"></div><div class="photo-controls"><button type="button" id="previous-photo" aria-label="Previous photo">&larr; Previous</button><span id="photo-position" aria-live="polite"></span><button type="button" id="next-photo" aria-label="Next photo">Next &rarr;</button></div><div class="photo-gallery" aria-label="Photos grouped by year">${photoGallery}</div>`;
   const placeholderApps = new Map();
   for (const [id, image, title] of [['napster', 'napster', 'Napster'], ['photo-carousel', 'photos', 'Photos']]) {
     document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window placeholder-window ${id === 'photo-carousel' ? 'photos-window' : ''}" id="${id}" aria-labelledby="${id}-title" hidden><div class="titlebar"><div class="title" id="${id}-title">${icon(image)}${title}</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize ${title}">_</button><button type="button" data-window-action="maximize" aria-label="Maximize ${title}">□</button><button type="button" data-window-action="close" aria-label="Close ${title}">×</button></div></div><div class="utility-content ${id === 'photo-carousel' ? 'photos-content' : 'placeholder-content'}">${id === 'photo-carousel' ? photoViewer : icon(image) + '<p>Work in progress</p>'}</div></section>`);
@@ -115,11 +139,18 @@
   }
   function showPhoto(step) {
     photoIndex = (photoIndex + step + photos.length) % photos.length;
-    const photo = document.getElementById('photo-image');
-    photo.src = photos[photoIndex].src;
-    photo.alt = photos[photoIndex].alt;
-    document.getElementById('photo-position').textContent = `${photoIndex + 1} of ${photos.length}`;
+    updatePhoto();
   }
+  function updatePhoto() {
+    const currentPhoto = photos[photoIndex];
+    const photo = document.getElementById('photo-image');
+    photo.src = currentPhoto.src;
+    photo.alt = currentPhoto.alt;
+    document.getElementById('photo-position').textContent = `${currentPhoto.year ?? 'Year unknown'} · ${currentPhoto.label}`;
+    document.querySelectorAll('.photo-thumb').forEach(button => button.setAttribute('aria-current', Number(button.dataset.photoIndex) === photoIndex));
+  }
+  document.querySelectorAll('.photo-thumb').forEach(button => button.addEventListener('click', () => { photoIndex = Number(button.dataset.photoIndex); updatePhoto(); }));
+  updatePhoto();
   for (const [id, step] of [['previous-photo', -1], ['next-photo', 1]]) {
     const button = document.getElementById(id);
     button.disabled = photos.length < 2;
