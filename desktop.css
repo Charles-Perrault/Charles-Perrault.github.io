@@ -127,3 +127,7 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .placeholder-content { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px; text-align: center; }
 .placeholder-content .pixel-icon { width: 48px; height: 48px; }
 .task-button { min-width: 0; flex: 0 1 220px; }
+
+.webring-links { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding: 10px; border: 2px inset #dfdfdf; background: #e8e8e8; font-size: 12px; }
+.webring-links a { color: #000080; }
+.webring-links a:nth-child(2) { font-weight: bold; }
