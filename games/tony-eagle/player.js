@@ -11,6 +11,8 @@
   let paused = true;
   let failed = false;
   let started = false;
+  const cheatCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  let cheatKeys = [];
   const notifyHost = type => { if (window.parent !== window) window.parent.postMessage({ type }, window.location.origin); };
   function setPaused(value) {
     paused = value;
@@ -50,6 +52,17 @@
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(event.key)) event.preventDefault();
   });
   window.addEventListener('keydown', event => {
+    if (instance && !failed && !event.repeat && !event.isComposing && !event.ctrlKey && !event.metaKey && !event.altKey && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      cheatKeys.push(key);
+      cheatKeys = cheatKeys.slice(-cheatCode.length);
+      if (cheatKeys.length === cheatCode.length && cheatKeys.every((key, index) => key === cheatCode[index])) {
+        window.TonyLeaderboard?.disqualify();
+        instance.SendMessage('BrowserBridge', 'EnableUnlimitedUpgradePoints', '');
+        document.getElementById('cheat-notice').hidden = false;
+        cheatKeys = [];
+      }
+    }
     if (event.key === 'Escape' && instance && started) {
       event.preventDefault();
       setPaused(!paused);
@@ -59,6 +72,12 @@
   document.getElementById('fullscreen').addEventListener('click', async () => {
     try { await document.getElementById('stage').requestFullscreen(); }
     catch { status.textContent = 'Fullscreen is unavailable in this browser. Open the game standalone for more space.'; }
+  });
+  window.addEventListener('tony-eagle:reset-progress', () => {
+    if (!instance || failed) return;
+    instance.SendMessage('BrowserBridge', 'ResetRankedProgress', '');
+    document.getElementById('cheat-notice').hidden = true;
+    setPaused(false);
   });
   async function load() {
     const phone = navigator.userAgentData?.mobile || /iPhone|iPod|Android.*Mobile|Windows Phone|IEMobile|BlackBerry|Opera Mini/i.test(navigator.userAgent);
@@ -74,7 +93,7 @@
     const build = new URL('Build/', document.baseURI);
     const assetUrl = name => {
       const url = new URL(name, build);
-      url.searchParams.set('v', '20261015-2');
+      url.searchParams.set('v', '20261015-3');
       return url.href;
     };
     const loaderUrl = assetUrl('tony-eagle.loader.js');

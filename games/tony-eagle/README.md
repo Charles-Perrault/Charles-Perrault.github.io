@@ -27,3 +27,13 @@ To embed the hosted version:
 The website's Windows 95 desktop also opens the game in its own window. Minimize,
 switch windows, or press Escape to pause. The gray overlay shows GAME PAUSED;
 click the text or press Escape to continue.
+
+Enter Up, Up, Down, Down, Left, Right, Left, Right, B, A in the game to unlock
+unlimited upgrade points. Pick speed, jump, and spin upgrades as often as you
+like, then choose SKATE AGAIN to apply them. The cheat lasts through retries
+until the game is reloaded; purchased upgrades use the game's normal save system.
+
+Open Leaderboard.txt in the desktop's Notepad app for the shared top 20 scores.
+After a normal round, enter a name and submit your score. Using the Konami code
+disqualifies the run and saved cheat upgrades; use Reset upgrades to return to
+ranked play. The original music is retained.

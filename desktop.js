@@ -30,7 +30,7 @@
   }
   document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav><div class="desktop-caption">CHARLES PERRAULT · PERSONAL COMPUTER</div></main>`);
   document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['folder', 'Documents', 'documents'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cbperrault@gmail.com'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows')}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe')}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker')}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
-  document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=2" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=3" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
   document.getElementById('utility-task').insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="game-task" aria-pressed="false" hidden>${icon('skateboard')}<span>Tony Eagle</span></button>`);
   const game = document.getElementById('tony-eagle');
   const gameFrame = document.getElementById('game-frame');
@@ -40,7 +40,7 @@
     if (gameFrame.contentWindow && gameFrame.hasAttribute('src')) gameFrame.contentWindow.postMessage({ type: 'tony-eagle:pause' }, hostOrigin);
   }
   function openGame() {
-    if (!gameFrame.hasAttribute('src')) gameFrame.src = 'games/tony-eagle/index.html?v=2';
+    if (!gameFrame.hasAttribute('src')) gameFrame.src = 'games/tony-eagle/index.html?v=3';
     gameTask.hidden = false; gameTask.setAttribute('aria-pressed', 'true');
     focusWindow(game);
     gameFrame.focus();
@@ -57,6 +57,8 @@
     if (event.origin !== hostOrigin || event.source !== gameFrame.contentWindow) return;
     if (event.data?.type === 'tony-eagle:focus') focusWindow(game);
     if (event.data?.type === 'tony-eagle:ready' && game.hidden) pauseGame();
+    if (event.data?.type === 'tony-eagle:leaderboard') document.querySelector('[data-open="notepad"]').click();
+    if (event.data?.type === 'tony-eagle:score-saved') window.TonyLeaderboard?.refreshNote();
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
   const utility = document.getElementById('utility');
@@ -75,7 +77,7 @@
     computer: ['computer', 'My Computer', `<div class="file-grid">${[shortcuts[1], shortcuts[2], ['notepad', 'Notepad', 'notepad']].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
     documents: ['folder', 'My Documents', `<h2>My Documents</h2><div class="file-grid">${[shortcuts[4], shortcuts[5], ['globe', 'LinkedIn', 'https://www.linkedin.com/in/charles-perrault-b4a933327']].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
     recycle: ['recycle', 'Recycle Bin', '<h2>Recycle Bin is empty.</h2><p>0 objects · 0 bytes</p>'],
-    notepad: ['notepad', 'Untitled — Notepad', '<textarea class="notepad" id="notes" aria-label="Notepad"></textarea>'],
+    notepad: ['notepad', 'Leaderboard.txt — Notepad', '<div class="notepad-files"><button type="button" data-note="leaderboard" aria-pressed="true">Leaderboard.txt</button><button type="button" data-note="scratch" aria-pressed="false">Untitled</button><button type="button" id="refresh-leaderboard">Refresh</button></div><textarea class="notepad" id="leaderboard-note" aria-label="Leaderboard.txt" readonly></textarea><textarea class="notepad" id="notes" aria-label="Untitled note" hidden></textarea>'],
   };
   let notes = '';
   document.addEventListener('input', e => { if (e.target.id === 'notes') notes = e.target.value; });
@@ -90,7 +92,21 @@
     const [image, title, html] = pages[name];
     document.getElementById('utility-title').innerHTML = icon(image) + title;
     document.getElementById('utility-content').innerHTML = html;
-    if (name === 'notepad') document.getElementById('notes').value = notes;
+    if (name === 'notepad') {
+      document.getElementById('notes').value = notes;
+      window.TonyLeaderboard?.refreshNote();
+      document.getElementById('refresh-leaderboard').addEventListener('click', () => window.TonyLeaderboard?.refreshNote());
+      document.querySelectorAll('[data-note]').forEach(button => button.addEventListener('click', () => {
+        const leaderboard = button.dataset.note === 'leaderboard';
+        document.getElementById('leaderboard-note').hidden = !leaderboard;
+        document.getElementById('notes').hidden = leaderboard;
+        document.getElementById('refresh-leaderboard').hidden = !leaderboard;
+        document.querySelectorAll('[data-note]').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
+        const title = leaderboard ? 'Leaderboard.txt — Notepad' : 'Untitled — Notepad';
+        document.getElementById('utility-title').innerHTML = icon('notepad') + title;
+        utilityTask.querySelector('span').textContent = title;
+      }));
+    }
     utilityTask.innerHTML = icon(image) + `<span>${title}</span>`;
     utilityTask.hidden = false; utilityTask.setAttribute('aria-pressed', 'true');
     focusWindow(utility);
@@ -141,4 +157,5 @@
     document.getElementById('crash-screen').classList.remove('show');
     portfolio.hidden = true; task.hidden = true; task.setAttribute('aria-pressed', 'false');
   });
+  if (new URLSearchParams(location.search).get('notepad') === 'leaderboard') document.querySelector('[data-open="notepad"]').click();
 })();

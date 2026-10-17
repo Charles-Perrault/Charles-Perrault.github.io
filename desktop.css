@@ -43,6 +43,10 @@ button { font: inherit; color: inherit; }
 .utility-window { top: 100px; left: calc(50% - 220px); width: 440px; height: auto; max-height: calc(100dvh - 160px); }
 .utility-content { padding: 20px; overflow: auto; font-size: 12px; line-height: 1.6; }
 .utility-content h2 { font-size: 15px; margin-top: 0; }
+.utility-window:has(.notepad-files) { width: min(650px, calc(100vw - 24px)); left: max(12px, calc(50% - 325px)); }
+.notepad-files { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.notepad-files button { padding: 3px 8px; border: 2px solid; border-color: #fff #404040 #404040 #fff; background: #c0c0c0; cursor: pointer; }
+.notepad-files button[aria-pressed="true"] { border-color: #404040 #fff #fff #404040; }
 .utility-content a { color: #000080; }
 .utility-content .file-grid { display: flex; flex-wrap: wrap; gap: 16px; padding: 12px; background: white; border: 1px inset; }
 .file-grid .desktop-icon { color: black; text-shadow: none; }

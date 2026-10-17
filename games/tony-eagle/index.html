@@ -25,6 +25,12 @@ footer { display: flex; justify-content: space-between; flex-wrap: wrap; align-i
 footer p { margin: 0; } .actions { display: flex; align-items: center; gap: 12px; }
 footer button { font-size: 11px; padding: 3px 9px; }
 #error-help { font-size: 12px; color: #c3d1d7; }
+#cheat-notice { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); margin: 0; padding: 6px 12px; max-width: 90%; background: #202c34e8; color: #ffda6b; font-weight: bold; text-align: center; pointer-events: none; }
+#ranked-result { position: absolute; bottom: 12px; left: 12px; padding: 8px 12px; max-width: min(440px, 90%); background: #202c34ee; font-size: 12px; }
+#ranked-result p { margin: 0 0 5px; }
+#ranked-submit { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+#ranked-name { font: inherit; width: 150px; padding: 5px; }
+#ranked-submit button { padding: 4px 8px; }
 </style>
 </head>
 <body>
@@ -37,11 +43,14 @@ footer button { font-size: 11px; padding: 3px 9px; }
 <p id="error-help" hidden></p>
 <button type="button" id="resume" hidden>Click to play</button>
 </section>
+<p id="cheat-notice" role="status" hidden>UNLIMITED UPGRADE POINTS UNLOCKED</p>
+<section id="ranked-result" aria-live="polite" hidden><p id="ranked-message"></p><form id="ranked-submit" hidden><label>Your name <input id="ranked-name" maxlength="24" required autocomplete="nickname"></label><button id="ranked-submit-button" type="submit">Submit score</button></form></section>
 </main>
 <footer>
 <div><p>Original game by <a href="https://gamejolt.com/games/tony-eagle-amateur-skateboarding/24295" target="_blank" rel="noopener noreferrer">GloveGames</a>, this is just a preservation I did of a childhood favorite because you can't play it anywhere online in 2026</p><p id="controls">Arrows / WASD: move · Hold Space / B, release to jump</p></div>
-<div class="actions"><button type="button" id="pause" disabled>Pause</button><button type="button" id="fullscreen">Fullscreen</button></div>
+<div class="actions"><button type="button" id="leaderboard-open">Leaderboard</button><button type="button" id="reset-upgrades" hidden>Reset upgrades</button><button type="button" id="pause" disabled>Pause</button><button type="button" id="fullscreen">Fullscreen</button></div>
 </footer>
-<script src="player.js?v=3"></script>
+<script src="leaderboard.js?v=1"></script>
+<script src="player.js?v=4"></script>
 </body>
 </html>
