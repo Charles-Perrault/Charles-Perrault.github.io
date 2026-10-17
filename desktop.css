@@ -98,3 +98,8 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .word-paper p { margin: 0; }
 .word-status { padding: 2px 8px; border-top: 1px solid white; font-size: 11px; }
 @media (max-width: 600px) { .word-window { top: 24px; height: calc(100dvh - 78px); } .word-workspace { padding: 12px; } }
+
+.word-paper h2 { font: bold 16px/1.5 'Times New Roman', serif; margin: 0 0 8px; }
+.word-paper section + section { margin-top: 24px; }
+.word-paper ul { list-style: disc; margin: 0; padding-left: 24px; }
+.word-paper li + li { margin-top: 12px; }
