@@ -1,10 +1,11 @@
 (() => {
   const stockIcons = {
-    napster: 'music', photos: 'photos', computer: 'computer', folder: 'folder',
+    photos: 'photos', computer: 'computer', folder: 'folder',
     document: 'document', mail: 'mail', globe: 'browser', recycle: 'recycle-full',
     notepad: 'notepad', windows: 'windows', speaker: 'speaker'
   };
-  const icon = (name, size = 32) => name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
+  const napsterIcon = '<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges"><path fill="#2872c8" stroke="#000" d="M5 14V7l7 4h8l7-4v7c4 16-26 16-22 0z"/><path fill="none" stroke="#000" stroke-width="3" d="M3 18v-5a13 13 0 0 1 26 0v5"/><path fill="#c0c0c0" stroke="#000" d="M1 14h5v10H1zm25 0h5v10h-5z"/><path fill="#fff" d="m9 16 5 2-4 2zm14 0-5 2 4 2z"/></svg>';
+  const icon = (name, size = 32) => name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
   const portfolio = document.querySelector('body > .window');
   portfolio.id = 'portfolio';
   portfolio.setAttribute('aria-label', 'Charles Perrault — Home Page');
@@ -73,17 +74,13 @@
   const benchContent = benchSections.map(([numeral, title, bullets]) => title === 'Results' ? benchResults :
     `<section><h2>${numeral}. ${title}</h2><ul>${bullets.map(text => `<li>${text}</li>`).join('')}</ul></section>`
   ).join('');
-  const trashFiles = ['Negative attitudes', 'Distractions', 'A full fish skeleton', '10 cans of monster', 'Your mom', 'Laziness'].map((name, index) => [name + '.txt', 'trash-file-' + index]);
-  const trashDrafts = new Map();
+  const trashFiles = ['Negative attitudes', 'Distractions', 'A full fish skeleton', '10 cans of monster', 'Your mom', 'Laziness'].map(name => name + '.txt');
   const pages = {
     'bench-press-study': ['bench', 'Bench Press Study — Microsoft Word', `<div class="word-toolbar"><span>Times New Roman</span><span>12</span><a class="standalone-link" href="?app=bench-press-study" target="_blank" rel="noopener noreferrer">Open in new tab</a><button type="button" class="study-print" id="print-study">Print / Save PDF</button><a href="documents/Bench%20Press%20Study.docx" download="Bench Press Study.docx">Download Word document</a></div><div class="word-workspace"><article class="word-paper" aria-label="Bench Press Study document"><h1 class="standalone-study-title">Bench Press Study</h1>${benchContent}<p class="results-announcement">Full results coming November 22nd!</p></article></div><div class="word-status">Bench Press Study <span id="study-sync-status" aria-live="polite"></span></div>`],
     computer: ['computer', 'My Computer', `<div class="file-grid">${[shortcuts[1], shortcuts[2]].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
-    recycle: ['recycle', 'Recycle Bin', `<div class="file-grid">${trashFiles.map(([name, action]) => shortcut(['document', name, action], 'desktop-icon')).join('')}</div><p class="utility-note">${trashFiles.length} objects</p>`],
+    recycle: ['recycle', 'Recycle Bin', `<div class="file-grid">${trashFiles.map(name => `<div class="desktop-icon">${icon('document')}<span>${name}</span></div>`).join('')}</div><p class="utility-note">${trashFiles.length} objects</p>`],
     notepad: ['notepad', 'Leaderboard.txt — Notepad', '<div class="notepad-files"><button type="button" data-note="leaderboard" aria-pressed="true">Leaderboard.txt</button><button type="button" data-note="scratch" aria-pressed="false">Untitled</button></div><textarea class="notepad" id="leaderboard-note" aria-label="Leaderboard.txt"></textarea><textarea class="notepad" id="notes" aria-label="Untitled note" hidden></textarea>'],
   };
-  for (const [name, action] of trashFiles) {
-    pages[action] = ['notepad', name + ' — Notepad', `<div class="notepad-files"><button type="button" data-open="recycle">Back to Recycle Bin</button></div><textarea class="notepad" data-trash-file="${action}" aria-label="${name}"></textarea>`];
-  }
   // Keep the study independent of the shared desktop utility window.
   document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
   const bench = document.getElementById('bench-study');
@@ -163,7 +160,7 @@
   const windows = [portfolio, utility, game, bench, ...Array.from(placeholderApps.values(), app => app.win)];
   const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
   let notes = '';
-  document.addEventListener('input', e => { if (e.target.id === 'notes') notes = e.target.value; if (e.target.dataset.trashFile) trashDrafts.set(e.target.dataset.trashFile, e.target.value); });
+  document.addEventListener('input', e => { if (e.target.id === 'notes') notes = e.target.value; });
   document.addEventListener('click', e => {
     const launcher = e.target.closest('[data-open]');
     if (!launcher) return;
@@ -190,8 +187,6 @@
     const [image, title, html] = pages[name];
     document.getElementById('utility-title').innerHTML = icon(image, 16) + title;
     document.getElementById('utility-content').innerHTML = html;
-    const trashEditor = document.querySelector('[data-trash-file]');
-    if (trashEditor) trashEditor.value = trashDrafts.get(name) || '';
     if (name === 'notepad') {
       document.getElementById('notes').value = notes;
       window.TonyLeaderboard?.refreshNote();
