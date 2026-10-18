@@ -181,3 +181,13 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .taskbar-button .stock-icon, .system-tray .stock-icon { width: 16px; height: 16px; }
 .toolbar-icon { width: 16px; height: 16px; display: inline-block; vertical-align: middle; image-rendering: pixelated; }
 .titlebar .title .icon { background: url("assets/icons/win95/document-16.png") no-repeat center; border: 0; width: 16px; height: 16px; }
+
+/* Keep the live sheet chart alongside the results, including narrow windows. */
+.word-window { left: max(12px, calc(50% - 530px)); width: min(1060px, calc(100% - 24px)); }
+.word-paper { min-width: 740px; padding: 40px; }
+.standalone-window .word-paper { max-width: 1100px; }
+.study-results-layout { display: grid; grid-template-columns: minmax(250px, 0.85fr) minmax(330px, 1.15fr); gap: 24px; align-items: center; }
+.study-results-data > ul { margin-top: 12px; }
+.study-chart { display: block; min-width: 0; }
+.study-chart img { display: block; width: 100%; height: auto; object-fit: contain; image-rendering: auto; }
+@media print { .word-paper { min-width: 0; } .study-results-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 16px; break-inside: avoid; } }

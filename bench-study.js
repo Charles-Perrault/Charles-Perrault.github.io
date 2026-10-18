@@ -69,6 +69,12 @@
         };
         if (!valid(data)) throw new Error('Invalid sheet values');
         render(data, true);
+        const chart = document.getElementById('study-chart');
+        if (chart) {
+          const url = new URL(chart.src);
+          url.searchParams.set('_', String(Date.now()));
+          chart.src = url.href;
+        }
         try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch { /* Keep the in-memory results. */ }
       } catch {
         render(results);
