@@ -74,13 +74,29 @@
   const benchContent = benchSections.map(([numeral, title, bullets]) => title === 'Results' ? benchResults :
     `<section><h2>${numeral}. ${title}</h2><ul>${bullets.map(text => `<li>${text}</li>`).join('')}</ul></section>`
   ).join('');
-  const trashFiles = ['Negative attitudes', 'Distractions', 'A full fish skeleton', '10 cans of monster', 'Your mom', 'Laziness'].map(name => name + '.txt');
+  const trashFiles = [
+    ['document', 'Negative attitudes.txt', 'trash-negative'],
+    ['document', 'Distractions.txt', 'trash-distractions'],
+    ['photos', 'A full fish skeleton.png', 'trash-fish'],
+    ['folder', 'Your mom.zip', 'trash-mom'],
+    ['document', 'Laziness.txt', 'trash-laziness']
+  ];
   const pages = {
     'bench-press-study': ['bench', 'Bench Press Study — Microsoft Word', `<div class="word-toolbar"><span>Times New Roman</span><span>12</span><a class="standalone-link" href="?app=bench-press-study" target="_blank" rel="noopener noreferrer">Open in new tab</a><button type="button" class="study-print" id="print-study">Print / Save PDF</button><a href="documents/Bench%20Press%20Study.docx" download="Bench Press Study.docx">Download Word document</a></div><div class="word-workspace"><article class="word-paper" aria-label="Bench Press Study document"><h1 class="standalone-study-title">Bench Press Study</h1>${benchContent}<p class="results-announcement">Full results coming November 22nd!</p></article></div><div class="word-status">Bench Press Study <span id="study-sync-status" aria-live="polite"></span></div>`],
     computer: ['computer', 'My Computer', `<div class="file-grid">${[shortcuts[1], shortcuts[2]].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
-    recycle: ['recycle', 'Recycle Bin', `<div class="file-grid">${trashFiles.map(name => `<div class="desktop-icon">${icon('document')}<span>${name}</span></div>`).join('')}</div><p class="utility-note">${trashFiles.length} objects</p>`],
+    recycle: ['recycle', 'Recycle Bin', `<div class="file-grid">${trashFiles.map(file => shortcut(file, 'desktop-icon')).join('')}</div><p class="utility-note">${trashFiles.length} objects</p>`],
     notepad: ['notepad', 'Leaderboard.txt — Notepad', '<div class="notepad-files"><button type="button" data-note="leaderboard" aria-pressed="true">Leaderboard.txt</button><button type="button" data-note="scratch" aria-pressed="false">Untitled</button></div><textarea class="notepad" id="leaderboard-note" aria-label="Leaderboard.txt"></textarea><textarea class="notepad" id="notes" aria-label="Untitled note" hidden></textarea>'],
   };
+  const trashBack = '<div class="notepad-files"><button type="button" data-open="recycle">Back to Recycle Bin</button></div>';
+  for (const [id, title, content] of [
+    ['trash-negative', 'Negative attitudes.txt', 'meanness, arrogance, being A CHUD, ego'],
+    ['trash-distractions', 'Distractions.txt', 'Fortnite OG and Young Sheldon Youtube Shorts clips'],
+    ['trash-laziness', 'Laziness.txt', "I'll put something here later"]
+  ]) {
+    pages[id] = ['notepad', title + ' — Notepad', `${trashBack}<textarea class="notepad" aria-label="${title}" readonly>${content}</textarea>`];
+  }
+  pages['trash-fish'] = ['photos', 'A full fish skeleton.png', `${trashBack}<div class="trash-image"><img src="assets/fish-skeleton.png" alt="A full fish skeleton" width="500" height="500"></div>`];
+  pages['trash-mom'] = ['folder', 'Your mom.zip', '<div class="zip-opening" role="status">Opening Your mom.zip...</div><div class="zip-error" role="alert" hidden><h2>Error</h2><p>file too large to open</p><button type="button" data-open="recycle">OK</button></div>'];
   // Keep the study independent of the shared desktop utility window.
   document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
   const bench = document.getElementById('bench-study');
@@ -187,6 +203,15 @@
     const [image, title, html] = pages[name];
     document.getElementById('utility-title').innerHTML = icon(image, 16) + title;
     document.getElementById('utility-content').innerHTML = html;
+    if (name === 'trash-mom') {
+      const opening = document.querySelector('.zip-opening');
+      const error = document.querySelector('.zip-error');
+      setTimeout(() => {
+        if (!opening.isConnected) return;
+        opening.hidden = true;
+        error.hidden = false;
+      }, 800);
+    }
     if (name === 'notepad') {
       document.getElementById('notes').value = notes;
       window.TonyLeaderboard?.refreshNote();
