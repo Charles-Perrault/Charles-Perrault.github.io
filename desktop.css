@@ -147,3 +147,24 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 
 .gurt-icon { object-fit: contain; }
 #gurt-takeover { position: fixed; inset: 0; z-index: 2147483647; background: url("assets/photos/portrait-01.png") repeat 0 0 / 112px 199px; image-rendering: pixelated; cursor: default; }
+
+/* Direct links open the same apps as full-page, shareable browser tabs. */
+.photo-toolbar { flex-shrink: 0; padding: 2px 4px 6px; font-size: 12px; }
+.photo-toolbar a { color: #000080; }
+.desktop-link, .study-print, .standalone-study-title { display: none; }
+.word-toolbar a + a { margin-left: 0; }
+body.standalone-mode > :not(.standalone-window) { display: none !important; }
+body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important; width: 100% !important; height: 100dvh !important; min-width: 0; min-height: 0; max-height: none; margin: 0; }
+.standalone-window > .titlebar { cursor: default; pointer-events: none; }
+.standalone-window .winbtns, .standalone-window > .resize-handle, .standalone-window .standalone-link { display: none; }
+.standalone-window .desktop-link, .standalone-window .study-print { display: inline-block; }
+.standalone-window .word-paper { max-width: 850px; margin: 0 auto; }
+.standalone-window .standalone-study-title { display: block; margin: 0 0 24px; color: black; font: bold 24px/1.5 'Times New Roman', serif; }
+@media print {
+  body.standalone-mode > #portfolio { display: none !important; }
+  body.standalone-mode > .standalone-window.word-window { display: block !important; position: static; width: 100% !important; height: auto !important; border: 0; box-shadow: none; }
+  .standalone-window.word-window .titlebar, .standalone-window.word-window .word-toolbar, .standalone-window.word-window .word-status { display: none; }
+  .standalone-window.word-window .utility-content, .standalone-window.word-window .word-workspace { display: block; overflow: visible; height: auto; padding: 0; background: white; }
+  .standalone-window.word-window .word-paper { min-height: 0; padding: 0; box-shadow: none; font-size: 12pt; }
+  .standalone-window.word-window .word-paper h2 { break-after: avoid; }
+}
