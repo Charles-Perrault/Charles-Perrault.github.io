@@ -96,7 +96,7 @@
     pages[id] = ['notepad', title + ' — Notepad', `${trashBack}<textarea class="notepad" aria-label="${title}" readonly>${content}</textarea>`];
   }
   pages['trash-fish'] = ['photos', 'A full fish skeleton.png', `${trashBack}<div class="trash-image"><img src="assets/fish-skeleton.png" alt="A full fish skeleton" width="500" height="500"></div>`];
-  pages['trash-mom'] = ['folder', 'Your mom.zip', '<div class="zip-opening" role="status">Opening Your mom.zip...</div><div class="zip-error" role="alert" hidden><h2>Error</h2><p>file too large to open</p><button type="button" data-open="recycle">OK</button></div>'];
+  pages['trash-mom'] = ['folder', 'Your mom.zip', '<div class="zip-opening" role="status">Opening Your mom.zip...</div><div class="zip-error" role="alert" hidden><h2>Error</h2><p>file too large!</p></div>'];
   // Keep the study independent of the shared desktop utility window.
   document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
   const bench = document.getElementById('bench-study');
@@ -210,6 +210,19 @@
         if (!opening.isConnected) return;
         opening.hidden = true;
         error.hidden = false;
+        setTimeout(() => {
+          if (document.getElementById('reboot-screen')) return;
+          pauseGame();
+          const blackout = document.createElement('div');
+          blackout.id = 'reboot-screen';
+          blackout.setAttribute('role', 'status');
+          blackout.setAttribute('aria-label', 'Restarting computer');
+          document.body.append(blackout);
+          for (const child of document.body.children) {
+            if (child !== blackout) child.inert = true;
+          }
+          setTimeout(() => window.location.replace(window.location.pathname), 3500);
+        }, 1200);
       }, 800);
     }
     if (name === 'notepad') {

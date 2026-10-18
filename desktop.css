@@ -195,8 +195,7 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .trash-image { background: white; border: 2px inset #dfdfdf; text-align: center; }
 .trash-image img { display: block; width: 100%; max-width: 500px; height: auto; margin: auto; }
 .zip-opening { padding: 24px; cursor: wait; }
-.zip-error { padding: 12px; animation: zip-crash 180ms steps(2) 2; }
+.zip-error { padding: 12px; }
 .zip-error p { margin: 12px 0 24px; }
-.zip-error button { display: block; margin: 0 auto; min-width: 80px; padding: 4px 12px; border: 2px solid; border-color: white #404040 #404040 white; background: #c0c0c0; cursor: pointer; }
-@keyframes zip-crash { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-@media (prefers-reduced-motion: reduce) { .zip-error { animation: none; } }
+
+#reboot-screen { position: fixed; inset: 0; z-index: 2147483647; background: #000; cursor: none; }
