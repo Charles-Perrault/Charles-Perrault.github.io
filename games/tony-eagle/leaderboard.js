@@ -32,9 +32,7 @@
     const rows = rankings.entries.map((entry, index) => `${String(index + 1).padStart(2)}. ${entry.name.padEnd(24)} ${Number(entry.score).toLocaleString()}`).join('\n');
     return header + (saved ? 'Live refresh unavailable — showing saved rankings.\n\n' : '') +
       (rows || 'No scores yet. Go skate and set the first record!') +
-      '\n\n------------------------------------------\nKonami-code runs do not qualify.\nScores are shared by everyone visiting this site.\n' +
-      (saved ? 'Last updated ' : 'Updated ') + new Date(rankings.fetchedAt).toLocaleString() +
-      (saved ? '\nClick Refresh to try the live leaderboard again.' : '');
+      (saved ? '\n\nClick Refresh to try the live leaderboard again.' : '');
   }
   async function note() {
     try {
