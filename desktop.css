@@ -195,7 +195,8 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .trash-image { background: white; border: 2px inset #dfdfdf; text-align: center; }
 .trash-image img { display: block; width: 100%; max-width: 500px; height: auto; margin: auto; }
 .zip-opening { padding: 24px; cursor: wait; }
-.zip-error { padding: 12px; }
-.zip-error p { margin: 12px 0 24px; }
+.utility-window:has(.zip-error) { width: min(880px, calc(100vw - 24px)); left: max(12px, calc(50% - 440px)); }
+.zip-error { padding: 32px 16px; text-align: center; }
+.zip-error p { margin: 20px 0; font: bold clamp(40px, 6vw, 80px)/1.15 Tahoma, sans-serif; }
 
 #reboot-screen { position: fixed; inset: 0; z-index: 2147483647; background: #000; cursor: none; }
