@@ -31,8 +31,7 @@
     const header = 'TONY EAGLE: AMATEUR SKATEBOARDING\nSHARED LEADERBOARD — TOP 20\n\n';
     const rows = rankings.entries.map((entry, index) => `${String(index + 1).padStart(2)}. ${entry.name.padEnd(24)} ${Number(entry.score).toLocaleString()}`).join('\n');
     return header + (saved ? 'Live refresh unavailable — showing saved rankings.\n\n' : '') +
-      (rows || 'No scores yet. Go skate and set the first record!') +
-      (saved ? '\n\nClick Refresh to try the live leaderboard again.' : '');
+      (rows || 'No scores yet. Go skate and set the first record!');
   }
   async function note() {
     try {
@@ -49,15 +48,21 @@
       } catch { /* A previously loaded copy can still be available offline. */ }
       const saved = [cached, snapshot].filter(validRankings).sort((a, b) => b.fetchedAt - a.fetchedAt)[0];
       if (saved) return formatNote(saved, true);
-      return 'TONY EAGLE: AMATEUR SKATEBOARDING\nSHARED LEADERBOARD — TOP 20\n\nThe live leaderboard is temporarily unavailable.\nClick Refresh to try again.';
+      return 'TONY EAGLE: AMATEUR SKATEBOARDING\nSHARED LEADERBOARD — TOP 20\n\nThe live leaderboard is temporarily unavailable.';
     }
   }
+  let leaderboardDraft = null, noteRequest = 0;
+  document.addEventListener('input', event => {
+    if (event.target.id === 'leaderboard-note') leaderboardDraft = event.target.value;
+  });
   async function refreshNote() {
     const target = get('leaderboard-note');
     if (!target) return;
-    target.value = 'Opening Leaderboard.txt…';
+    if (leaderboardDraft !== null) { target.value = leaderboardDraft; return; }
+    const requestId = ++noteRequest;
+    target.value = '';
     const text = await note();
-    if (get('leaderboard-note') === target) target.value = text;
+    if (get('leaderboard-note') === target && requestId === noteRequest && leaderboardDraft === null) target.value = text;
   }
   function result(message, offerSubmit = false) {
     if (!get('ranked-result')) return;

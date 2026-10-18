@@ -86,7 +86,7 @@
     'bench-press-study': ['bench', 'Bench Press Study — Microsoft Word', `<div class="word-toolbar"><span>Times New Roman</span><span>12</span><a class="standalone-link" href="?app=bench-press-study" target="_blank" rel="noopener noreferrer">Open in new tab</a><button type="button" class="study-print" id="print-study">Print / Save PDF</button><a href="documents/Bench%20Press%20Study.docx" download="Bench Press Study.docx">Download Word document</a></div><div class="word-workspace"><article class="word-paper" aria-label="Bench Press Study document"><h1 class="standalone-study-title">Bench Press Study</h1>${benchContent}<p class="results-announcement">Full results coming November 22nd!</p></article></div><div class="word-status">Bench Press Study <span id="study-sync-status" aria-live="polite"></span></div>`],
     computer: ['computer', 'My Computer', `<div class="file-grid">${[shortcuts[1], shortcuts[2]].map(s => shortcut(s, 'desktop-icon')).join('')}</div>`],
     recycle: ['recycle', 'Recycle Bin', '<h2>Recycle Bin is empty.</h2><p>0 objects · 0 bytes</p>'],
-    notepad: ['notepad', 'Leaderboard.txt — Notepad', '<div class="notepad-files"><button type="button" data-note="leaderboard" aria-pressed="true">Leaderboard.txt</button><button type="button" data-note="scratch" aria-pressed="false">Untitled</button><button type="button" id="refresh-leaderboard">Refresh</button></div><textarea class="notepad" id="leaderboard-note" aria-label="Leaderboard.txt" readonly></textarea><textarea class="notepad" id="notes" aria-label="Untitled note" hidden></textarea>'],
+    notepad: ['notepad', 'Leaderboard.txt — Notepad', '<div class="notepad-files"><button type="button" data-note="leaderboard" aria-pressed="true">Leaderboard.txt</button><button type="button" data-note="scratch" aria-pressed="false">Untitled</button></div><textarea class="notepad" id="leaderboard-note" aria-label="Leaderboard.txt"></textarea><textarea class="notepad" id="notes" aria-label="Untitled note" hidden></textarea>'],
   };
   // Keep the study independent of the shared desktop utility window.
   document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
@@ -197,12 +197,10 @@
     if (name === 'notepad') {
       document.getElementById('notes').value = notes;
       window.TonyLeaderboard?.refreshNote();
-      document.getElementById('refresh-leaderboard').addEventListener('click', () => window.TonyLeaderboard?.refreshNote());
       document.querySelectorAll('[data-note]').forEach(button => button.addEventListener('click', () => {
         const leaderboard = button.dataset.note === 'leaderboard';
         document.getElementById('leaderboard-note').hidden = !leaderboard;
         document.getElementById('notes').hidden = leaderboard;
-        document.getElementById('refresh-leaderboard').hidden = !leaderboard;
         document.querySelectorAll('[data-note]').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
         const title = leaderboard ? 'Leaderboard.txt — Notepad' : 'Untitled — Notepad';
         document.getElementById('utility-title').innerHTML = icon('notepad') + title;
