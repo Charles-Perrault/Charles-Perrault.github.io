@@ -170,3 +170,8 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 }
 
 .standalone-window .photo-toolbar { display: none; }
+
+.study-results > ul { margin-top: 12px; }
+.study-results li ul { margin-top: 4px; }
+.study-results li li + li { margin-top: 4px; }
+#study-sync-status { margin-left: 12px; }
