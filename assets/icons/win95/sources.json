@@ -1,0 +1,122 @@
+[
+  {
+    "file": "computer-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Explorer100_16x16_4.png",
+    "sha256": "fa032284bcbc6f20ff400b99bdb8d81daad590e0e7db74055c2258ee1d4ad442"
+  },
+  {
+    "file": "computer-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Explorer100_32x32_4.png",
+    "sha256": "d46097b54cf58b94f14247ed03e50a646a585deffbac37c7275b184363e91e91"
+  },
+  {
+    "file": "recycle-full-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Shell3233_16x16_4.png",
+    "sha256": "26c046c1a8243dbdba53cd8aae79624a788640be47a11a96f0f7e0cd51a93ce4"
+  },
+  {
+    "file": "recycle-full-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Shell3233_32x32_4.png",
+    "sha256": "95848d1ef1606ba8e2efd97ba36e12424b50a91d9e264f9dc2df0988bee985ce"
+  },
+  {
+    "file": "notepad-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Notepad_16x16_4.png",
+    "sha256": "dbbbad2f92f3d6e75e59b130d1298072b092ac09b01225942a54eb5c9cc9553c"
+  },
+  {
+    "file": "notepad-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Notepad_32x32_4.png",
+    "sha256": "125cf646e1eed8868efca909c630906cb8e806b3771e08a1e7357ce8610dc623"
+  },
+  {
+    "file": "photos-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Wangimg128_16x16_4.png",
+    "sha256": "ef00583b9dbc09a7fb6b4f9eecf4eb596ccdd6ad5533af0a6cc1c60bdb3404c7"
+  },
+  {
+    "file": "photos-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Wangimg128_32x32_4.png",
+    "sha256": "c1561346f359eee67eb7bf46f8ec971c03336d72f2d76a820810a14e1b37f0aa"
+  },
+  {
+    "file": "document-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Shell322_16x16_4.png",
+    "sha256": "32aeeb3f1bd3392fdfcc2601e3f1f24743ed897f2cbf300596339253edb9a92d"
+  },
+  {
+    "file": "document-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Shell322_32x32_4.png",
+    "sha256": "3eaa986d0777dac8a7de41e59c649b4c945b3dde81e6a2f8a2a93a809b5d0b2b"
+  },
+  {
+    "file": "folder-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Shell324_16x16_4.png",
+    "sha256": "ba8679014401e4c447491043e57e3238d43d3a04fbfcb2d29a36982c749d4b8a"
+  },
+  {
+    "file": "folder-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Shell324_32x32_4.png",
+    "sha256": "c13577d5c1e43d38078ade5362e1a2c0d70abe84b3a0bad35b6936a2e17eb72f"
+  },
+  {
+    "file": "mail-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Mail_16x16_4.png",
+    "sha256": "c2e97c6f0b76747cbf4981d5afa2c6dc0336e325a77697688569fcc1038e99b3"
+  },
+  {
+    "file": "mail-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Mail_32x32_4.png",
+    "sha256": "237b691f9837c05af2c2ab1cd09b567a25228fa4ea1fe5f1011f8f2bb07f7870"
+  },
+  {
+    "file": "browser-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Iexplore32528_16x16_4.png",
+    "sha256": "39bd6c84a9beed1646bb3c2471d38457806b5ade05c205cdf7742f79c75acd80"
+  },
+  {
+    "file": "browser-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Iexplore32528_32x32_4.png",
+    "sha256": "40d111cf023199cb4890a89c3251075bc1dd6faa4ec5f751763f73bead6985cd"
+  },
+  {
+    "file": "windows-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/User1_16x16_4.png",
+    "sha256": "efd8c5ee2d79035652888cdc573b56407516d27fde8791588a157b5ba42cea45"
+  },
+  {
+    "file": "windows-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/User1_32x32_4.png",
+    "sha256": "c8bcc81906f5af58421c039ef5f8f930fcd16d24335fae2f23f20efdf59eb0a7"
+  },
+  {
+    "file": "speaker-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Sndvol32304_16x16_4.png",
+    "sha256": "a3e2bd1bb624afa3144b024c52805fe9ca405c0e3c36c1c0485c68be5d394a3a"
+  },
+  {
+    "file": "speaker-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Sndvol32304_32x32_4.png",
+    "sha256": "cc273add1bb614f246bcc81bf5d804456adf21107b098378f502e4c1f517d14f"
+  },
+  {
+    "file": "music-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Cdplayer107_16x16_4.png",
+    "sha256": "40fec79af6a3d1c52aecb1b8a1cacf6a5b6ac87bdf813df169822e1bc6c85d2b"
+  },
+  {
+    "file": "music-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Cdplayer107_32x32_4.png",
+    "sha256": "cd482fd8083425809f95ce3b5cfe307d259abe1360c8eff00ccfa109207c8897"
+  },
+  {
+    "file": "phone-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Dialer1_16x16_4.png",
+    "sha256": "353f436db10079036f874454cf41769594b0203c0874ac833ca03d0318d85ef2"
+  },
+  {
+    "file": "phone-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Dialer1_32x32_4.png",
+    "sha256": "d5a7519257d23e5ccf0fd59081579d058a687d8ea83c0f4226631a8f27f83555"
+  }
+]

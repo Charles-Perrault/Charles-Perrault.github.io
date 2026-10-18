@@ -175,3 +175,9 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .study-results li ul { margin-top: 4px; }
 .study-results li li + li { margin-top: 4px; }
 #study-sync-status { margin-left: 12px; }
+
+.stock-icon { object-fit: contain; filter: none; }
+.desktop-icons .stock-icon, .start-item .stock-icon { width: 32px; height: 32px; }
+.taskbar-button .stock-icon, .system-tray .stock-icon { width: 16px; height: 16px; }
+.toolbar-icon { width: 16px; height: 16px; display: inline-block; vertical-align: middle; image-rendering: pixelated; }
+.titlebar .title .icon { background: url("assets/icons/win95/document-16.png") no-repeat center; border: 0; width: 16px; height: 16px; }
