@@ -198,3 +198,8 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .utility-window:has(.zip-error) .winbtns button:not([data-window-action="close"]), .utility-window:has(.zip-error) .resize-handle { display: none; }
 .zip-error { display: flex; align-items: center; gap: 20px; padding: 12px 8px; }
 .zip-error p { margin: 0; font: 13px/1.5 Tahoma, sans-serif; }
+
+.webring { position: fixed; right: 12px; bottom: 48px; z-index: 90; display: flex; gap: 12px; max-width: calc(100vw - 24px); padding: 6px 10px; border: 2px solid; border-color: white #404040 #404040 white; background: #c0c0c0; font: 11px/1.5 Tahoma, sans-serif; }
+.webring a { color: #000080; white-space: nowrap; }
+@media (max-width: 420px) { .webring { right: 4px; gap: 8px; padding: 5px 6px; max-width: calc(100vw - 8px); font-size: 10px; } }
+@media print { .webring { display: none !important; } }
