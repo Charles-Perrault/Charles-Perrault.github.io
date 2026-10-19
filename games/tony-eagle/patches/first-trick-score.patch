@@ -1,0 +1,226 @@
+--- a/Assets/MonoScript/Assembly-CSharp/PlayerMove.cs
++++ b/Assets/MonoScript/Assembly-CSharp/PlayerMove.cs
+@@ -204,7 +204,7 @@
+ 				else
+ 				{
+ 					trickList.text += "\n FORWARD IS TOO MAINSTREAM";
+-					score += 50 * combo;
++					score += 50 * Mathf.Max(1, combo);
+ 					combo++;
+ 				}
+ 				acceleration *= -1f;
+@@ -217,7 +217,7 @@
+ 				if (Mathf.Abs(f) > 90.5f && angleDifference < 10f)
+ 				{
+ 					trickList.text += "\n SMOOTH LANDING";
+-					score += 50 * combo;
++					score += 50 * Mathf.Max(1, combo);
+ 					combo++;
+ 				}
+ 				AudioSource.PlayClipAtPoint(landClip, base.transform.position, Mathf.Clamp(controller.velocity.y * 3f, 1.5f, 4f));
+@@ -377,12 +377,12 @@
+ 			if (trickList.text.Contains("RIGHT SWITCH"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup]RIGHT SWITCH";
+-				score += 50 * combo;
++				score += 50 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n RIGHT SWITCH";
+-				score += 100 * combo;
++				score += 100 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -391,12 +391,12 @@
+ 			if (trickList.text.Contains("BACKHAND 180"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] BACKHAND 180";
+-				score += 50 * combo;
++				score += 50 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n BACKHAND 180";
+-				score += 100 * combo;
++				score += 100 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -407,24 +407,24 @@
+ 				if (trickList.text.Contains("LEFTSIDE AGDG"))
+ 				{
+ 					trickList.text += "\n [sup]STALE[/sup] LEFTSIDE AGDG";
+-					score += 100 * combo;
++					score += 100 * Mathf.Max(1, combo);
+ 				}
+ 				else
+ 				{
+ 					trickList.text += "\n LEFTSIDE AGDG";
+-					score += 200 * combo;
++					score += 200 * Mathf.Max(1, combo);
+ 					combo++;
+ 				}
+ 			}
+ 			else if (trickList.text.Contains("RIGHT LUDUM DARE"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] RIGHT LUDUM DARE";
+-				score += 100 * combo;
++				score += 100 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n RIGHT LUDUM DARE";
+-				score += 200 * combo;
++				score += 200 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -435,24 +435,24 @@
+ 				if (trickList.text.Contains("NECK SNAPPER"))
+ 				{
+ 					trickList.text += "\n [sup]STALE[/sup] NECK SNAPPER";
+-					score += 300 * combo;
++					score += 300 * Mathf.Max(1, combo);
+ 				}
+ 				else
+ 				{
+ 					trickList.text += "\n NECK SNAPPER";
+-					score += 600 * combo;
++					score += 600 * Mathf.Max(1, combo);
+ 					combo++;
+ 				}
+ 			}
+ 			else if (trickList.text.Contains("BALLS OF STEEL"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] BALLS OF STEEL";
+-				score += 300 * combo;
++				score += 300 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n BALLS OF STEEL";
+-				score += 600 * combo;
++				score += 600 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -463,24 +463,24 @@
+ 				if (trickList.text.Contains("FRONTSIDE FLIPPER"))
+ 				{
+ 					trickList.text += "\n [sup]STALE[/sup] FRONTSIDE FLIPPER";
+-					score += 70 * combo;
++					score += 70 * Mathf.Max(1, combo);
+ 				}
+ 				else
+ 				{
+ 					trickList.text += "\n FRONTSIDE FLIPPER";
+-					score += 140 * combo;
++					score += 140 * Mathf.Max(1, combo);
+ 					combo++;
+ 				}
+ 			}
+ 			else if (trickList.text.Contains("BACKWARD FLIPPER"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] BACKWARD FLIPPER";
+-				score += 70 * combo;
++				score += 70 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n BACKWARD FLIPPER";
+-				score += 140 * combo;
++				score += 140 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -491,24 +491,24 @@
+ 				if (trickList.text.Contains("LEFTSIDE TORNADO"))
+ 				{
+ 					trickList.text += "\n [sup]STALE[/sup] LEFTSIDE TORNADO";
+-					score += 70 * combo;
++					score += 70 * Mathf.Max(1, combo);
+ 				}
+ 				else
+ 				{
+ 					trickList.text += "\n LEFTSIDE TORNADO";
+-					score += 140 * combo;
++					score += 140 * Mathf.Max(1, combo);
+ 					combo++;
+ 				}
+ 			}
+ 			else if (trickList.text.Contains("LEFTSIDE DOLPHIN"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] LEFTSIDE DOLPHIN";
+-				score += 70 * combo;
++				score += 70 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n LEFTSIDE DOLPHIN";
+-				score += 140 * combo;
++				score += 140 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -517,12 +517,12 @@
+ 			if (trickList.text.Contains("WEATHER CHECKIN"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] WEATHER CHECKIN";
+-				score += 60 * combo;
++				score += 60 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n WEATHER CHECKIN";
+-				score += 120 * combo;
++				score += 120 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -531,12 +531,12 @@
+ 			if (trickList.text.Contains("HEADBANG"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] HEADBANG";
+-				score += 60 * combo;
++				score += 60 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n HEADBANG";
+-				score += 120 * combo;
++				score += 120 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -545,12 +545,12 @@
+ 			if (trickList.text.Contains("NOPE WRONG WAY"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] NOPE WRONG WAY";
+-				score += 50 * combo;
++				score += 50 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n NOPE WRONG WAY";
+-				score += 100 * combo;
++				score += 100 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}
+@@ -559,12 +559,12 @@
+ 			if (trickList.text.Contains("NOT THIS WAY EITHER"))
+ 			{
+ 				trickList.text += "\n [sup]STALE[/sup] NOT THIS WAY EITHER";
+-				score += 50 * combo;
++				score += 50 * Mathf.Max(1, combo);
+ 			}
+ 			else
+ 			{
+ 				trickList.text += "\n NOT THIS WAY EITHER";
+-				score += 100 * combo;
++				score += 100 * Mathf.Max(1, combo);
+ 				combo++;
+ 			}
+ 		}

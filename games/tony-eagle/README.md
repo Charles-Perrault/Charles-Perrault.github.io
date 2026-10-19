@@ -37,3 +37,10 @@ Open Leaderboard.txt in the desktop's Notepad app for the shared top 20 scores.
 After a normal round, enter a name and submit your score. Using the Konami code
 disqualifies the run and saved cheat upgrades; use Reset upgrades to return to
 ranked play. The original music is retained.
+
+Scoring fix: a new combo starts at a minimum multiplier of one, so a single
+trick awards its base points. Existing combo multipliers and stale-trick penalties
+are preserved. The Unity source patch is in `patches/first-trick-score.patch`.
+Copy `tests/*.cs` into the recovered project's `Assets/Editor/` and run
+`TonyEagleSingleTrickRegression.ValidateAndBuild` to verify first tricks, existing
+combos, repeated tricks, and real flip detection before rebuilding WebGL.
