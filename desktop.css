@@ -194,9 +194,7 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 
 .trash-image { background: white; border: 2px inset #dfdfdf; text-align: center; }
 .trash-image img { display: block; width: 100%; max-width: 500px; height: auto; margin: auto; }
-.zip-opening { padding: 24px; cursor: wait; }
-.utility-window:has(.zip-error) { width: min(880px, calc(100vw - 24px)); left: max(12px, calc(50% - 440px)); }
-.zip-error { padding: 32px 16px; text-align: center; }
-.zip-error p { margin: 20px 0; font: bold clamp(40px, 6vw, 80px)/1.15 Tahoma, sans-serif; }
-
-#reboot-screen { position: fixed; inset: 0; z-index: 2147483647; background: #000; cursor: none; }
+.utility-window:has(.zip-error) { width: min(360px, calc(100vw - 24px)); left: max(12px, calc(50% - 180px)); min-height: 120px; }
+.utility-window:has(.zip-error) .winbtns button:not([data-window-action="close"]), .utility-window:has(.zip-error) .resize-handle { display: none; }
+.zip-error { display: flex; align-items: center; gap: 20px; padding: 12px 8px; }
+.zip-error p { margin: 0; font: 13px/1.5 Tahoma, sans-serif; }

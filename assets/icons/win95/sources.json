@@ -118,5 +118,15 @@
     "file": "phone-32.png",
     "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/Dialer1_32x32_4.png",
     "sha256": "d5a7519257d23e5ccf0fd59081579d058a687d8ea83c0f4226631a8f27f83555"
+  },
+  {
+    "file": "error-16.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/User2_32x32_4.png",
+    "sha256": "1029729a686ec91a34474eabc1d0c648f8b78168485601258869af64834eaacb"
+  },
+  {
+    "file": "error-32.png",
+    "source": "https://raw.githubusercontent.com/React95/React95/301917334a127320b6c6e647c982d3d6f1d88a09/packages/icons/png/User2_32x32_4.png",
+    "sha256": "1029729a686ec91a34474eabc1d0c648f8b78168485601258869af64834eaacb"
   }
 ]

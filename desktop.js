@@ -2,7 +2,7 @@
   const stockIcons = {
     photos: 'photos', computer: 'computer', folder: 'folder',
     document: 'document', mail: 'mail', globe: 'browser', recycle: 'recycle-full',
-    notepad: 'notepad', windows: 'windows', speaker: 'speaker'
+    error: 'error', notepad: 'notepad', windows: 'windows', speaker: 'speaker'
   };
   const napsterIcon = '<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges"><path fill="#2872c8" stroke="#000" d="M5 14V7l7 4h8l7-4v7c4 16-26 16-22 0z"/><path fill="none" stroke="#000" stroke-width="3" d="M3 18v-5a13 13 0 0 1 26 0v5"/><path fill="#c0c0c0" stroke="#000" d="M1 14h5v10H1zm25 0h5v10h-5z"/><path fill="#fff" d="m9 16 5 2-4 2zm14 0-5 2 4 2z"/></svg>';
   const icon = (name, size = 32) => name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
@@ -96,7 +96,7 @@
     pages[id] = ['notepad', title + ' — Notepad', `${trashBack}<textarea class="notepad" aria-label="${title}" readonly>${content}</textarea>`];
   }
   pages['trash-fish'] = ['photos', 'A full fish skeleton.png', `${trashBack}<div class="trash-image"><img src="assets/fish-skeleton.png" alt="A full fish skeleton" width="500" height="500"></div>`];
-  pages['trash-mom'] = ['folder', 'Your mom.zip', '<div class="zip-opening" role="status">Opening Your mom.zip...</div><div class="zip-error" role="alert" hidden><h2>Error</h2><p>file too large!</p></div>'];
+  pages['trash-mom'] = ['error', 'Error', `<div class="zip-error" role="alert">${icon('error')}<p>file is too large!</p></div>`];
   // Keep the study independent of the shared desktop utility window.
   document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
   const bench = document.getElementById('bench-study');
@@ -203,28 +203,6 @@
     const [image, title, html] = pages[name];
     document.getElementById('utility-title').innerHTML = icon(image, 16) + title;
     document.getElementById('utility-content').innerHTML = html;
-    if (name === 'trash-mom') {
-      const opening = document.querySelector('.zip-opening');
-      const error = document.querySelector('.zip-error');
-      setTimeout(() => {
-        if (!opening.isConnected) return;
-        opening.hidden = true;
-        error.hidden = false;
-        setTimeout(() => {
-          if (document.getElementById('reboot-screen')) return;
-          pauseGame();
-          const blackout = document.createElement('div');
-          blackout.id = 'reboot-screen';
-          blackout.setAttribute('role', 'status');
-          blackout.setAttribute('aria-label', 'Restarting computer');
-          document.body.append(blackout);
-          for (const child of document.body.children) {
-            if (child !== blackout) child.inert = true;
-          }
-          setTimeout(() => window.location.replace(window.location.pathname), 3500);
-        }, 1200);
-      }, 800);
-    }
     if (name === 'notepad') {
       document.getElementById('notes').value = notes;
       window.TonyLeaderboard?.refreshNote();
