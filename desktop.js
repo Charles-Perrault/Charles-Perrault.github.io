@@ -89,13 +89,13 @@
   };
   const trashBack = '<div class="notepad-files"><button type="button" data-open="recycle">Back to Recycle Bin</button></div>';
   for (const [id, title, content] of [
-    ['trash-negative', 'Negative attitudes.txt', 'meanness, arrogance, being A CHUD, ego'],
     ['trash-distractions', 'Distractions.txt', 'Fortnite OG and Young Sheldon Youtube Shorts clips'],
     ['trash-laziness', 'Laziness.txt', "I'll put something here later"]
   ]) {
     pages[id] = ['notepad', title + ' — Notepad', `${trashBack}<textarea class="notepad" aria-label="${title}" readonly>${content}</textarea>`];
   }
   pages['trash-fish'] = ['photos', 'A full fish skeleton.png', `${trashBack}<div class="trash-image"><img src="assets/fish-skeleton.png" alt="A full fish skeleton" width="500" height="500"></div>`];
+  pages['trash-negative'] = ['error', 'Error', `<div class="zip-error" role="alert">${icon('error')}<p>file is empty</p></div>`];
   pages['trash-mom'] = ['error', 'Error', `<div class="zip-error" role="alert">${icon('error')}<p>file is too large!</p></div>`];
   // Keep the study independent of the shared desktop utility window.
   document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window" id="bench-study" aria-labelledby="bench-title" hidden><div class="titlebar"><div class="title" id="bench-title">${icon('bench')}Bench Press Study — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Bench Press Study">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Bench Press Study">□</button><button type="button" data-window-action="close" aria-label="Close Bench Press Study">×</button></div></div><div class="utility-content">${pages['bench-press-study'][2]}</div></section>`);
