@@ -112,7 +112,10 @@
     el('position').textContent = el('duration').textContent = '0:00';
     el('title').textContent = track.title; el('artist').textContent = track.artist;
     el('source').hidden = !track.source;
-    if (track.source) el('source').href = track.source; else el('source').removeAttribute('href');
+    if (track.source) {
+      el('source').href = track.source;
+      el('source').textContent = new URL(track.source).hostname.endsWith('youtube.com') ? 'YouTube ↗' : 'SoundCloud ↗';
+    } else el('source').removeAttribute('href');
     status('Loading…'); updateLike(); render(); drawWave(); waveform(track, index);
     if (autoplay) play();
   }
@@ -177,7 +180,7 @@
       try { url = new URL(track.src, document.baseURI); } catch { invalid++; return; }
       if (url.origin !== location.origin || !/^https?:$/.test(url.protocol)) { invalid++; return; }
       let source;
-      try { const credit = new URL(track.source); if (credit.protocol === 'https:' && (credit.hostname === 'soundcloud.com' || credit.hostname.endsWith('.soundcloud.com'))) source = credit.href; } catch {}
+      try { const credit = new URL(track.source); if (credit.protocol === 'https:' && (credit.hostname === 'soundcloud.com' || credit.hostname.endsWith('.soundcloud.com') || credit.hostname === 'www.youtube.com')) source = credit.href; } catch {}
       tracks.push({title: track.title, artist: typeof track.artist === 'string' ? track.artist : '', src: url.href, source, id: url.pathname});
     });
     render(); if (invalid) status('Some library entries could not be loaded.');
