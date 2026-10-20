@@ -168,7 +168,7 @@
   new ResizeObserver(drawWave).observe(el('wave'));
   window.addEventListener('pagehide', event => { if (!event.persisted) { audio.pause(); waveController?.abort(); objectURLs.forEach(url => URL.revokeObjectURL(url)); } });
   render();
-  fetch('music/library.json').then(response => { if (!response.ok) throw new Error(); return response.json(); }).then(library => {
+  fetch('music/library.json', {cache: 'no-cache'}).then(response => { if (!response.ok) throw new Error(); return response.json(); }).then(library => {
     if (!Array.isArray(library)) throw new Error();
     let invalid = 0;
     library.forEach(track => {
