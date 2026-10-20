@@ -10,6 +10,7 @@ button { font: inherit; color: inherit; }
 .desktop-icon:hover, .desktop-icon:focus-visible { background: #00008055; border: 1px dotted white; outline: none; }
 .desktop-icon:active { background: #000080; }
 .pixel-icon { width: 34px; height: 34px; flex: none; image-rendering: pixelated; filter: drop-shadow(1px 1px 0 #0005); }
+.napster-icon { object-fit: contain; image-rendering: auto; filter: none; }
 .game-icon { object-fit: contain; image-rendering: auto; }
 .desktop-icon .game-icon { width: 64px; height: 36px; }
 .desktop-caption { position: absolute; right: 24px; bottom: 20px; color: #fff; font-size: 11px; text-shadow: 1px 1px #24415f; letter-spacing: 1px; pointer-events: none; }
@@ -146,9 +147,8 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .music-menu button:hover, .music-menu a:hover { background: #000080; color: #fff; }
 #music-file-summary { margin-left: auto; color: #444; }
 .music-brand { min-height: 64px; display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 50px 5px; border: 2px inset #e9e9e9; background: #e9e9df; box-shadow: inset 0 0 0 2px #fff; }
-.music-brand .pixel-icon { width: 48px; height: 48px; flex-shrink: 0; }
-.music-brand strong { font: italic 900 43px Arial, sans-serif; letter-spacing: -3px; color: #112c4a; }
-.music-brand > span { align-self: flex-end; margin: 0 0 9px 4px; font-size: 10px; color: #2b4b68; }
+.music-brand .napster-logo { display: block; width: min(260px, 85%); height: auto; max-height: 76px; padding: 5px 0; object-fit: contain; flex-shrink: 0; }
+.music-brand { min-height: 84px; flex-shrink: 0; }
 .music-tabs { display: flex; flex-shrink: 0; gap: 3px; border-bottom: 1px solid #808080; padding: 0 4px; }
 .music-tabs button { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 95px; height: 24px; margin-bottom: -1px; }
 .music-tabs button[aria-pressed="true"] { background: #d5d5d5; border-color: #fff #404040 #c0c0c0 #fff; }
@@ -196,7 +196,6 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .music-controls button { height: 29px; min-width: 30px; flex: 1; padding: 2px; }
 #music-play { min-width: 40px; }
 .music-volume { display: flex; align-items: center; gap: 3px; min-height: 17px; font-size: 10px; }
-.music-volume a { white-space: nowrap; color: #000080; }
 .music-volume label { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 #music-volume { width: 65px; height: 12px; accent-color: #c0c0c0; margin: 0; }
 .music-queue-panel { display: flex; flex-direction: column; }
@@ -213,9 +212,7 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 @media (max-width: 480px) {
   .napster-window { top: 55px; height: calc(100dvh - 150px); max-height: none; }
   .music-brand { margin: 0 8px 3px; min-height: 48px; gap: 9px; }
-  .music-brand .pixel-icon { width: 34px; height: 34px; }
-  .music-brand strong { font-size: 34px; }
-  .music-brand > span { font-size: 9px; margin-left: 0; }
+  .music-brand .napster-logo { width: 200px; max-height: 56px; padding: 3px 0; }
   .music-tabs button { min-width: 0; flex: 1; padding: 2px 5px; }
   .music-search input { flex: 1; width: 0; }
   .music-list table { min-width: 620px; }
@@ -224,7 +221,6 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
   .music-queue-panel legend, #music-queue { display: none; }
   .music-controls { margin: 3px 0; }
   .music-controls button { height: 25px; }
-  .music-brand > span { display: none; }
 }
 .task-button { min-width: 0; flex: 0 1 220px; }
 

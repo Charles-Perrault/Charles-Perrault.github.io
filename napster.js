@@ -4,17 +4,16 @@
   win.classList.add('napster-window');
   const root = win.querySelector('.utility-content');
   root.className = 'utility-content napster-content';
-  const brandIcon = win.querySelector('.title .pixel-icon').outerHTML;
   root.innerHTML = `<div class="music-menubar"><details><summary>File</summary><div class="music-menu"><button type="button" id="music-open">Open files…</button><a href="?app=napster" target="_blank" rel="noopener">Open in new tab</a></div></details><span id="music-file-summary"></span></div>
     <input type="file" id="music-files" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" multiple hidden>
-    <div class="music-brand">${brandIcon}<strong>napster</strong><span>MP3 Library</span></div>
+    <div class="music-brand"><img class="napster-logo" src="assets/napster-logo-1999.svg" alt="Napster" width="1080" height="300"></div>
     <nav class="music-tabs" aria-label="Music library"><button type="button" data-music-view="all" aria-pressed="true"><img src="assets/icons/win95/folder-16.png" alt="">Library</button><button type="button" id="music-search-tab" aria-pressed="false"><span aria-hidden="true">⌕</span>Search</button><button type="button" data-music-view="liked" aria-pressed="false"><span aria-hidden="true">★</span>Hot List</button></nav>
     <div class="music-toolbar"><label class="music-search">Search <input id="music-search" type="search" placeholder="Title or artist" autocomplete="off"></label></div>
     <div class="music-library"><div class="music-list"><table><thead><tr><th scope="col">Filename</th><th scope="col">Filesize</th><th scope="col">Bitrate</th><th scope="col">Frequency</th><th scope="col">Length</th><th scope="col" aria-label="Liked">★</th></tr></thead><tbody id="music-tracks"></tbody></table><p id="music-empty">No tracks yet. Open files to listen.</p></div></div>
     <div class="music-player"><fieldset class="music-audio-panel"><legend>Internal Audio Controls</legend>
     <div class="music-now"><div><strong id="music-title">No track selected</strong><span id="music-artist"></span></div><button type="button" id="music-like" aria-label="Like current track" aria-pressed="false" disabled>☆</button></div>
     <div class="music-timeline"><canvas id="music-wave" height="64" aria-hidden="true"></canvas><label><input id="music-seek" type="range" min="0" max="1000" value="0" disabled aria-label="Playback position"></label><div class="music-times"><span id="music-position">0:00</span><span id="music-duration">0:00</span></div></div>
-    <div class="music-controls"><button type="button" id="music-prev" aria-label="Previous track" disabled>|◀</button><button type="button" id="music-stop" aria-label="Stop" disabled>■</button><button type="button" id="music-play" disabled>Play</button><button type="button" id="music-next" aria-label="Next track" disabled>▶|</button><button type="button" id="music-repeat" aria-label="Repeat track" aria-pressed="false">Repeat</button></div><div class="music-volume"><a id="music-source" target="_blank" rel="noopener noreferrer" hidden>SoundCloud ↗</a><label>Volume <input id="music-volume" type="range" min="0" max="100" value="80"></label></div></fieldset>
+    <div class="music-controls"><button type="button" id="music-prev" aria-label="Previous track" disabled>|◀</button><button type="button" id="music-stop" aria-label="Stop" disabled>■</button><button type="button" id="music-play" disabled>Play</button><button type="button" id="music-next" aria-label="Next track" disabled>▶|</button><button type="button" id="music-repeat" aria-label="Repeat track" aria-pressed="false">Repeat</button></div><div class="music-volume"><label>Volume <input id="music-volume" type="range" min="0" max="100" value="80"></label></div></fieldset>
     <fieldset class="music-queue-panel"><legend>Playlist Control Panel</legend><ol id="music-queue" aria-label="Playlist"></ol><div class="music-queue-controls"><button type="button" id="music-shuffle" aria-pressed="false">Random Play</button><button type="button" id="music-continuous" aria-pressed="true">Continuous Play</button></div></fieldset></div>
     <div class="music-statusbar"><div class="music-status" id="music-status" role="status">Ready</div><span id="music-library-summary"></span></div><audio id="music-audio" preload="metadata"></audio>`;
   const el = id => document.getElementById('music-' + id);
@@ -135,12 +134,6 @@
     peaks = null; el('seek').value = 0; el('seek').disabled = true;
     el('position').textContent = el('duration').textContent = '0:00';
     el('title').textContent = track.title; el('artist').textContent = track.artist;
-    el('source').hidden = !track.source;
-    if (track.source) {
-      el('source').href = track.source;
-      const host = new URL(track.source).hostname;
-      el('source').textContent = host.endsWith('youtube.com') ? 'YouTube ↗' : host.endsWith('.bandcamp.com') ? 'Bandcamp ↗' : 'SoundCloud ↗';
-    } else el('source').removeAttribute('href');
     status('Loading…'); updateLike(); render(); drawWave(); waveform(track, index);
     if (autoplay) play();
   }
@@ -213,11 +206,9 @@
       let url;
       try { url = new URL(track.src, document.baseURI); } catch { invalid++; return; }
       if (url.origin !== location.origin || !/^https?:$/.test(url.protocol)) { invalid++; return; }
-      let source;
-      try { const credit = new URL(track.source); if (credit.protocol === 'https:' && (credit.hostname === 'soundcloud.com' || credit.hostname.endsWith('.soundcloud.com') || credit.hostname === 'www.youtube.com' || credit.hostname.endsWith('.bandcamp.com'))) source = credit.href; } catch {}
       const metadata = {};
       for (const key of ['bytes', 'duration', 'bitrate', 'sampleRate']) if (Number.isFinite(track[key]) && track[key] > 0) metadata[key] = track[key];
-      tracks.push({title: track.title, artist: typeof track.artist === 'string' ? track.artist : '', src: url.href, source, ...metadata, id: url.pathname});
+      tracks.push({title: track.title, artist: typeof track.artist === 'string' ? track.artist : '', src: url.href, ...metadata, id: url.pathname});
     });
     render(); if (invalid) status('Some library entries could not be loaded.');
   }).catch(() => status('Shared library unavailable. You can still open local files.'));

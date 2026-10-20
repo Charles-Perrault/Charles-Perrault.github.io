@@ -4,7 +4,7 @@
     document: 'document', mail: 'mail', globe: 'browser', recycle: 'recycle-full',
     error: 'error', notepad: 'notepad', windows: 'windows', speaker: 'speaker'
   };
-  const napsterIcon = '<svg class="pixel-icon" aria-hidden="true" viewBox="0 0 32 32" shape-rendering="crispEdges"><path fill="#2872c8" stroke="#000" d="M5 14V7l7 4h8l7-4v7c4 16-26 16-22 0z"/><path fill="none" stroke="#000" stroke-width="3" d="M3 18v-5a13 13 0 0 1 26 0v5"/><path fill="#c0c0c0" stroke="#000" d="M1 14h5v10H1zm25 0h5v10h-5z"/><path fill="#fff" d="m9 16 5 2-4 2zm14 0-5 2 4 2z"/></svg>';
+  const napsterIcon = '<img class="pixel-icon napster-icon" src="assets/napster-icon-1999.svg" alt="" width="32" height="32">';
   const icon = (name, size = 32) => name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
   const portfolio = document.querySelector('body > .window');
   portfolio.id = 'portfolio';
