@@ -4,17 +4,24 @@
   win.classList.add('napster-window');
   const root = win.querySelector('.utility-content');
   root.className = 'utility-content napster-content';
-  root.innerHTML = `<div class="music-toolbar"><button type="button" id="music-open">Open files…</button><input type="file" id="music-files" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" multiple hidden><a class="standalone-link" href="?app=napster" target="_blank" rel="noopener">Open in new tab</a><label class="music-search">Search <input id="music-search" type="search" placeholder="Title or artist" autocomplete="off"></label></div>
-    <div class="music-library"><nav class="music-sidebar" aria-label="Music library"><button type="button" data-music-view="all" aria-pressed="true">All tracks</button><button type="button" data-music-view="liked" aria-pressed="false">Liked tracks</button></nav><div class="music-list"><table><thead><tr><th scope="col">Play</th><th scope="col">Title</th><th scope="col">Artist</th><th scope="col">Like</th></tr></thead><tbody id="music-tracks"></tbody></table><p id="music-empty">No tracks yet. Open files to listen.</p></div></div>
-    <div class="music-now"><div><strong id="music-title">No track selected</strong><span id="music-artist"></span></div><a id="music-source" target="_blank" rel="noopener noreferrer" hidden>SoundCloud ↗</a><button type="button" id="music-like" aria-label="Like current track" aria-pressed="false" disabled>♡</button></div>
-    <div class="music-timeline"><canvas id="music-wave" height="64" aria-hidden="true"></canvas><label>Position <input id="music-seek" type="range" min="0" max="1000" value="0" disabled aria-label="Playback position"></label><div class="music-times"><span id="music-position">0:00</span><span id="music-duration">0:00</span></div></div>
-    <div class="music-controls"><button type="button" id="music-prev" aria-label="Previous track" disabled>|◀</button><button type="button" id="music-play" disabled>Play</button><button type="button" id="music-next" aria-label="Next track" disabled>▶|</button><button type="button" id="music-shuffle" aria-pressed="false">Shuffle</button><button type="button" id="music-repeat" aria-pressed="false">Repeat</button><label>Volume <input id="music-volume" type="range" min="0" max="100" value="80"></label></div>
-    <div class="music-status" id="music-status" role="status">Ready</div><audio id="music-audio" preload="metadata"></audio>`;
+  const brandIcon = win.querySelector('.title .pixel-icon').outerHTML;
+  root.innerHTML = `<div class="music-menubar"><details><summary>File</summary><div class="music-menu"><button type="button" id="music-open">Open files…</button><a href="?app=napster" target="_blank" rel="noopener">Open in new tab</a></div></details><span id="music-file-summary"></span></div>
+    <input type="file" id="music-files" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" multiple hidden>
+    <div class="music-brand">${brandIcon}<strong>napster</strong><span>MP3 Library</span></div>
+    <nav class="music-tabs" aria-label="Music library"><button type="button" data-music-view="all" aria-pressed="true"><img src="assets/icons/win95/folder-16.png" alt="">Library</button><button type="button" id="music-search-tab" aria-pressed="false"><span aria-hidden="true">⌕</span>Search</button><button type="button" data-music-view="liked" aria-pressed="false"><span aria-hidden="true">★</span>Hot List</button></nav>
+    <div class="music-toolbar"><label class="music-search">Search <input id="music-search" type="search" placeholder="Title or artist" autocomplete="off"></label></div>
+    <div class="music-library"><div class="music-list"><table><thead><tr><th scope="col">Filename</th><th scope="col">Filesize</th><th scope="col">Bitrate</th><th scope="col">Frequency</th><th scope="col">Length</th><th scope="col" aria-label="Liked">★</th></tr></thead><tbody id="music-tracks"></tbody></table><p id="music-empty">No tracks yet. Open files to listen.</p></div></div>
+    <div class="music-player"><fieldset class="music-audio-panel"><legend>Internal Audio Controls</legend>
+    <div class="music-now"><div><strong id="music-title">No track selected</strong><span id="music-artist"></span></div><button type="button" id="music-like" aria-label="Like current track" aria-pressed="false" disabled>☆</button></div>
+    <div class="music-timeline"><canvas id="music-wave" height="64" aria-hidden="true"></canvas><label><input id="music-seek" type="range" min="0" max="1000" value="0" disabled aria-label="Playback position"></label><div class="music-times"><span id="music-position">0:00</span><span id="music-duration">0:00</span></div></div>
+    <div class="music-controls"><button type="button" id="music-prev" aria-label="Previous track" disabled>|◀</button><button type="button" id="music-stop" aria-label="Stop" disabled>■</button><button type="button" id="music-play" disabled>Play</button><button type="button" id="music-next" aria-label="Next track" disabled>▶|</button><button type="button" id="music-repeat" aria-label="Repeat track" aria-pressed="false">Repeat</button></div><div class="music-volume"><a id="music-source" target="_blank" rel="noopener noreferrer" hidden>SoundCloud ↗</a><label>Volume <input id="music-volume" type="range" min="0" max="100" value="80"></label></div></fieldset>
+    <fieldset class="music-queue-panel"><legend>Playlist Control Panel</legend><ol id="music-queue" aria-label="Playlist"></ol><div class="music-queue-controls"><button type="button" id="music-shuffle" aria-pressed="false">Random Play</button><button type="button" id="music-continuous" aria-pressed="true">Continuous Play</button></div></fieldset></div>
+    <div class="music-statusbar"><div class="music-status" id="music-status" role="status">Ready</div><span id="music-library-summary"></span></div><audio id="music-audio" preload="metadata"></audio>`;
   const el = id => document.getElementById('music-' + id);
   const audio = el('audio');
   audio.volume = 0.8;
   const tracks = [], objectURLs = [];
-  let current = -1, view = 'all', shuffle = false, repeat = false, peaks = null, waveController;
+  let current = -1, view = 'all', shuffle = false, repeat = false, continuous = true, stopped = false, peaks = null, waveController;
   let liked;
   try { const saved = JSON.parse(localStorage.getItem('napster-likes-v1') || '[]'); liked = new Set(Array.isArray(saved) ? saved.filter(x => typeof x === 'string') : []); }
   catch { liked = new Set(); }
@@ -30,7 +37,7 @@
   function updateLike() {
     const active = current >= 0 && liked.has(tracks[current].id);
     el('like').disabled = current < 0;
-    el('like').textContent = active ? '♥' : '♡';
+    el('like').textContent = active ? '★' : '☆';
     el('like').setAttribute('aria-pressed', String(active));
   }
   function render() {
@@ -45,11 +52,16 @@
       play.setAttribute('aria-label', `${index === current && !audio.paused ? 'Pause' : 'Play'} ${track.title}`);
       play.addEventListener('click', () => index === current ? togglePlay() : select(index));
       const like = document.createElement('button'); like.type = 'button';
-      like.textContent = liked.has(track.id) ? '♥' : '♡';
+      like.textContent = liked.has(track.id) ? '★' : '☆';
       like.setAttribute('aria-label', `Like ${track.title}`);
       like.setAttribute('aria-pressed', String(liked.has(track.id)));
       like.addEventListener('click', () => toggleLike(index));
-      for (const value of [play, track.title, track.artist, like]) {
+      const filename = document.createElement('span'); filename.className = 'music-filename';
+      filename.textContent = track.file ? track.file.name : `${track.artist} - ${track.title}.mp3`;
+      const fileCell = document.createElement('td'); fileCell.append(play, filename); row.append(fileCell);
+      row.addEventListener('dblclick', () => select(index));
+      const format = value => Number.isFinite(value) && value > 0 ? Math.round(value).toLocaleString('en-US') : '—';
+      for (const value of [format(track.bytes), format(track.bitrate), format(track.sampleRate), track.duration ? time(track.duration) : '—', like]) {
         const cell = document.createElement('td');
         if (typeof value === 'string') cell.textContent = value; else cell.append(value);
         row.append(cell);
@@ -60,6 +72,17 @@
     el('empty').textContent = tracks.length ? 'No matching tracks.' : 'No tracks yet. Open files to listen.';
     el('play').disabled = !tracks.length;
     el('prev').disabled = el('next').disabled = tracks.length < 2;
+    el('stop').disabled = current < 0;
+    el('file-summary').textContent = `${tracks.length} files`;
+    el('library-summary').textContent = `${tracks.length} songs in library`;
+    const queue = el('queue'); queue.replaceChildren();
+    tracks.slice(Math.max(0, current + 1), Math.max(0, current + 1) + 8).forEach((track, offset) => {
+      const item = document.createElement('li'), button = document.createElement('button');
+      const index = Math.max(0, current + 1) + offset;
+      button.type = 'button'; button.textContent = `${track.artist} - ${track.title}`;
+      button.addEventListener('click', () => select(index));
+      item.append(button); queue.append(item);
+    });
   }
   function drawWave() {
     const canvas = el('wave'), width = canvas.clientWidth;
@@ -68,11 +91,11 @@
     canvas.height = 64 * (window.devicePixelRatio || 1);
     const ctx = canvas.getContext('2d');
     ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, 64);
+    ctx.fillStyle = '#071923'; ctx.fillRect(0, 0, width, 64);
     if (!peaks) { ctx.fillStyle = '#808080'; ctx.fillRect(0, 31, width, 1); return; }
     const progress = Number.isFinite(audio.duration) ? audio.currentTime / audio.duration : 0;
     peaks.forEach((peak, i) => {
-      ctx.fillStyle = i / peaks.length < progress ? '#000080' : '#808080';
+      ctx.fillStyle = i / peaks.length < progress ? '#8ee5f4' : '#36748a';
       const height = Math.max(1, peak * 58);
       ctx.fillRect(i * width / peaks.length, (64 - height) / 2, Math.max(1, width / peaks.length - 1), height);
     });
@@ -102,6 +125,7 @@
     finally { if (context) context.close().catch(() => {}); }
   }
   async function play() {
+    stopped = false;
     try { await audio.play(); } catch { status('Playback could not start. Try Play or choose another file.'); }
   }
   function select(index, autoplay = true) {
@@ -131,13 +155,15 @@
     const index = shuffle && tracks.length > 1 ? (current + 1 + Math.floor(Math.random() * (tracks.length - 1))) % tracks.length : (Math.max(0, current) + direction + tracks.length) % tracks.length;
     select(index);
   }
-  el('open').addEventListener('click', () => el('files').click());
+  el('open').addEventListener('click', () => { el('open').closest('details').open = false; el('files').click(); });
+  document.addEventListener('pointerdown', event => { if (!event.target.closest('.music-menubar details')) root.querySelector('.music-menubar details').open = false; });
+  root.addEventListener('keydown', event => { if (event.key === 'Escape') root.querySelector('.music-menubar details').open = false; });
   el('files').addEventListener('change', () => {
     let added = 0;
     for (const file of el('files').files) {
       if (!file.type.startsWith('audio/') && !/\.(mp3|wav|ogg|m4a|flac|aac|opus|aiff?)$/i.test(file.name)) continue;
       const src = URL.createObjectURL(file); objectURLs.push(src);
-      tracks.push({title: file.name.replace(/\.[^.]+$/, ''), artist: 'Local file', src, file, id: `local:${file.name}:${file.size}:${file.lastModified}`}); added++;
+      tracks.push({title: file.name.replace(/\.[^.]+$/, ''), artist: 'Local file', src, file, bytes: file.size, id: `local:${file.name}:${file.size}:${file.lastModified}`}); added++;
     }
     render(); status(added ? `${added} file${added === 1 ? '' : 's'} added for this session. Nothing uploaded.` : 'Choose an audio file.');
     el('files').value = '';
@@ -146,26 +172,33 @@
   root.querySelectorAll('[data-music-view]').forEach(button => button.addEventListener('click', () => {
     view = button.dataset.musicView;
     root.querySelectorAll('[data-music-view]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    el('search-tab').setAttribute('aria-pressed', 'false');
     render();
   }));
+  el('search-tab').addEventListener('click', () => {
+    view = 'all'; root.querySelectorAll('[data-music-view]').forEach(item => item.setAttribute('aria-pressed', 'false'));
+    el('search-tab').setAttribute('aria-pressed', 'true'); el('search').focus(); render();
+  });
   el('play').addEventListener('click', togglePlay);
   el('prev').addEventListener('click', () => advance(-1));
   el('next').addEventListener('click', () => advance(1));
+  el('stop').addEventListener('click', () => { stopped = true; audio.pause(); audio.currentTime = 0; status('Stopped'); });
   el('like').addEventListener('click', () => toggleLike(current));
   el('shuffle').addEventListener('click', () => { shuffle = !shuffle; el('shuffle').setAttribute('aria-pressed', String(shuffle)); });
   el('repeat').addEventListener('click', () => { repeat = !repeat; el('repeat').setAttribute('aria-pressed', String(repeat)); });
+  el('continuous').addEventListener('click', () => { continuous = !continuous; el('continuous').setAttribute('aria-pressed', String(continuous)); });
   el('volume').addEventListener('input', () => { audio.volume = Number(el('volume').value) / 100; });
   el('seek').addEventListener('input', () => { if (Number.isFinite(audio.duration)) audio.currentTime = Number(el('seek').value) / 1000 * audio.duration; });
   audio.addEventListener('loadedmetadata', () => { el('duration').textContent = time(audio.duration); el('seek').disabled = !Number.isFinite(audio.duration); status('Ready'); });
   audio.addEventListener('timeupdate', () => { el('position').textContent = time(audio.currentTime); el('seek').value = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.currentTime / audio.duration * 1000 : 0; drawWave(); });
   audio.addEventListener('play', () => { el('play').textContent = 'Pause'; status('Playing'); render(); });
-  audio.addEventListener('pause', () => { el('play').textContent = 'Play'; if (current >= 0) status('Paused'); render(); });
+  audio.addEventListener('pause', () => { el('play').textContent = 'Play'; if (current >= 0) status(stopped ? 'Stopped' : 'Paused'); render(); });
   audio.addEventListener('waiting', () => status('Buffering…'));
   audio.addEventListener('playing', () => status('Playing'));
   audio.addEventListener('error', () => status('Could not play this file. Check the file or its audio format.'));
   audio.addEventListener('ended', () => {
     if (repeat) { audio.currentTime = 0; play(); }
-    else if (shuffle || current < tracks.length - 1) advance(1);
+    else if (continuous && (shuffle || current < tracks.length - 1)) advance(1);
     else { status('Finished'); el('play').textContent = 'Play'; }
   });
   win.querySelector('[data-window-action="close"]').addEventListener('click', () => audio.pause());
@@ -182,7 +215,9 @@
       if (url.origin !== location.origin || !/^https?:$/.test(url.protocol)) { invalid++; return; }
       let source;
       try { const credit = new URL(track.source); if (credit.protocol === 'https:' && (credit.hostname === 'soundcloud.com' || credit.hostname.endsWith('.soundcloud.com') || credit.hostname === 'www.youtube.com' || credit.hostname.endsWith('.bandcamp.com'))) source = credit.href; } catch {}
-      tracks.push({title: track.title, artist: typeof track.artist === 'string' ? track.artist : '', src: url.href, source, id: url.pathname});
+      const metadata = {};
+      for (const key of ['bytes', 'duration', 'bitrate', 'sampleRate']) if (Number.isFinite(track[key]) && track[key] > 0) metadata[key] = track[key];
+      tracks.push({title: track.title, artist: typeof track.artist === 'string' ? track.artist : '', src: url.href, source, ...metadata, id: url.pathname});
     });
     render(); if (invalid) status('Some library entries could not be loaded.');
   }).catch(() => status('Shared library unavailable. You can still open local files.'));
