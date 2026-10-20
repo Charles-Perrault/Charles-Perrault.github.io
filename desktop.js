@@ -301,12 +301,12 @@
   });
   document.getElementById('print-study').addEventListener('click', () => window.print());
   const standaloneApp = new URLSearchParams(location.search).get('app');
-  const standaloneWindow = standaloneApp === 'bench-press-study' ? bench : standaloneApp === 'photos' ? placeholderApps.get('photo-carousel').win : null;
+  const standaloneWindow = standaloneApp === 'bench-press-study' ? bench : standaloneApp === 'photos' ? placeholderApps.get('photo-carousel').win : standaloneApp === 'napster' ? placeholderApps.get('napster').win : null;
   if (standaloneWindow) {
     document.body.classList.add('standalone-mode');
     standaloneWindow.classList.add('standalone-window', 'maximized');
     focusWindow(standaloneWindow);
-    document.title = `${standaloneApp === 'photos' ? 'Photos' : 'Bench Press Study'} — Charles Perrault`;
+    document.title = `${standaloneApp === 'photos' ? 'Photos' : standaloneApp === 'napster' ? 'Napster' : 'Bench Press Study'} — Charles Perrault`;
   }
   if (new URLSearchParams(location.search).get('notepad') === 'leaderboard') document.querySelector('[data-open="notepad"]').click();
 })();
