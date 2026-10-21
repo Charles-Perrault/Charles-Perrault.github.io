@@ -299,3 +299,7 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .webring a { color: #000080; white-space: nowrap; }
 @media (max-width: 420px) { .webring { right: 4px; gap: 8px; padding: 5px 6px; max-width: calc((100vw - 8px) / 1.5); font-size: 10px; } }
 @media print { .webring { display: none !important; } }
+
+.study-doc-list + .study-doc-list, .study-doc-paragraph + .study-doc-paragraph, .study-doc-list + .study-doc-paragraph, .study-doc-paragraph + .study-doc-list { margin-top: 12px; }
+.study-results-manuscript { margin-bottom: 12px; }
+.word-paper .study-results-manuscript .study-doc-list { margin-top: 0; }

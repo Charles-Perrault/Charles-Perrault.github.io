@@ -100,55 +100,21 @@
     return zipLibrary;
   }
 
-  // Preserve the original Word document and replace just its Results paragraphs
-  // so downloads and PDFs include the figures currently displayed on the page.
+  // Preserve the Word template styles and export the displayed Google Doc text
+  // together with the live figures, so there is only one manuscript to edit.
   async function downloadWord(link) {
     const originalLabel = link.textContent;
     if (link.getAttribute('aria-busy') === 'true') return;
     link.setAttribute('aria-busy', 'true');
     link.textContent = 'Preparing Word document…';
     try {
-      await refresh(true);
-      const data = results;
+      await Promise.all([refresh(true), window.BenchStudyDocument.refresh(true)]);
       const [zip, response] = await Promise.all([loadZipLibrary(), fetch(link.href)]);
       if (!response.ok) throw new Error('Document template unavailable');
       const files = zip.unzipSync(new Uint8Array(await response.arrayBuffer()));
       const xml = new DOMParser().parseFromString(zip.strFromU8(files['word/document.xml']), 'application/xml');
       if (xml.getElementsByTagName('parsererror').length) throw new Error('Invalid document template');
-      const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
-      const body = xml.getElementsByTagNameNS(ns, 'body')[0];
-      const text = paragraph => Array.from(paragraph.getElementsByTagNameNS(ns, 't'), node => node.textContent).join('');
-      const paragraphs = Array.from(body.children);
-      const start = paragraphs.findIndex(paragraph => text(paragraph) === 'IV. Results');
-      const end = paragraphs.findIndex(paragraph => text(paragraph) === 'V. Reflection');
-      if (start < 0 || end <= start) throw new Error('Results section not found');
-      const element = (name, attributes = {}) => {
-        const node = xml.createElementNS(ns, `w:${name}`);
-        for (const [key, value] of Object.entries(attributes)) node.setAttributeNS(ns, `w:${key}`, value);
-        return node;
-      };
-      const paragraph = (value, level = -1, bold = false) => {
-        const p = element('p'), properties = element('pPr');
-        properties.append(element('pStyle', {val: level < 0 ? 'Normal' : level === 0 ? 'ListBullet' : 'ListBullet2'}));
-        if (level >= 0) properties.append(element('ind', {left: String(360 * (level + 1)), hanging: '360'}));
-        p.append(properties);
-        const run = element('r');
-        if (bold) { const style = element('rPr'); style.append(element('b')); run.append(style); }
-        const content = element('t'); content.textContent = value; run.append(content); p.append(run);
-        return p;
-      };
-      const rows = [
-        ['WORK IN PROGRESS'],
-        ['Starting one-rep maxes', 0, true], ['Charlie: 165 lbs', 1], ['Lucas: 130 lbs', 1],
-        ['Current highest one-rep maxes', 0, true], [`Charlie: ${format(data.current.charlie)}`, 1], [`Lucas: ${format(data.current.lucas)}`, 1],
-        ['Projected maxes by 11/22/2026 (very accurate)', 0, true], [`Charlie: ${format(data.projected.charlie)}`, 1], [`Lucas: ${format(data.projected.lucas)}`, 1]
-      ];
-      for (let index = start + 1; index < end; index++) paragraphs[index].remove();
-      for (const row of rows) body.insertBefore(paragraph(...row), paragraphs[end]);
-      const announcement = Array.from(body.children).find(p => text(p) === 'Results coming November 22nd!');
-      if (announcement) Array.from(announcement.getElementsByTagNameNS(ns, 't')).forEach((node, index) => {
-        node.textContent = index === 0 ? 'Full results coming November 22nd!' : '';
-      });
+      window.BenchStudyDocument.writeWordBody(xml);
       files['word/document.xml'] = zip.strToU8(new XMLSerializer().serializeToString(xml));
       const blob = new Blob([zip.zipSync(files)], {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
       const url = URL.createObjectURL(blob), download = document.createElement('a');
