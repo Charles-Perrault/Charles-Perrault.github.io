@@ -202,8 +202,15 @@
     const cached = JSON.parse(localStorage.getItem(cacheKey));
     if (cached?.documentId === documentId && typeof cached.updatedAt === 'number' && cached.updatedAt <= Date.now() + 60000) render(parse(cached.html));
   } catch { /* Use the bundled manuscript until the first live read succeeds. */ }
-  document.addEventListener('bench-study-open', () => refresh());
-  document.addEventListener('visibilitychange', () => refresh());
+  // A quick edit in another tab/window must not be swallowed by the periodic
+  // one-minute throttle, including a page restored from the back/forward cache.
+  const refreshOnReturn = () => {
+    if (!document.hidden && !study.hidden) refresh(true);
+  };
+  document.addEventListener('bench-study-open', refreshOnReturn);
+  document.addEventListener('visibilitychange', refreshOnReturn);
+  window.addEventListener('focus', refreshOnReturn);
+  window.addEventListener('pageshow', refreshOnReturn);
   setInterval(() => refresh(), 5 * 60 * 1000);
   refresh();
 })();
