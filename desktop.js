@@ -14,7 +14,7 @@
   const shortcuts = [
     ['computer', 'My Computer', 'computer'], ['globe', 'About Me', 'portfolio'],
     ['notepad', 'Notepad', 'notepad'], ['mail', 'Email', 'mailto:cbperrault@gmail.com'],
-    ['document', 'Resume', 'Charles_Perrault_Resume_v1.2.2.pdf'],
+    ['document', 'Resume', 'Charles_Perrault_Resume_v1.2.3.pdf'],
     ['globe', 'GitHub', 'https://github.com/charles-perrault'],
     ['recycle', 'Recycle Bin', 'recycle'], ['skateboard', 'Tony Eagle', 'tony-eagle'],
     ['bench', 'Bench Press Study', 'bench-press-study'],
