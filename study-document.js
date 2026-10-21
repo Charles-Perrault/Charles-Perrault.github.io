@@ -194,10 +194,6 @@
   }
 
   window.BenchStudyDocument = {refresh, writeWordBody};
-  const toolbar = study.querySelector('.word-toolbar');
-  const edit = document.createElement('a');
-  edit.href = sourceUrl; edit.target = '_blank'; edit.rel = 'noopener noreferrer'; edit.textContent = 'Edit in Google Docs';
-  toolbar.insertBefore(edit, toolbar.querySelector('[download]'));
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey));
     if (cached?.documentId === documentId && typeof cached.updatedAt === 'number' && cached.updatedAt <= Date.now() + 60000) render(parse(cached.html));
