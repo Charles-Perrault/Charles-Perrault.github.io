@@ -2500,16 +2500,6 @@
     "sampleRate": 48000
   },
   {
-    "title": "Hard Sun",
-    "artist": "Eddie Vedder",
-    "src": "music/soundcloud-67771515.mp3",
-    "source": "https://soundcloud.com/diegobepe/eddie-vedder-hard-sun",
-    "bytes": 2695978,
-    "duration": 112.3,
-    "bitrate": 192,
-    "sampleRate": 44100
-  },
-  {
     "title": "Ace and Nicky",
     "artist": "Nine Vicious Vault",
     "src": "music/youtube-_U4z8Ra0v0Y.mp3",
@@ -2636,6 +2626,26 @@
     "source": "https://www.youtube.com/watch?v=C2qpuKnK6gI",
     "bytes": 3909164,
     "duration": 195.43,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "Fuck Prom",
+    "artist": "Nettspend",
+    "src": "music/youtube-Ay93WAHjrUQ.mp3",
+    "source": "https://www.youtube.com/watch?v=Ay93WAHjrUQ",
+    "bytes": 3158924,
+    "duration": 157.92000000000002,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "California Crazy",
+    "artist": "Nettspend",
+    "src": "music/youtube-0E_qdqQYOtA.mp3",
+    "source": "https://www.youtube.com/watch?v=0E_qdqQYOtA",
+    "bytes": 1793804,
+    "duration": 89.66,
     "bitrate": 160,
     "sampleRate": 48000
   }
