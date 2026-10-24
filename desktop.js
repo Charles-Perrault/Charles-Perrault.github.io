@@ -5,7 +5,7 @@
     error: 'error', notepad: 'notepad', windows: 'windows', speaker: 'speaker'
   };
   const napsterIcon = '<img class="pixel-icon napster-icon" src="assets/napster-icon-1999.svg" alt="" width="32" height="32">';
-  const icon = (name, size = 32) => name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
+  const icon = (name, size = 32) => name === 'magnet' ? '<img class="pixel-icon magnet-icon" src="assets/magnet-implant.png" alt="" width="32" height="40">' : name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
   const portfolio = document.querySelector('body > .window');
   portfolio.id = 'portfolio';
   portfolio.setAttribute('aria-label', 'Charles Perrault — Home Page');
@@ -18,6 +18,7 @@
     ['globe', 'GitHub', 'https://github.com/charles-perrault'],
     ['recycle', 'Recycle Bin', 'recycle'], ['skateboard', 'Tony Eagle', 'tony-eagle'],
     ['bench', 'Bench Press Study', 'bench-press-study'],
+    ['magnet', 'BADASS MAGNET IMPLANT!', 'magnet-implant'],
     ['napster', 'Napster', 'napster'], ['photos', 'Photos', 'photo-carousel'], ['gurt', 'gurt', 'gurt']
   ];
   function shortcut([image, label, action], className) {
@@ -25,7 +26,7 @@
     return link ? `<a class="${className}" href="${action}" ${action.startsWith('mailto:') ? '' : 'target="_blank" rel="noopener noreferrer"'}>${icon(image)}<span>${label}</span></a>` : `<button type="button" class="${className}" data-open="${action}">${icon(image)}<span>${label}</span></button>`;
   }
   document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav></main>`);
-  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['gurt', 'gurt', 'gurt'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cperraul@purdue.edu'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows', 16)}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe', 16)}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker', 16)}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['magnet', 'BADASS MAGNET IMPLANT!', 'magnet-implant'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['gurt', 'gurt', 'gurt'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cperraul@purdue.edu'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows', 16)}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe', 16)}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker', 16)}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
   document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=4" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
   document.getElementById('utility-task').insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="game-task" aria-pressed="false" hidden>${icon('skateboard')}<span>Tony Eagle</span></button>`);
   const game = document.getElementById('tony-eagle');
@@ -173,8 +174,22 @@
       showPhoto(event.key === 'ArrowLeft' ? -1 : 1);
     }
   });
-  const windows = [portfolio, utility, game, bench, ...Array.from(placeholderApps.values(), app => app.win)];
-  const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
+
+  document.body.insertAdjacentHTML('beforeend', `<section class="window utility-window word-window magnet-window" id="magnet-implant" aria-labelledby="magnet-title" hidden><div class="titlebar"><div class="title" id="magnet-title">${icon('magnet')}BADASS MAGNET IMPLANT! — Microsoft Word</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize BADASS MAGNET IMPLANT!">_</button><button type="button" data-window-action="maximize" aria-label="Maximize BADASS MAGNET IMPLANT!">□</button><button type="button" data-window-action="close" aria-label="Close BADASS MAGNET IMPLANT!">×</button></div></div><div class="utility-content"><div class="word-toolbar"><span>Times New Roman</span><span>12</span><a class="standalone-link" href="?app=magnet-implant" target="_blank" rel="noopener noreferrer">Open in new tab</a><a href="https://docs.google.com/document/d/1kmoxCofYkDaY8u0isb6GIisNRgbQ5PrQeXvj72CseXs/export?format=docx&amp;tab=t.0">Download Word document</a></div><div class="magnet-tabs" role="tablist" aria-label="Document tabs"><button type="button" role="tab" id="magnet-journal-tab" aria-controls="magnet-journal-panel" aria-selected="true">Journal</button><button type="button" role="tab" id="magnet-procedure-tab" aria-controls="magnet-procedure-panel" aria-selected="false" tabindex="-1">Procedure</button></div><div class="word-workspace"><article class="word-paper" id="magnet-journal-panel" role="tabpanel" aria-labelledby="magnet-journal-tab" tabindex="0"><div id="magnet-journal-content"><p>10/23/2026</p><p>I&#39;m 100% sure now that I&#39;m getting the implant. Yesterday I founded Clear Week<span class="magnet-trademark">™</span> to make $70. It could have been worth perhaps trillions but I&#39;ve decided not to pursue that unicorn because I realized I already have the $200 required to purchase the magnet if I count the cash I have at home. I know I&#39;m getting the m0422a, but I don&#39;t know when I&#39;ll be able to implant the magnet, because my mom is scared to death and I&#39;ll need to convince her I can do the procedure safely before I can proceed. I&#39;ll probably buy the magnet within the next week, but I need to do more research first, because I&#39;ll need to get my hands on some local anesthetic and source sterile surgical tools. I&#39;ll also need to come up with a place to do it (I feel like my Owen Hall dorm is a bit too grimy for surgery) and I&#39;ll need to make sure I can actually trust Lucas Flowers to perform the surgery (actually I&#39;m now realizing I&#39;m not 100% sure he&#39;s even agreed to do it). Anyway, the other tab will contain the procedure when I get closer to the operation date. Also today during the Purdue Hack Night checkpoint I told everyone I&#39;d be implanting a magnet so no backing out now!</p><p><br></p></div></article><article class="word-paper" id="magnet-procedure-panel" role="tabpanel" aria-labelledby="magnet-procedure-tab" tabindex="0" hidden><p>Work in progress...</p></article></div><div class="word-status">BADASS MAGNET IMPLANT!</div></div></section>`);
+  const magnet = document.getElementById('magnet-implant');
+  utilityTask.insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="magnet-task" aria-pressed="false" hidden>${icon('magnet')}<span>BADASS MAGNET IMPLANT!</span></button>`);
+  const magnetTask = document.getElementById('magnet-task');
+  function openMagnet() {
+    magnetTask.hidden = false; magnetTask.setAttribute('aria-pressed', 'true');
+    focusWindow(magnet);
+    document.dispatchEvent(new Event('magnet-journal-open'));
+  }
+  magnetTask.addEventListener('click', () => {
+    if (magnet.hidden) openMagnet();
+    else { magnet.hidden = true; magnetTask.setAttribute('aria-pressed', 'false'); }
+  });
+  const windows = [portfolio, utility, game, bench, magnet, ...Array.from(placeholderApps.values(), app => app.win)];
+  const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], [magnet, magnetTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
   let notes = '';
   document.addEventListener('input', e => { if (e.target.id === 'notes') notes = e.target.value; });
   document.addEventListener('click', e => {
@@ -198,6 +213,7 @@
     }
     if (name === 'tony-eagle') { openGame(); return; }
     if (name === 'bench-press-study') { openBench(); return; }
+    if (name === 'magnet-implant') { openMagnet(); return; }
     if (placeholderApps.has(name)) { placeholderApps.get(name).open(); return; }
     if (!pages[name]) return;
     const [image, title, html] = pages[name];
@@ -227,7 +243,7 @@
       const taskButton = windowTasks.get(win);
       if (action === 'maximize') {
         win.classList.toggle('maximized');
-        button.setAttribute('aria-label', `${win.classList.contains('maximized') ? 'Restore' : 'Maximize'} ${win === portfolio ? 'Home Page' : win === game ? 'Tony Eagle' : win === bench ? 'Bench Press Study' : placeholderApps.get(win.id)?.title || 'utility window'}`);
+        button.setAttribute('aria-label', `${win.classList.contains('maximized') ? 'Restore' : 'Maximize'} ${win === portfolio ? 'Home Page' : win === game ? 'Tony Eagle' : win === bench ? 'Bench Press Study' : win === magnet ? 'BADASS MAGNET IMPLANT!' : placeholderApps.get(win.id)?.title || 'utility window'}`);
       } else { win.hidden = true; taskButton.setAttribute('aria-pressed', 'false'); if (win === game) { pauseGame(); if (action === 'close') gameFrame.removeAttribute('src'); } if (action === 'close') taskButton.hidden = true; }
     }));
     // Pointer capture keeps edge dragging working over the game iframe.
@@ -301,12 +317,12 @@
   });
   document.getElementById('print-study').addEventListener('click', () => window.print());
   const standaloneApp = new URLSearchParams(location.search).get('app');
-  const standaloneWindow = standaloneApp === 'bench-press-study' ? bench : standaloneApp === 'photos' ? placeholderApps.get('photo-carousel').win : standaloneApp === 'napster' ? placeholderApps.get('napster').win : null;
+  const standaloneWindow = standaloneApp === 'magnet-implant' ? magnet : standaloneApp === 'bench-press-study' ? bench : standaloneApp === 'photos' ? placeholderApps.get('photo-carousel').win : standaloneApp === 'napster' ? placeholderApps.get('napster').win : null;
   if (standaloneWindow) {
     document.body.classList.add('standalone-mode');
     standaloneWindow.classList.add('standalone-window', 'maximized');
     focusWindow(standaloneWindow);
-    document.title = `${standaloneApp === 'photos' ? 'Photos' : standaloneApp === 'napster' ? 'Napster' : 'Bench Press Study'} — Charles Perrault`;
+    document.title = `${standaloneApp === 'magnet-implant' ? 'BADASS MAGNET IMPLANT!' : standaloneApp === 'photos' ? 'Photos' : standaloneApp === 'napster' ? 'Napster' : 'Bench Press Study'} — Charles Perrault`;
   }
   if (new URLSearchParams(location.search).get('notepad') === 'leaderboard') document.querySelector('[data-open="notepad"]').click();
 })();

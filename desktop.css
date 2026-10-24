@@ -281,7 +281,20 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 /* Keep the live sheet chart alongside the results, including narrow windows. */
 .word-window { left: max(12px, calc(50% - 530px)); width: min(1060px, calc(100% - 24px)); }
 .word-paper { min-width: 740px; padding: 40px; }
+.magnet-window { width: min(850px, calc(100% - 24px)); left: max(12px, calc(50% - 425px)); }
+.magnet-window .word-paper { min-width: 0; max-width: 760px; margin: 0 auto; padding: clamp(20px, 5vw, 56px); overflow-wrap: anywhere; }
+.magnet-window .word-paper p { margin: 0 0 16px; }
+.magnet-trademark { font-family: Arial, sans-serif; font-size: 0.85em; line-height: 0; }
+.magnet-icon { object-fit: contain; image-rendering: auto; }
+.desktop-icon .magnet-icon { height: 28px; }
+.magnet-window .winbtns { position: relative; z-index: 6; }
+.magnet-tabs { display: flex; flex-shrink: 0; padding: 6px 6px 0; gap: 2px; border-bottom: 2px solid white; }
+.magnet-tabs button { position: relative; padding: 5px 18px; background: #c0c0c0; border: 2px solid; border-color: white #404040 #808080 white; border-radius: 3px 3px 0 0; cursor: pointer; }
+.magnet-tabs button[aria-selected="true"] { bottom: -2px; border-bottom-color: #c0c0c0; padding-top: 3px; }
+.magnet-tabs button:focus-visible { outline: 1px dotted black; outline-offset: -5px; }
+@media print { .magnet-tabs { display: none; } }
 .standalone-window .word-paper { max-width: 1100px; }
+.magnet-window.standalone-window .word-paper { max-width: 760px; }
 .study-results-layout { display: grid; grid-template-columns: minmax(250px, 0.85fr) minmax(330px, 1.15fr); gap: 24px; align-items: center; }
 .study-results-data > ul { margin-top: 12px; }
 .study-chart { display: block; min-width: 0; }
