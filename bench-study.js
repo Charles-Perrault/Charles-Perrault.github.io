@@ -2,22 +2,23 @@
   const study = document.getElementById('bench-study');
   if (!study) return;
   const sheetId = '1D7ep2dRfMzbV1DDvGQ7n3vDFC4zSjxMtq-fs5Fb24-0';
-  const cacheKey = 'bench-study-results-v2';
+  const cacheKey = 'bench-study-results-v3';
   const snapshot = {
-    current: {charlie: 169.0925, lucas: 119.0925},
-    projected: {charlie: 294.0925, lucas: 154.0925},
-    updatedAt: '2026-10-18T07:53:06+00:00'
+    current: {charlie: 175, lucas: 132.5},
+    projected: {charlie: 219.4990909090909, lucas: 191.57181818181817},
+    calculated: {charlie: 192.54221848205077, lucas: 149.01863956578015},
+    updatedAt: '2026-10-24T08:16:07.264453+00:00'
   };
   let results = snapshot, pending, lastAttempt = 0, requestId = 0, zipLibrary;
   const status = document.getElementById('study-sync-status');
   const format = value => `${new Intl.NumberFormat('en-US', {maximumFractionDigits: 1}).format(value)} lbs`;
   function valid(data) {
-    return ['current', 'projected'].every(group => ['charlie', 'lucas'].every(name =>
+    return ['current', 'projected', 'calculated'].every(group => ['charlie', 'lucas'].every(name =>
       typeof data?.[group]?.[name] === 'number' && Number.isFinite(data[group][name]) && data[group][name] > 0)) && Number.isFinite(Date.parse(data?.updatedAt));
   }
   function render(data, live = false) {
     results = data;
-    for (const group of ['current', 'projected']) for (const name of ['charlie', 'lucas']) {
+    for (const group of ['current', 'projected', 'calculated']) for (const name of ['charlie', 'lucas']) {
       study.querySelector(`[data-result="${group}-${name}"]`).textContent = format(data[group][name]);
     }
     const time = new Date(data.updatedAt).toLocaleString([], {dateStyle: 'short', timeStyle: 'short'});
@@ -54,10 +55,11 @@
     lastAttempt = Date.now();
     pending = (async () => {
       try {
-        const [maxes, forecast] = await Promise.all([
+        const [maxes, forecast, calculated] = await Promise.all([
           query({gid: '0', range: 'Z2:AA3', headers: '0'}),
           // These cells contain the sheet's own FORECAST.LINEAR(40, ...) results.
-          query({gid: '1256876327', range: 'J6:J7', headers: '0'})
+          query({gid: '1256876327', range: 'J6:J7', headers: '0'}),
+          query({gid: '1276024107', range: 'J7:J8', headers: '0'})
         ]);
         // Prefer the requested row 3; the existing MAX formulas are on row 2.
         const highest = [...(maxes.rows || [])].reverse().map(row => row.c).find(cells =>
@@ -65,12 +67,14 @@
         const data = {
           current: {charlie: highest?.[0]?.v, lucas: highest?.[1]?.v},
           projected: {charlie: forecast.rows?.[0]?.c?.[0]?.v, lucas: forecast.rows?.[1]?.c?.[0]?.v},
+          calculated: {charlie: calculated.rows?.[0]?.c?.[0]?.v, lucas: calculated.rows?.[1]?.c?.[0]?.v},
           updatedAt: new Date().toISOString()
         };
         if (!valid(data)) throw new Error('Invalid sheet values');
         render(data, true);
-        const chart = document.getElementById('study-chart');
-        if (chart) {
+        for (const id of ['study-chart', 'study-calculated-chart']) {
+          const chart = document.getElementById(id);
+          if (!chart) continue;
           const url = new URL(chart.src);
           url.searchParams.set('_', String(Date.now()));
           chart.src = url.href;
