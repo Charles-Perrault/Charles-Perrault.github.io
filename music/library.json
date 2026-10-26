@@ -2868,5 +2868,105 @@
     "duration": 157.9,
     "bitrate": 160,
     "sampleRate": 48000
+  },
+  {
+    "title": "Rita",
+    "artist": "prettifun",
+    "src": "music/youtube-ZgH7fQGIKhM.mp3",
+    "source": "https://www.youtube.com/watch?v=ZgH7fQGIKhM",
+    "bytes": 3915404,
+    "duration": 195.74,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "CUTTHROAT",
+    "artist": "Che",
+    "src": "music/youtube-WX9WMvEbytk.mp3",
+    "source": "https://www.youtube.com/watch?v=WX9WMvEbytk",
+    "bytes": 2304524,
+    "duration": 115.2,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "off that!",
+    "artist": "OsamaSon",
+    "src": "music/youtube-8Zuh44rji24.mp3",
+    "source": "https://www.youtube.com/watch?v=8Zuh44rji24",
+    "bytes": 2794124,
+    "duration": 139.68,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "lesbian vampire killers",
+    "artist": "bleood",
+    "src": "music/youtube-seNCBDiBXKI.mp3",
+    "source": "https://www.youtube.com/watch?v=seNCBDiBXKI",
+    "bytes": 2275244,
+    "duration": 113.74000000000001,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "STAGEDIVIN",
+    "artist": "Che",
+    "src": "music/youtube-Y2tg7P9Id9c.mp3",
+    "source": "https://www.youtube.com/watch?v=Y2tg7P9Id9c",
+    "bytes": 2481644,
+    "duration": 124.06,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "Theme Song",
+    "artist": "wonder, tasah, sixteen",
+    "src": "music/youtube-ne7bCwY1oSI.mp3",
+    "source": "https://www.youtube.com/watch?v=ne7bCwY1oSI",
+    "bytes": 2458604,
+    "duration": 122.9,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "Lebron James",
+    "artist": "hxldr, wonder",
+    "src": "music/youtube-TAuoaugfTws.mp3",
+    "source": "https://www.youtube.com/watch?v=TAuoaugfTws",
+    "bytes": 2650604,
+    "duration": 132.5,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "SLAM PUNK",
+    "artist": "Che",
+    "src": "music/youtube-tDm7yLf-nKo.mp3",
+    "source": "https://www.youtube.com/watch?v=tDm7yLf-nKo",
+    "bytes": 2041484,
+    "duration": 102.05,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "sol",
+    "artist": "Che",
+    "src": "music/youtube-ZhnHlpiY-vA.mp3",
+    "source": "https://www.youtube.com/watch?v=ZhnHlpiY-vA",
+    "bytes": 2713004,
+    "duration": 135.62,
+    "bitrate": 160,
+    "sampleRate": 48000
+  },
+  {
+    "title": "I just wanna geek",
+    "artist": "hxldr",
+    "src": "music/youtube-tmtiWzDMZE0.mp3",
+    "source": "https://www.youtube.com/watch?v=tmtiWzDMZE0",
+    "bytes": 2858444,
+    "duration": 142.9,
+    "bitrate": 160,
+    "sampleRate": 48000
   }
 ]
