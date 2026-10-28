@@ -317,4 +317,6 @@ body.standalone-mode > .standalone-window { position: fixed; inset: 0 !important
 .study-results-manuscript { margin-bottom: 12px; }
 .word-paper .study-results-manuscript .study-doc-list { margin-top: 0; }
 
-.study-calculated-results { margin-top: 24px; }
+.study-results-data > ul { margin-bottom: 0; }
+.study-calculated-results { margin-top: 12px; align-items: start; }
+.study-calculated-results > div > ul { margin-top: 0; }
