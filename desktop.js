@@ -117,7 +117,7 @@
     {src: 'assets/photos/portrait-01.png', alt: 'gurt', year: 2025, label: 'gurt'},
     {src: 'assets/photos/gallery/1681573395125987102.jpeg', alt: 'Person standing on a boulder above a foggy forest', year: 2025},
     {src: 'assets/photos/gallery/7247057647173750472.jpeg', alt: 'Stream in a mossy forest', year: 2025},
-    {src: 'assets/photos/gallery/FullSizeRender.jpeg', alt: 'Person leaning beside a car at night', year: 2025},
+    {src: 'assets/photos/gallery/kid-photo.png', alt: 'Kid sitting on a couch', year: 2025},
     {src: 'assets/photos/gallery/IMG_1371.jpeg', alt: 'Silhouette standing on an indoor platform', year: 2025},
     {src: 'assets/photos/gallery/IMG_1908.jpeg', alt: 'Rocky desert landscape with cacti', year: 2025},
     {src: 'assets/photos/gallery/IMG_1999.jpeg', alt: 'A close-up selfie', year: 2019},
