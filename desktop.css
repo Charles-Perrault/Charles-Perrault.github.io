@@ -242,7 +242,7 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .photo-thumb span { display: block; overflow: hidden; padding-top: 3px; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
 
 .gurt-icon { object-fit: contain; }
-#gurt-takeover { position: fixed; inset: 0; z-index: 2147483647; background: url("assets/photos/portrait-01.png") repeat 0 0 / 112px 199px; image-rendering: pixelated; cursor: default; }
+#gurt-takeover { position: fixed; inset: 0; z-index: 2147483647; background: url("assets/photos/portrait-01.png") round 0 0 / calc(100% / 9) calc(100% / 3); image-rendering: pixelated; cursor: default; }
 
 /* Direct links open the same apps as full-page, shareable browser tabs. */
 .photo-toolbar { flex-shrink: 0; padding: 2px 4px 6px; font-size: 12px; }
