@@ -1,34 +1,346 @@
 (() => {
   'use strict';
-  // Minutes, energy (1–3), maximum cost, setting, company.
+  // Minutes, energy (1-3), maximum cost, creative medium.
   const ideas = [
-    ['Comfort episode', 'Put on one episode of a show you already love. Get comfortable and let the credits roll.', 30, 1, 0, 'home', 'any'],
-    ['An album, front to back', 'Pick an album you already have access to. Put your phone down and listen in order.', 60, 1, 0, 'home', 'any'],
-    ['Movie night', 'Choose a movie from your existing watchlist or collection. Start it before browsing for another.', 120, 1, 0, 'home', 'any'],
-    ['Read one chapter', 'Grab a book you already own. Read a chapter somewhere comfortable.', 30, 1, 0, 'home', 'any'],
-    ['The photo rabbit hole', 'Open an old photo album. Pick five favorites and enjoy the memories.', 30, 1, 0, 'home', 'any'],
-    ['A real phone call', 'Call someone you miss. Ask what the best part of their week was.', 30, 1, 0, 'home', 'solo'],
-    ['Draw something badly', 'Get paper and a pen. Draw whatever is in front of you for ten minutes. Skill is irrelevant.', 30, 1, 0, 'home', 'any'],
-    ['Trade favorite songs', 'Take turns playing three favorite songs. Each person gets to explain one pick.', 30, 1, 0, 'home', 'together'],
-    ['Cards on the table', 'Grab a deck of cards you already have and play a familiar game.', 60, 1, 0, 'home', 'together'],
-    ['Play an old favorite', 'Launch a game you already own. Play for one session, then stop at a natural break.', 60, 1, 0, 'home', 'any'],
-    ['Make the easy dinner', 'Make a meal you already know with ingredients you have. Put on music while you cook.', 60, 2, 0, 'home', 'any'],
-    ['Fix one tiny thing', 'Choose one small annoyance in your room. Spend fifteen minutes fixing it, then call it done.', 30, 2, 0, 'home', 'any'],
-    ['Make a ridiculous playlist', 'Pick a very specific theme and build a ten-song playlist from music you know.', 30, 1, 0, 'home', 'any'],
-    ['Write tomorrow a favor', 'Write down tomorrow’s first task and set out what you need. Spend the rest of the evening relaxing.', 30, 1, 0, 'home', 'any'],
-    ['Dessert experiment', 'Make a simple dessert with ingredients you have, or spend up to $10 on what is missing.', 60, 2, 10, 'home', 'any'],
-    ['Living-room picnic', 'Make snacks from what you have. Sit somewhere other than the usual table and leave your phone aside.', 30, 1, 0, 'home', 'any'],
-    ['Step outside', 'Sit outside near home for ten minutes. Notice the sounds and let yourself do nothing.', 30, 1, 0, 'out', 'any'],
-    ['A short familiar walk', 'Take a short walk on a familiar, well-lit route. Turn back halfway through your available time.', 30, 2, 0, 'out', 'any'],
-    ['Look at the sky', 'Find a comfortable spot near home and spend ten minutes looking at the sky.', 30, 1, 0, 'out', 'any'],
-    ['A camera walk', 'Take a familiar route and photograph five things you usually overlook.', 60, 2, 0, 'out', 'any'],
-    ['A little treat', 'Walk to a familiar nearby place that is open. Choose one snack within $10, then enjoy it without scrolling.', 60, 2, 10, 'out', 'any'],
-    ['Catch up outside', 'Sit outside together and take turns sharing a good thing, a bad thing, and a weird thing from today.', 30, 1, 0, 'out', 'together'],
-    ['Explore a familiar route', 'Walk a longer version of a route you know. Pick one interesting detail to tell someone about later.', 120, 3, 0, 'out', 'any'],
-    ['Dinner with no menu spiral', 'Go to a familiar nearby place you know is open. Order your usual within $25.', 120, 2, 25, 'out', 'any']
-  ].map(([title, steps, time, energy, budget, place, company], id) => ({id: `idea-${id}`, title, steps, time, energy, budget, place, company}));
+  [
+    "A website for one extremely specific opinion",
+    "Make a single page defending an opinion like the best spoon shape. Start with a headline, three arguments, and one ridiculous diagram.",
+    30,
+    1,
+    0,
+    "code"
+  ],
+  [
+    "A one-button sound machine",
+    "Build a page with one enormous button that plays a sound you record. Start with the button and a five-second recording.",
+    30,
+    1,
+    0,
+    "code"
+  ],
+  [
+    "A useless progress bar",
+    "Make a progress bar for an imaginary task like downloading confidence. Start with one bar and five status messages.",
+    30,
+    1,
+    0,
+    "code"
+  ],
+  [
+    "A tiny personal museum",
+    "Build a page displaying three ordinary objects you own as priceless artifacts. Start by photographing the first object.",
+    60,
+    2,
+    0,
+    "code"
+  ],
+  [
+    "A game with one key",
+    "Build a game where one key makes a square jump over obstacles. Start with the square, a floor, and a jump.",
+    120,
+    3,
+    0,
+    "code"
+  ],
+  [
+    "A fake operating system error",
+    "Make an interactive error dialog for a problem computers should never have. Start by writing the error and two button labels.",
+    30,
+    1,
+    0,
+    "code"
+  ],
+  [
+    "A pocket-sized habit tracker",
+    "Build a page that checks off one habit and remembers it on this device. Start with a checkbox and local storage.",
+    60,
+    2,
+    0,
+    "code"
+  ],
+  [
+    "An apology generator for inanimate objects",
+    "Make a button that generates apologies from objects. Start with five objects, five offenses, and five excuses.",
+    60,
+    2,
+    0,
+    "code"
+  ],
+  [
+    "An album cover for a band that does not exist",
+    "Invent a band name and album title. Make a square cover using two colors and one object in your room.",
+    30,
+    1,
+    0,
+    "art"
+  ],
+  [
+    "A warning sign for a harmless thing",
+    "Design a very serious warning sign for a pillow, spoon, or sock. Start with a bold symbol and a six-word warning.",
+    30,
+    1,
+    0,
+    "art"
+  ],
+  [
+    "A portrait made only of rectangles",
+    "Draw a face using twelve rectangles and three colors. Start with the head shape and keep every edge straight.",
+    30,
+    1,
+    0,
+    "art"
+  ],
+  [
+    "A poster for an imaginary local event",
+    "Design a poster for an event like competitive sitting. Start with its title, date, and one oversized visual.",
+    60,
+    2,
+    0,
+    "art"
+  ],
+  [
+    "A six-panel comic about a minor inconvenience",
+    "Turn a small annoyance into an epic story. Start by drawing six empty boxes and writing the final punchline.",
+    60,
+    2,
+    0,
+    "art"
+  ],
+  [
+    "An object redesigned for an alien",
+    "Sketch a household item as if its designer had never met a human. Start with three absurd variations.",
+    30,
+    1,
+    0,
+    "art"
+  ],
+  [
+    "A miniature illustrated field guide",
+    "Make a one-page field guide to five types of people, clouds, or chairs. Start with five silhouettes and invented names.",
+    120,
+    3,
+    0,
+    "art"
+  ],
+  [
+    "A complaint letter from your chair",
+    "Write 200 words from your chair to you. Start with its biggest grievance and end with one unreasonable demand.",
+    30,
+    1,
+    0,
+    "writing"
+  ],
+  [
+    "A story told through five notifications",
+    "Tell a complete story using only five phone notifications. Start with an ordinary notification and make the last one change its meaning.",
+    30,
+    1,
+    0,
+    "writing"
+  ],
+  [
+    "Instructions for an impossible task",
+    "Write a short manual for folding a shadow or returning a Tuesday. Start with a materials list and five steps.",
+    30,
+    1,
+    0,
+    "writing"
+  ],
+  [
+    "A review of a place that does not exist",
+    "Write a one-star review of an imaginary location. Start with one strangely specific detail that makes it feel real.",
+    30,
+    1,
+    0,
+    "writing"
+  ],
+  [
+    "A story with one room and one strange rule",
+    "Write a 700-word story set in one room where one ordinary action is forbidden. Start with someone breaking the rule.",
+    120,
+    3,
+    0,
+    "writing"
+  ],
+  [
+    "A tiny newspaper from tomorrow",
+    "Make a page with three fictional headlines, a classified ad, and the weather. Start with a headline about a very small disaster.",
+    60,
+    2,
+    0,
+    "writing"
+  ],
+  [
+    "A poem made of overheard fragments",
+    "Write twelve lines using phrases you remember hearing today. Start with the weirdest phrase and repeat it at the end.",
+    30,
+    1,
+    0,
+    "writing"
+  ],
+  [
+    "A beat made from your desk",
+    "Record three desk sounds and arrange a twenty-second loop with tools you already have. Start with a tap, a scrape, and a knock.",
+    30,
+    1,
+    0,
+    "music"
+  ],
+  [
+    "A theme song for an ordinary object",
+    "Make a twenty-second theme for your lamp, shoe, or kettle. Start by humming a four-note melody into your phone.",
+    30,
+    1,
+    0,
+    "music"
+  ],
+  [
+    "A fake radio station ident",
+    "Record a ten-second station announcement for a fictional radio station. Start with its name and one absurd slogan.",
+    30,
+    1,
+    0,
+    "music"
+  ],
+  [
+    "A tiny soundtrack for a made-up game",
+    "Make a one-minute loop for an imaginary game menu. Start with a repeating four-note pattern and one contrasting layer.",
+    60,
+    2,
+    0,
+    "music"
+  ],
+  [
+    "A room turned into a soundscape",
+    "Record five sounds around you and arrange a one-minute audio scene. Start with thirty seconds of room tone.",
+    60,
+    2,
+    0,
+    "music"
+  ],
+  [
+    "A song with only three sounds",
+    "Use a voice, a clap, and one other sound to make a ninety-second track. Start with an eight-beat rhythm.",
+    120,
+    3,
+    0,
+    "music"
+  ],
+  [
+    "A dramatic documentary about a spoon",
+    "Film a thirty-second documentary treating an ordinary object as historically significant. Start with a close-up and a very serious opening line.",
+    30,
+    1,
+    0,
+    "video"
+  ],
+  [
+    "An advertisement for something nobody needs",
+    "Film a twenty-second commercial for a useless invention. Start with an exaggerated problem and demonstrate the solution with household objects.",
+    30,
+    1,
+    0,
+    "video"
+  ],
+  [
+    "A five-shot story with no dialogue",
+    "Tell a tiny story using exactly five shots and no spoken words. Start by listing the five images.",
+    60,
+    2,
+    0,
+    "video"
+  ],
+  [
+    "A stop-motion escape attempt",
+    "Make an object cross your desk in ten seconds of stop motion. Start with a locked camera position and ten photos.",
+    60,
+    2,
+    0,
+    "video"
+  ],
+  [
+    "An ordinary task as a thriller",
+    "Film making a drink or putting on shoes as a suspense scene. Start with three extreme close-ups.",
+    30,
+    1,
+    0,
+    "video"
+  ],
+  [
+    "A one-minute fake movie trailer",
+    "Create a trailer for a film about a petty problem. Start with three title cards and an ominous voice-over.",
+    120,
+    3,
+    0,
+    "video"
+  ],
+  [
+    "A tiny paper creature",
+    "Fold or cut scrap paper into a creature that can stand up. Start with its body, then give it a name and one bad habit.",
+    30,
+    1,
+    0,
+    "physical"
+  ],
+  [
+    "A museum label for something you own",
+    "Make a physical museum label for an ordinary object. Start with its title, invented origin, and an absurd estimated value.",
+    30,
+    1,
+    0,
+    "physical"
+  ],
+  [
+    "A miniature zine from one sheet",
+    "Fold a sheet into a tiny booklet about one very specific obsession. Start with the cover and one page of facts or drawings.",
+    60,
+    2,
+    0,
+    "physical"
+  ],
+  [
+    "A cardboard monument to a small achievement",
+    "Use packaging you already have to build a trophy for something like answering an email. Start with the base and its inscription.",
+    60,
+    2,
+    0,
+    "physical"
+  ],
+  [
+    "A board game on one sheet of paper",
+    "Make a two-player game using a hand-drawn board and household objects as pieces. Start with the win condition and one rule.",
+    120,
+    3,
+    0,
+    "physical"
+  ],
+  [
+    "A postcard from an imaginary town",
+    "Make a postcard using scrap paper and whatever drawing supplies you own. Start with the town name and its least impressive landmark.",
+    30,
+    1,
+    0,
+    "physical"
+  ],
+  [
+    "A pocket notebook with a ridiculous purpose",
+    "Use up to $10 of paper and basic supplies to make a notebook for one absurd category of observations. Start by designing its cover.",
+    60,
+    2,
+    10,
+    "physical"
+  ],
+  [
+    "A tiny diorama of an impossible room",
+    "Use packaging and up to $25 of supplies to build a room with one impossible feature. Start with a shoebox-sized floor plan.",
+    120,
+    3,
+    25,
+    "physical"
+  ]
+].map(([title, steps, time, energy, budget, medium], id) => ({id: `create-${id}`, title, steps, time, energy, budget, medium}));
   const $ = id => document.getElementById(id);
-  const key = 'decision-fatigue-v1';
+  const key = 'creative-decision-v1';
   const today = () => new Date().toLocaleDateString('en-CA');
   let state = {history: [], settings: {}, current: null};
   let storageWorks = true;
@@ -44,13 +356,13 @@
     try { localStorage.setItem(key, JSON.stringify(state)); }
     catch { storageWorks = false; $('status').textContent = 'Session only — storage unavailable'; }
   }
-  for (const id of ['time', 'energy', 'budget', 'company', 'place', 'custom']) {
+  for (const id of ['time', 'energy', 'budget', 'medium', 'custom']) {
     if (typeof state.settings[id] === 'string') {
       if (id === 'custom') $(id).value = state.settings[id].slice(0, 10000);
       else if ([...$(id).options].some(option => option.value === state.settings[id])) $(id).value = state.settings[id];
     }
   }
-  function settings() { return Object.fromEntries(['time', 'energy', 'budget', 'company', 'place', 'custom'].map(id => [id, $(id).value])); }
+  function settings() { return Object.fromEntries(['time', 'energy', 'budget', 'medium', 'custom'].map(id => [id, $(id).value])); }
   function history() {
     $('history').replaceChildren();
     if (!state.history.length) { const li = document.createElement('li'); li.textContent = 'No decisions yet.'; $('history').append(li); }
@@ -72,7 +384,7 @@
     state.settings = s;
     $('message').textContent = '';
     const custom = [...new Set(s.custom.split('\n').map(x => x.trim()).filter(Boolean))];
-    let pool = custom.length ? custom.map(title => ({id: `custom:${title}`, title, steps: 'This is your plan.', custom: true})) : ideas.filter(x => x.time <= +s.time && x.energy <= +s.energy && x.budget <= +s.budget && (s.place === 'either' || x.place === s.place) && (x.company === 'any' || x.company === s.company));
+    let pool = custom.length ? custom.map(title => ({id: `custom:${title}`, title, steps: 'This is your plan.', custom: true})) : ideas.filter(x => x.time <= +s.time && x.energy <= +s.energy && x.budget <= +s.budget && (s.medium === 'any' || x.medium === s.medium));
     if (!pool.length) { $('message').textContent = 'No matching ideas. Change a filter or add your own options.'; return; }
     const recent = new Set(state.history.slice(0, 7).map(x => x.id));
     const fresh = pool.filter(x => !recent.has(x.id) && x.id !== state.current?.id);
@@ -81,7 +393,7 @@
     else if (force) $('message').textContent = 'That is the only matching option. Add another or change your filters for a different choice.';
     const random = new Uint32Array(1); crypto.getRandomValues(random);
     const item = pool[Math.floor(random[0] / 4294967296 * pool.length)];
-    state.current = {...item, date: today(), accepted: false, reason: item.custom ? 'Picked from your own options.' : `${item.time} min · ${item.budget ? `Up to $${item.budget}` : '$0'} · ${item.place === 'home' ? 'Staying in' : 'Going out'} · Matches your filters`};
+    state.current = {...item, date: today(), accepted: false, reason: item.custom ? 'Picked from your own options.' : `${item.time} min · ${item.budget ? `Up to $${item.budget}` : '$0'} · ${$('medium').options[[...$('medium').options].findIndex(option => option.value === item.medium)].text} · Matches your filters`};
     save(); render();
   }
   $('settings').addEventListener('submit', e => { e.preventDefault(); choose(false); });

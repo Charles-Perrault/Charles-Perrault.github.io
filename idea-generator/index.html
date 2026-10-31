@@ -6,23 +6,22 @@
   <meta name="theme-color" content="#008080">
   <title>idea generator for fat pieces of shit</title>
   <link rel="stylesheet" href="style.css?v=1">
-  <script src="app.js?v=1" defer></script>
+  <script src="app.js?v=2" defer></script>
 </head>
 <body>
   <main class="window">
     <header class="titlebar"><img src="../assets/icons/win95/computer-16.png" alt="" width="16" height="16"><span>idea generator for fat pieces of shit</span><a href="../" aria-label="Back to desktop">×</a></header>
     <nav class="menubar" aria-label="App navigation"><a href="../">Desktop</a></nav>
     <div class="content">
-      <div class="intro"><img src="../assets/icons/win95/computer-32.png" alt="" width="32" height="32"><div><h1>decision fatigue?</h1><p>the perfect decision every time no mistakes</p></div></div>
+      <div class="intro"><img src="../assets/icons/win95/computer-32.png" alt="" width="32" height="32"><div><h1>what to create</h1><p>the perfect decision every time no mistakes</p></div></div>
       <form id="settings">
         <fieldset><legend>Right now</legend><div class="fields">
           <label>Time<select id="time"><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option></select></label>
           <label>Energy<select id="energy"><option value="1" selected>Absolutely none</option><option value="2">Some</option><option value="3">I'm alive</option></select></label>
           <label>Budget<select id="budget"><option value="0" selected>$0</option><option value="10">Up to $10</option><option value="25">Up to $25</option></select></label>
-          <label>Company<select id="company"><option value="solo">Just me</option><option value="together">With someone</option></select></label>
-          <label>Where<select id="place"><option value="home" selected>Staying in</option><option value="out">Going out</option><option value="either">Either</option></select></label>
+          <label>What kind<select id="medium"><option value="any">Anything</option><option value="code">Website / app</option><option value="art">Art / design</option><option value="writing">Writing</option><option value="music">Music / audio</option><option value="video">Video</option><option value="physical">Something physical</option></select></label>
         </div></fieldset>
-        <details><summary>Pick from my own options instead</summary><label class="custom-label" for="custom">One option per line. Leave blank for built-in ideas.</label><textarea id="custom" rows="4" maxlength="10000" placeholder="Make pasta&#10;Watch a movie&#10;Call a friend"></textarea><p class="note">Your options bypass the filters above.</p></details>
+        <details><summary>Pick from my own options instead</summary><label class="custom-label" for="custom">One option per line. Leave blank for built-in ideas.</label><textarea id="custom" rows="4" maxlength="10000" placeholder="Make a tiny game&#10;Design a fake album cover&#10;Write a short story"></textarea><p class="note">Your options bypass the filters above.</p></details>
         <button class="decide" type="submit">Make the decision</button>
       </form>
       <section id="result" class="result" aria-live="polite" aria-atomic="true" hidden>
