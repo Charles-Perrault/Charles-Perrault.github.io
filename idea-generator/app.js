@@ -28,7 +28,7 @@
     ['Dinner with no menu spiral', 'Go to a familiar nearby place you know is open. Order your usual within $25.', 120, 2, 25, 'out', 'any']
   ].map(([title, steps, time, energy, budget, place, company], id) => ({id: `idea-${id}`, title, steps, time, energy, budget, place, company}));
   const $ = id => document.getElementById(id);
-  const key = 'nightly-idea-generator-v1';
+  const key = 'decision-fatigue-v1';
   const today = () => new Date().toLocaleDateString('en-CA');
   let state = {history: [], settings: {}, current: null};
   let storageWorks = true;
@@ -81,7 +81,7 @@
     else if (force) $('message').textContent = 'That is the only matching option. Add another or change your filters for a different choice.';
     const random = new Uint32Array(1); crypto.getRandomValues(random);
     const item = pool[Math.floor(random[0] / 4294967296 * pool.length)];
-    state.current = {...item, date: today(), accepted: false, reason: item.custom ? 'Picked from your own options.' : `${item.time} min · ${item.budget ? `Up to $${item.budget}` : '$0'} · ${item.place === 'home' ? 'Staying in' : 'Going out'} · Matches tonight’s filters`};
+    state.current = {...item, date: today(), accepted: false, reason: item.custom ? 'Picked from your own options.' : `${item.time} min · ${item.budget ? `Up to $${item.budget}` : '$0'} · ${item.place === 'home' ? 'Staying in' : 'Going out'} · Matches your filters`};
     save(); render();
   }
   $('settings').addEventListener('submit', e => { e.preventDefault(); choose(false); });
