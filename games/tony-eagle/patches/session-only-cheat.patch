@@ -1,0 +1,112 @@
+--- a/Assets/Browser/BrowserBridge.cs
++++ b/Assets/Browser/BrowserBridge.cs
+@@ -1,4 +1,5 @@
+ using System;
++using System.Collections.Generic;
+ using System.Runtime.InteropServices;
+ using UnityEngine;
+ using UnityEngine.SceneManagement;
+@@ -11,6 +12,7 @@
+     private bool paused;
+     public static bool UnlimitedUpgradePoints { get; private set; }
+     private static bool upgradeMenuRequested;
++    private static readonly Dictionary<string, float> sessionUpgrades = new Dictionary<string, float>();
+ 
+     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+     private static void Install()
+@@ -21,6 +23,14 @@
+ #endif
+         UnlimitedUpgradePoints = false;
+         upgradeMenuRequested = false;
++        sessionUpgrades.Clear();
++        // Remove upgrades saved by older cheat builds once; new cheats never write them.
++        if (PlayerPrefs.GetInt("leaderboard_cheat_used", 0) != 0)
++        {
++            foreach (string stat in new[] { "speed", "jump", "spin" }) PlayerPrefs.DeleteKey(stat);
++            PlayerPrefs.DeleteKey("leaderboard_cheat_used");
++            PlayerPrefs.Save();
++        }
+         // Exact TimeManager / PhysicsManager values recovered from the package.
+         Time.fixedDeltaTime = 0.01f;
+         Time.maximumDeltaTime = 0.33333334f;
+@@ -45,12 +55,23 @@
+ 
+     public void EnableUnlimitedUpgradePoints(string unused)
+     {
++        if (!UnlimitedUpgradePoints)
++            foreach (string stat in new[] { "speed", "jump", "spin" }) sessionUpgrades[stat] = PlayerPrefs.GetFloat(stat);
+         UnlimitedUpgradePoints = true;
+-        PlayerPrefs.SetInt("leaderboard_cheat_used", 1);
+-        PlayerPrefs.Save();
+         GameManager manager = FindObjectOfType<GameManager>();
+         if (manager != null) manager.EnableUnlimitedUpgradePoints();
+         else upgradeMenuRequested = true;
++    }
++
++    public static float GetUpgrade(string stat)
++    {
++        return UnlimitedUpgradePoints ? sessionUpgrades[stat] : PlayerPrefs.GetFloat(stat);
++    }
++
++    public static void SetUpgrade(string stat, float value)
++    {
++        if (UnlimitedUpgradePoints) sessionUpgrades[stat] = value;
++        else PlayerPrefs.SetFloat(stat, value);
+     }
+ 
+     public static bool TakeUpgradeMenuRequest()
+@@ -107,7 +128,7 @@
+         State state = new State { scene = SceneManager.GetActiveScene().name, paused = paused,
+             playerPresent = player != null, timer = manager == null ? -1f : manager.timer,
+             unlimitedUpgradePoints = UnlimitedUpgradePoints,
+-            leaderboardDisqualified = PlayerPrefs.GetInt("leaderboard_cheat_used", 0) != 0,
++            leaderboardDisqualified = UnlimitedUpgradePoints,
+             roundOver = manager != null && manager.timer < 1f };
+         if (player != null)
+         {
+--- a/Assets/MonoScript/Assembly-CSharp/GameManager.cs
++++ b/Assets/MonoScript/Assembly-CSharp/GameManager.cs
+@@ -74,22 +74,22 @@
+ 
+ 	public void UpgradeSpeed()
+ 	{
+-		float @float = PlayerPrefs.GetFloat("speed");
+-		PlayerPrefs.SetFloat("speed", @float += 0.007f);
++		float @float = BrowserBridge.GetUpgrade("speed");
++		BrowserBridge.SetUpgrade("speed", @float += 0.007f);
+ 		if (!BrowserBridge.UnlimitedUpgradePoints) statsScreen.SetActive(false);
+ 	}
+ 
+ 	public void UpgradeJump()
+ 	{
+-		float @float = PlayerPrefs.GetFloat("jump");
+-		PlayerPrefs.SetFloat("jump", @float += 0.01f);
++		float @float = BrowserBridge.GetUpgrade("jump");
++		BrowserBridge.SetUpgrade("jump", @float += 0.01f);
+ 		if (!BrowserBridge.UnlimitedUpgradePoints) statsScreen.SetActive(false);
+ 	}
+ 
+ 	public void UpgradeSpin()
+ 	{
+-		float @float = PlayerPrefs.GetFloat("spin");
+-		PlayerPrefs.SetFloat("spin", @float += 25f);
++		float @float = BrowserBridge.GetUpgrade("spin");
++		BrowserBridge.SetUpgrade("spin", @float += 25f);
+ 		if (!BrowserBridge.UnlimitedUpgradePoints) statsScreen.SetActive(false);
+ 	}
+ 
+--- a/Assets/MonoScript/Assembly-CSharp/PlayerMove.cs
++++ b/Assets/MonoScript/Assembly-CSharp/PlayerMove.cs
+@@ -95,9 +95,9 @@
+ 		controller = GetComponent<CharacterController>();
+ 		previousTrickRotation = base.transform.rotation;
+ 		gameManager = GameObject.Find("Manager").GetComponent<GameManager>();
+-		maxJump += PlayerPrefs.GetFloat("jump");
+-		groundAccel += PlayerPrefs.GetFloat("speed");
+-		airTurnSpeed += PlayerPrefs.GetFloat("spin");
++		maxJump += BrowserBridge.GetUpgrade("jump");
++		groundAccel += BrowserBridge.GetUpgrade("speed");
++		airTurnSpeed += BrowserBridge.GetUpgrade("spin");
+ 	}
+ 
+ 	private void FixedUpdate()

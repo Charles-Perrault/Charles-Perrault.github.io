@@ -44,6 +44,7 @@ public static class TonyEagleSingleTrickRegression
             }
             PlayerMove player = UnityEngine.Object.FindObjectOfType<PlayerMove>();
             if (player == null || player.trickList == null) return;
+            TonyEagleSessionCheatRegression.Validate();
             player.enabled = false;
             MethodInfo score = typeof(PlayerMove).GetMethod("CheckTricks", BindingFlags.Instance | BindingFlags.NonPublic);
             string[] names = { "FRONTSIDE FLIPPER", "LEFTSIDE TORNADO", "NECK SNAPPER", "BALLS OF STEEL" };

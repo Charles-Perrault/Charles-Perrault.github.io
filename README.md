@@ -2,8 +2,7 @@
 
 Tony Eagle uses the recovered original Unity game and music. The shared leaderboard
 appears as Leaderboard.txt in Notepad. Scores are frozen at round end; the Konami
-code unlocks unlimited upgrades and disqualifies the run. Saved cheat upgrades
-remain excluded until Reset upgrades clears them.
+code unlocks unlimited upgrades and disqualifies the run. Cheats and cheat-bought upgrades last only until refresh; normal earned upgrades remain saved.
 
 The score API and D1 database are hosted with Sites at
 https://tony-eagle-leaderboard.new-plum-8104.chatgpt.site
