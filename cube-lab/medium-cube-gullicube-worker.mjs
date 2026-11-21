@@ -55,15 +55,14 @@ export function runGullicube({ size, facelets, budget, fast, tables, seed = 1, o
 if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) self.onmessage = async ({ data }) => {
   const started = performance.now();
   const small = Promise.all(smallTables.map((table) => readTable(table, localTables, 10000)));
-  const lowMemory = self.navigator.deviceMemory !== undefined && self.navigator.deviceMemory < 4;
-  const quality = data.fast || (lowMemory && data.size !== 5)
+  const quality = data.fast
     ? Promise.resolve([])
     : Promise.all(qualityTables(data.size).map((table) => readTable(table, upstream, Math.min(12000, data.budget * 400)))).catch(() => []);
   try {
     self.postMessage({ stage: 'gulli-download' });
     const [base, extra] = await Promise.all([small, quality]);
     self.postMessage({ stage: 'gulli-prep' });
-    const repeat = data.size === 5 && !data.fast;
+    const repeat = !data.fast;
     const tables = [...base, ...extra];
     for (let seed = 1; ; seed++) {
       const remaining = data.budget - (performance.now() - started) / 1000;

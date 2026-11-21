@@ -14,6 +14,7 @@ const message = get('status-message');
 const progress = get('turn-progress');
 const planningEstimate = get('planning-estimate');
 const stopButton = get('stop-turns');
+const endSearchButton = get('end-search');
 const playbackButton = get('playback-toggle');
 const paintToggle = get('color-picker');
 const paintPanel = get('color-panel');
@@ -94,6 +95,8 @@ function setBusy(busy, label) {
 }
 
 function stopWork() {
+  endSearchButton.hidden = true;
+  endSearchButton.onclick = null;
   cancelAnimationFrame(frame);
   frame = 0;
   if (task?.sequence) solutionList.update(task, cube.size, { ended: true, force: true });
@@ -447,8 +450,9 @@ function startSolve(center) {
   solutionList.clear();
   renderer.cancelDrag();
   try {
-    const job = new Worker(new URL('./solver-worker.mjs?v=19', import.meta.url), { type: 'module' });
+    const job = new Worker(new URL('./solver-worker.mjs?v=20', import.meta.url), { type: 'module' });
     worker = job;
+    let bestSearch;
     let phase = 'white';
     let phaseStarted = performance.now();
     const showPlanningProgress = (nextPhase, fraction) => {
@@ -468,7 +472,9 @@ function startSolve(center) {
           'gulli-search': 'Searching for shorter solutions',
         };
         const stageMessage = stages[phase] ?? `Planning ${subject}`;
-        showMessage(stageMessage);
+        showMessage(phase === 'gulli-search' && bestSearch
+          ? `${stageMessage} · Best so far: ${countFormat.format(bestSearch.length)} turns`
+          : stageMessage);
         progress.setAttribute('aria-label', stageMessage);
       }
       if (fraction === null) {
@@ -488,6 +494,11 @@ function startSolve(center) {
     };
     job.onmessage = ({ data }) => {
       if (worker !== job) return;
+      if (data.bestSearch) {
+        bestSearch = data.bestSearch;
+        showMessage(`Searching for shorter solutions · Best so far: ${countFormat.format(bestSearch.length)} turns`);
+        return;
+      }
       if (data.progress) {
         showPlanningProgress(data.progress.phase, data.progress.fraction);
         return;
@@ -514,6 +525,18 @@ function startSolve(center) {
       if (worker === job) settle('Could not plan the solve');
     };
     setBusy(true, 'Solving');
+    if (cube.size >= 5 && cube.size <= 7 && (center === 'full' || center === 'fast')) {
+      endSearchButton.hidden = false;
+      endSearchButton.onclick = () => {
+        if (worker !== job) return;
+        if (!bestSearch) {
+          settle('Search ended before finding a solution');
+          return;
+        }
+        stopWork();
+        beginTurns(null, bestSearch.length, { center, backend: 'Gullicube', sequence: bestSearch });
+      };
+    }
     showMessage(center === 'blocks' ? 'Planning the white center with blocks' : 'Planning the white center');
     progress.max = 100;
     progress.setAttribute('aria-label', 'Planning progress for the white center');
