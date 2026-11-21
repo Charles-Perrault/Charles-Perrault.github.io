@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1017" />
+    <title>Cube Lab</title>
+    <link rel="icon" type="image/png" href="cube-lab-icon.png" />
+    <link rel="stylesheet" href="styles.css?v=17" />
+  </head>
+  <body>
+    <main class="workbench">
+      <canvas
+        id="cube-canvas"
+        tabindex="0"
+        aria-label="Interactive 3D Rubik's Cube. Drag a sticker to turn. Drag the background or right-drag to orbit. Scroll or pinch to zoom."
+      ></canvas>
+
+      <header class="identity">
+        <h1 class="brand"><span class="brand-mark" aria-hidden="true"></span>Cube Lab</h1>
+        <strong id="cube-dimensions" aria-label="Cube dimensions">3 × 3 × 3</strong>
+      </header>
+
+      <aside class="controls" aria-label="Cube controls">
+        <div class="setup-dock">
+          <section aria-labelledby="size-heading">
+            <div class="section-heading">
+              <h2 id="size-heading">Cube size</h2>
+              <a id="size-link" href="#id=3">Share size</a>
+            </div>
+            <form id="size-form" class="size-form">
+              <label class="sr-only" for="cube-size">Cube size</label>
+              <input id="cube-size" type="number" min="2" step="1" value="3" required />
+              <button class="button" type="submit">Resize</button>
+            </form>
+            <div class="presets" role="group" aria-label="Cube size presets">
+              <button type="button" data-size="3">3</button>
+              <button type="button" data-size="5">5</button>
+              <button type="button" data-size="10">10</button>
+              <button type="button" data-size="20">20</button>
+              <button type="button" data-size="50">50</button>
+            </div>
+          </section>
+          <div class="speed-row">
+            <label for="turn-speed" title="1 = 1 turn per second">Turn speed</label>
+            <input
+              id="turn-speed"
+              type="number"
+              min="0"
+              step="any"
+              value="24"
+              aria-describedby="speed-rate"
+              required
+            />
+            <span id="speed-rate">24 turns/sec</span>
+          </div>
+          <button class="button color-picker" id="color-picker" type="button" aria-controls="color-panel">Color picker</button>
+          <section id="color-panel" class="color-panel" aria-labelledby="color-heading" hidden>
+            <h2 id="color-heading">Color picker</h2>
+            <p>Match your cube with yellow up and green in front. Click to paint and drag to orbit.</p>
+            <div class="color-swatches" role="group" aria-label="Sticker color">
+              <button type="button" data-color="0" aria-label="White" aria-pressed="true" title="White"></button>
+              <button type="button" data-color="1" aria-label="Red" aria-pressed="false" title="Red"></button>
+              <button type="button" data-color="2" aria-label="Green" aria-pressed="false" title="Green"></button>
+              <button type="button" data-color="3" aria-label="Yellow" aria-pressed="false" title="Yellow"></button>
+              <button type="button" data-color="4" aria-label="Orange" aria-pressed="false" title="Orange"></button>
+              <button type="button" data-color="5" aria-label="Blue" aria-pressed="false" title="Blue"></button>
+            </div>
+            <p id="color-error" class="color-error" role="alert"></p>
+            <div class="color-actions">
+              <button class="button button-primary" id="apply-colors" type="button">Apply colors</button>
+              <button class="button" id="cancel-colors" type="button">Cancel</button>
+            </div>
+          </section>
+        </div>
+
+        <button
+          id="reset-view"
+          class="button reset-view"
+          type="button"
+          aria-label="Reset camera view"
+          title="Reset view"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2.2 7.5M4 5v5h5" /></svg>
+          <span>Reset view</span>
+        </button>
+
+        <div class="action-dock">
+          <section class="scramble-controls" aria-labelledby="scramble-heading">
+            <div class="section-heading">
+              <h2 id="scramble-heading">Scramble</h2>
+              <span class="section-meta"><span id="scramble-count">0</span> moves</span>
+            </div>
+            <button class="button button-primary" id="instant-scramble" type="button">
+              Instant scramble
+            </button>
+            <div class="button-row turn-controls">
+              <button class="button" id="animate-scramble" type="button">Scramble</button>
+              <button class="button" id="stop-turns" type="button" disabled>Stop</button>
+              <button class="button" id="playback-toggle" type="button" hidden>Pause</button>
+              <button class="button" id="reset-cube" type="button">Reset cube</button>
+            </div>
+            <form id="light-scramble-form" class="button-row light-scramble-form">
+              <label class="sr-only" for="light-scramble-count">Light scramble move count</label>
+              <input id="light-scramble-count" type="number" min="1" step="1" value="10" required />
+              <button class="button" type="submit">Light scramble</button>
+            </form>
+            <div class="center-buttons" role="group" aria-label="Solvers">
+              <button class="button" id="greedy-white" type="button">Greedy white</button>
+              <button class="button" id="solve-white-blocks" type="button">White blocks</button>
+              <button class="button" id="solve-white" type="button">White center</button>
+              <button class="button" id="solve-yellow" type="button">Yellow center</button>
+              <button class="button" id="solve-cube" type="button">Solve cube</button>
+              <button class="button" id="solve-fast" type="button">Solve cube fast</button>
+            </div>
+          </section>
+
+          <section class="solution-panel" id="solution-panel" aria-labelledby="solution-heading" hidden>
+            <div class="section-heading">
+              <h2 id="solution-heading">Solution moves</h2>
+              <span class="section-meta" id="solution-count"></span>
+            </div>
+            <div class="solution-current">
+              <span id="solution-current-label">Next move</span>
+              <code id="solution-current"></code>
+            </div>
+            <ol class="solution-list" aria-label="Planned moves" role="list" tabindex="0"></ol>
+            <div class="solution-nav" aria-label="Browse solution moves" role="group">
+              <button class="button" id="solution-prev" type="button" aria-label="Previous moves">Prev</button>
+              <button class="button" id="solution-follow" type="button" aria-label="Follow move" aria-pressed="true">Follow</button>
+              <button class="button" id="solution-next" type="button" aria-label="Next moves">Next</button>
+            </div>
+          </section>
+
+          <details class="moves-dock">
+            <summary class="button">Manual moves</summary>
+            <div class="moves-panel">
+              <div class="face-buttons" role="group" aria-label="Face turns">
+                <button type="button" data-move="U">U</button>
+                <button type="button" data-move="D">D</button>
+                <button type="button" data-move="R">R</button>
+                <button type="button" data-move="L">L</button>
+                <button type="button" data-move="F">F</button>
+                <button type="button" data-move="B">B</button>
+              </div>
+              <form id="move-form" class="sequence-form">
+                <label for="move-sequence">Move sequence</label>
+                <div class="sequence-input">
+                  <input
+                    id="move-sequence"
+                    type="text"
+                    placeholder="R U' 1m 1e2"
+                    aria-describedby="notation-guide"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <button class="button" type="submit">Apply</button>
+                </div>
+              </form>
+              <p class="notation-hint" id="notation-guide">
+                Count m, e, and s slices inward from L, D, and F. Use 10:15e for a slice range, Uw for two layers,
+                or 3Rw for three. Add ' to reverse a turn or 2 for a half turn.
+              </p>
+            </div>
+          </details>
+        </div>
+      </aside>
+
+      <div class="status-dock">
+        <div class="status-line">
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong id="cube-status">Solved</strong>
+          <span class="move-stat">Moves <strong id="moves-applied">0</strong></span>
+        </div>
+        <div class="status-detail">
+          <div id="status-message" role="status" aria-live="polite">Ready to turn</div>
+          <span id="planning-estimate" hidden></span>
+        </div>
+        <progress id="turn-progress" max="100" value="0" hidden aria-label="Turn progress"></progress>
+      </div>
+
+      <p class="canvas-hint" aria-hidden="true">
+        Drag a sticker to turn · Drag the background to orbit · <span class="mouse-hint">Scroll to zoom</span
+        ><span class="touch-hint">Pinch to zoom</span>
+      </p>
+    </main>
+    <script type="module" src="app.mjs?v=18"></script>
+  </body>
+</html>

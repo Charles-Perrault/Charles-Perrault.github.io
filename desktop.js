@@ -5,7 +5,7 @@
     error: 'error', notepad: 'notepad', windows: 'windows', speaker: 'speaker'
   };
   const napsterIcon = '<img class="pixel-icon napster-icon" src="assets/napster-icon-1999.svg" alt="" width="32" height="32">';
-  const icon = (name, size = 32) => name === 'squat' ? '<img class="pixel-icon" src="assets/squat-protocol.png" alt="" width="28" height="40">' : name === 'magnet' ? '<img class="pixel-icon magnet-icon" src="assets/magnet-implant.png" alt="" width="32" height="40">' : name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
+  const icon = (name, size = 32) => name === 'cube-lab' ? `<img class="pixel-icon" src="assets/cube-lab-icon${size === 16 ? '-16' : ''}.png" alt="" width="${size}" height="${size}">` : name === 'squat' ? '<img class="pixel-icon" src="assets/squat-protocol.png" alt="" width="28" height="40">' : name === 'magnet' ? '<img class="pixel-icon magnet-icon" src="assets/magnet-implant.png" alt="" width="32" height="40">' : name === 'napster' ? napsterIcon : name === 'gurt' ? '<img class="pixel-icon gurt-icon" src="assets/gurt-icon.png" alt="" width="32" height="38">' : name === 'bench' ? '<img class="pixel-icon bench-icon" src="assets/bench-press-study.png" alt="" width="50" height="36">' : name === 'skateboard' ? '<img class="pixel-icon game-icon" src="assets/tony-eagle.png" alt="" width="64" height="36">' : `<img class="pixel-icon stock-icon" src="assets/icons/win95/${stockIcons[name] || 'document'}-${size}.png" alt="" width="${size}" height="${size}">`;
   const portfolio = document.querySelector('body > .window');
   portfolio.id = 'portfolio';
   portfolio.setAttribute('aria-label', 'Charles Perrault — Home Page');
@@ -20,14 +20,14 @@
     ['bench', 'Bench Press Study', 'bench-press-study'],
     ['squat', 'Squat Protocol', 'squat-protocol'],
     ['magnet', 'BADASS MAGNET IMPLANT!', 'magnet-implant'],
-    ['napster', 'Napster', 'napster'], ['photos', 'Photos', 'photo-carousel'], ['gurt', 'gurt', 'gurt']
+    ['napster', 'Napster', 'napster'], ['photos', 'Photos', 'photo-carousel'], ['gurt', 'gurt', 'gurt'], ['cube-lab', 'Cube Lab', 'cube-lab']
   ];
   function shortcut([image, label, action], className) {
     const link = /^(https:|mailto:)|\.pdf$/.test(action);
     return link ? `<a class="${className}" href="${action}" ${action.startsWith('mailto:') ? '' : 'target="_blank" rel="noopener noreferrer"'}>${icon(image)}<span>${label}</span></a>` : `<button type="button" class="${className}" data-open="${action}">${icon(image)}<span>${label}</span></button>`;
   }
   document.body.insertAdjacentHTML('afterbegin', `<main class="desktop" aria-label="Windows 95 desktop"><nav class="desktop-icons" aria-label="Desktop shortcuts">${shortcuts.map(s => shortcut(s, 'desktop-icon')).join('')}</nav></main>`);
-  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['squat', 'Squat Protocol', 'squat-protocol'], 'start-item')}${shortcut(['magnet', 'BADASS MAGNET IMPLANT!', 'magnet-implant'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['gurt', 'gurt', 'gurt'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cperraul@purdue.edu'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows', 16)}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe', 16)}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker', 16)}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
+  document.body.insertAdjacentHTML('beforeend', `<section class="start-menu" id="start-menu" aria-label="Start menu" hidden><div class="start-brand">Windows <b>95</b></div><nav class="start-items">${shortcut(['globe', 'About Me', 'portfolio'], 'start-item')}${shortcut(['computer', 'My Computer', 'computer'], 'start-item')}${shortcut(['notepad', 'Notepad', 'notepad'], 'start-item')}${shortcut(['bench', 'Bench Press Study', 'bench-press-study'], 'start-item')}${shortcut(['squat', 'Squat Protocol', 'squat-protocol'], 'start-item')}${shortcut(['magnet', 'BADASS MAGNET IMPLANT!', 'magnet-implant'], 'start-item')}${shortcut(['napster', 'Napster', 'napster'], 'start-item')}${shortcut(['photos', 'Photos', 'photo-carousel'], 'start-item')}${shortcut(['gurt', 'gurt', 'gurt'], 'start-item')}${shortcut(['skateboard', 'Tony Eagle', 'tony-eagle'], 'start-item')}${shortcut(['cube-lab', 'Cube Lab', 'cube-lab'], 'start-item')}<hr>${shortcut(['mail', 'Email Charles', 'mailto:cperraul@purdue.edu'], 'start-item')}</nav></section><footer class="taskbar" aria-label="Taskbar"><button class="taskbar-button start-button" id="start-button" aria-expanded="false" aria-controls="start-menu">${icon('windows', 16)}Start</button><div class="task-divider"></div><button class="taskbar-button task-button" id="portfolio-task" aria-pressed="true">${icon('globe', 16)}<span>Charles Perrault — Home Page</span></button><button class="taskbar-button task-button" id="utility-task" hidden></button><div class="system-tray">${icon('speaker', 16)}<time id="desktop-clock" aria-label="Local time"></time></div></footer><section class="window utility-window" id="utility" aria-labelledby="utility-title" hidden><div class="titlebar"><div class="title" id="utility-title"></div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize utility window">_</button><button type="button" data-window-action="maximize" aria-label="Maximize utility window">□</button><button type="button" data-window-action="close" aria-label="Close utility window">×</button></div></div><div class="utility-content" id="utility-content"></div></section>`);
   document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="tony-eagle" aria-labelledby="game-title" hidden><div class="titlebar"><div class="title" id="game-title">${icon('skateboard')}Tony Eagle — Amateur Skateboarding</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Tony Eagle">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Tony Eagle">□</button><button type="button" data-window-action="close" aria-label="Close Tony Eagle">×</button></div></div><div class="game-toolbar"><span>Arrows / WASD: move · Hold Space / B, release to jump</span><button type="button" id="game-fullscreen">Fullscreen</button><a href="games/tony-eagle/index.html?v=5" target="_blank" rel="noopener noreferrer">Open standalone ↗</a></div><iframe id="game-frame" title="Tony Eagle game" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe></section>`);
   document.getElementById('utility-task').insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="game-task" aria-pressed="false" hidden>${icon('skateboard')}<span>Tony Eagle</span></button>`);
   const game = document.getElementById('tony-eagle');
@@ -189,8 +189,25 @@
     if (magnet.hidden) openMagnet();
     else { magnet.hidden = true; magnetTask.setAttribute('aria-pressed', 'false'); }
   });
-  const windows = [portfolio, utility, game, bench, magnet, ...Array.from(placeholderApps.values(), app => app.win)];
-  const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], [magnet, magnetTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
+  const cubeUrl = 'cube-lab/';
+  document.body.insertAdjacentHTML('beforeend', `<section class="window game-window" id="cube-lab" aria-labelledby="cube-lab-title" hidden><div class="titlebar"><div class="title" id="cube-lab-title">${icon('cube-lab', 16)}Cube Lab</div><div class="winbtns"><button type="button" data-window-action="minimize" aria-label="Minimize Cube Lab">_</button><button type="button" data-window-action="maximize" aria-label="Maximize Cube Lab">□</button><button type="button" data-window-action="close" aria-label="Close Cube Lab">×</button></div></div><div class="game-toolbar cube-lab-toolbar"><a href="${cubeUrl}" target="_blank" rel="noopener noreferrer">Open in new tab</a></div><iframe id="cube-lab-frame" title="Cube Lab"></iframe></section>`);
+  gameTask.insertAdjacentHTML('afterend', `<button class="taskbar-button task-button" id="cube-lab-task" aria-pressed="false" hidden>${icon('cube-lab', 16)}<span>Cube Lab</span></button>`);
+  const cubeWindow = document.getElementById('cube-lab');
+  const cubeFrame = document.getElementById('cube-lab-frame');
+  const cubeTask = document.getElementById('cube-lab-task');
+  function openCubeLab() {
+    if (!cubeFrame.hasAttribute('src')) cubeFrame.src = cubeUrl;
+    cubeTask.hidden = false;
+    cubeTask.setAttribute('aria-pressed', 'true');
+    focusWindow(cubeWindow);
+    cubeFrame.focus();
+  }
+  cubeTask.addEventListener('click', () => {
+    if (cubeWindow.hidden) openCubeLab();
+    else { cubeWindow.hidden = true; cubeTask.setAttribute('aria-pressed', 'false'); }
+  });
+  const windows = [portfolio, utility, game, bench, magnet, cubeWindow, ...Array.from(placeholderApps.values(), app => app.win)];
+  const windowTasks = new Map([[portfolio, task], [utility, utilityTask], [game, gameTask], [bench, benchTask], [magnet, magnetTask], [cubeWindow, cubeTask], ...Array.from(placeholderApps.values(), app => [app.win, app.taskButton])]);
   let notes = '';
   document.addEventListener('input', e => { if (e.target.id === 'notes') notes = e.target.value; });
   document.addEventListener('click', e => {
@@ -213,6 +230,7 @@
       return;
     }
     if (name === 'tony-eagle') { openGame(); return; }
+    if (name === 'cube-lab') { openCubeLab(); return; }
     if (name === 'bench-press-study') { openBench(); return; }
     if (name === 'magnet-implant') { openMagnet(); return; }
     if (placeholderApps.has(name)) { placeholderApps.get(name).open(); return; }
@@ -244,8 +262,8 @@
       const taskButton = windowTasks.get(win);
       if (action === 'maximize') {
         win.classList.toggle('maximized');
-        button.setAttribute('aria-label', `${win.classList.contains('maximized') ? 'Restore' : 'Maximize'} ${win === portfolio ? 'Home Page' : win === game ? 'Tony Eagle' : win === bench ? 'Bench Press Study' : win === magnet ? 'BADASS MAGNET IMPLANT!' : placeholderApps.get(win.id)?.title || 'utility window'}`);
-      } else { win.hidden = true; taskButton.setAttribute('aria-pressed', 'false'); if (win === game) { pauseGame(); if (action === 'close') gameFrame.removeAttribute('src'); } if (action === 'close') taskButton.hidden = true; }
+        button.setAttribute('aria-label', `${win.classList.contains('maximized') ? 'Restore' : 'Maximize'} ${win === portfolio ? 'Home Page' : win === game ? 'Tony Eagle' : win === bench ? 'Bench Press Study' : win === magnet ? 'BADASS MAGNET IMPLANT!' : win === cubeWindow ? 'Cube Lab' : placeholderApps.get(win.id)?.title || 'utility window'}`);
+      } else { win.hidden = true; taskButton.setAttribute('aria-pressed', 'false'); if (win === game) { pauseGame(); if (action === 'close') gameFrame.removeAttribute('src'); } if (action === 'close') { taskButton.hidden = true; if (win === cubeWindow) cubeFrame.removeAttribute('src'); } }
     }));
     // Pointer capture keeps edge dragging working over the game iframe.
     for (const direction of ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']) {

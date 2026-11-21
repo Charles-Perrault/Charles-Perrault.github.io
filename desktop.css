@@ -82,7 +82,9 @@ button:focus-visible, a:focus-visible { outline: 1px dotted currentColor; outlin
 .game-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 6px 8px; font-size: 11px; border-bottom: 1px solid #808080; }
 .game-toolbar span { flex: 1; }
 .game-toolbar button, .game-toolbar a { color: #000; background: #c0c0c0; border: 1px solid; border-color: white #404040 #404040 white; padding: 4px 7px; text-decoration: none; cursor: pointer; }
-#game-frame { display: block; width: 100%; flex: 1; min-height: 0; border: 2px inset #dfdfdf; background: #151b21; }
+.cube-lab-toolbar { justify-content: flex-end; }
+#cube-lab.maximized { height: calc(100dvh - 76px) !important; }
+#game-frame, #cube-lab-frame { display: block; width: 100%; flex: 1; min-height: 0; border: 2px inset #dfdfdf; background: #151b21; }
 @media (max-width: 600px) { .game-window { top: 16px; left: 4px; width: calc(100% - 8px); height: calc(100dvh - 58px); } .game-toolbar span { flex-basis: 100%; } .task-button { min-width: 0; } }
 @media print { .game-window { display: none !important; } }
 
