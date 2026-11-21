@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Curvy Copter Plus · Cube Lab</title>
+<link rel="stylesheet" href="style.css">
+<main class="stage">
+  <canvas id="puzzle" tabindex="0" aria-label="Interactive Curvy Copter Plus"></canvas>
+  <header><h1>Curvy Copter Plus</h1><a href="../">Cube Lab</a></header>
+  <button class="reset-view" id="view" type="button">Reset view</button>
+  <div class="controls">
+    <section aria-label="Solver">
+      <button class="primary" id="solve" type="button">Solve</button>
+      <div class="row"><button id="pause" disabled>Pause</button><button id="stop" disabled>Stop</button></div>
+      <p class="mode" id="shape">Cube shape</p>
+    </section>
+    <section aria-label="Scramble">
+      <h2>Scramble</h2>
+      <div class="row"><button id="scramble">Instant scramble</button><button id="animate">Animate</button></div>
+      <div class="row"><button id="jumble">Jumble</button><button id="jumble-scramble">Jumbled scramble</button></div>
+      <div class="fields">
+        <label>Moves <input id="count" type="number" min="1" max="1000" value="40"></label>
+        <label>Turns/sec <input id="speed" type="number" min="0.1" step="any" value="10"></label>
+      </div>
+    </section>
+    <section aria-label="Puzzle state">
+      <h2>Puzzle state</h2>
+      <div class="row"><select id="edge" aria-label="Edge"></select><select id="angle" aria-label="Turn position"></select><button id="flip">Turn</button></div>
+      <div class="row"><button id="paint" aria-pressed="false">Enter stickers</button><button id="reset">Reset puzzle</button></div>
+      <div id="palette" aria-label="Sticker color" hidden></div>
+    </section>
+    <section aria-label="Move sequence">
+      <h2>Moves</h2><div id="moves" tabindex="0"></div>
+    </section>
+  </div>
+  <div class="status" id="status" role="status">Solved</div>
+  <p class="hint" id="hint">Click an edge to select it · Drag to orbit · Scroll to zoom</p>
+</main>
+<script type="module" src="app.mjs"></script>
+</html>
