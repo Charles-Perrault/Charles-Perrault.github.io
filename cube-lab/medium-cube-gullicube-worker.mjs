@@ -19,13 +19,13 @@ async function readTable(name, base, timeout) {
   return [file, new Uint8Array(await response.arrayBuffer())];
 }
 
-export function runGullicube({ size, facelets, budget, fast, tables, onReport = () => {} }) {
+export function runGullicube({ size, facelets, budget, fast, tables, seed = 1, onReport = () => {} }) {
   return new Promise((resolve, reject) => {
     let cursor = 0;
     const solution = [];
     let lastLine;
     let lastError;
-    const args = [String(size), '-f', '-o', '-t', '1', '--seed', '1'];
+    const args = [String(size), '-f', '-o', '-t', '1', '--seed', String(seed)];
     args.push(...(fast ? ['--fast'] : ['--time', String(budget)]));
     createGullicube({
       locateFile: (name) => new URL(name, shipped).href,
@@ -56,22 +56,30 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
   const started = performance.now();
   const small = Promise.all(smallTables.map((table) => readTable(table, localTables, 10000)));
   const lowMemory = self.navigator.deviceMemory !== undefined && self.navigator.deviceMemory < 4;
-  const quality = data.fast || lowMemory
+  const quality = data.fast || (lowMemory && data.size !== 5)
     ? Promise.resolve([])
     : Promise.all(qualityTables(data.size).map((table) => readTable(table, upstream, Math.min(12000, data.budget * 400)))).catch(() => []);
   try {
     self.postMessage({ stage: 'gulli-download' });
     const [base, extra] = await Promise.all([small, quality]);
-    const remaining = Math.max(1, data.budget - (performance.now() - started) / 1000);
     self.postMessage({ stage: 'gulli-prep' });
-    const candidate = await runGullicube({
-      ...data,
-      fast: !extra.length,
-      budget: remaining,
-      tables: [...base, ...extra],
-      onReport: (event) => self.postMessage(event),
-    });
-    self.postMessage({ done: true, candidate });
+    const repeat = data.size === 5 && !data.fast;
+    const tables = [...base, ...extra];
+    for (let seed = 1; ; seed++) {
+      const remaining = data.budget - (performance.now() - started) / 1000;
+      if (seed > 1 && remaining < 1) break;
+      const candidate = await runGullicube({
+        ...data,
+        seed,
+        fast: !extra.length,
+        budget: Math.max(1, repeat && seed > 1 ? Math.min(remaining, 7) : remaining),
+        tables,
+        onReport: (event) => self.postMessage(event),
+      });
+      self.postMessage({ stage: 'gulli-search', candidate });
+      if (!repeat) break;
+    }
+    self.postMessage({ done: true });
   } catch (error) {
     self.postMessage({ error: error.message });
   }

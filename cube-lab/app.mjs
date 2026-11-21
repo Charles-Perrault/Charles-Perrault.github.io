@@ -447,7 +447,7 @@ function startSolve(center) {
   solutionList.clear();
   renderer.cancelDrag();
   try {
-    const job = new Worker(new URL('./solver-worker.mjs?v=18', import.meta.url), { type: 'module' });
+    const job = new Worker(new URL('./solver-worker.mjs?v=19', import.meta.url), { type: 'module' });
     worker = job;
     let phase = 'white';
     let phaseStarted = performance.now();
@@ -459,8 +459,8 @@ function startSolve(center) {
         const stages = {
           verify: 'Checking Brobdicube solution',
           'direct-search': 'Checking for a short solution',
-          'optimal-tables': 'Preparing optimal-search tables',
-          'optimal-search': 'Proving the shortest solution',
+          'three-search': 'Searching for a short 3×3 solution',
+          'optimal-search': 'Finding the shortest 2×2 solution',
           'four-tables': 'Preparing 4×4 search tables',
           'four-search': 'Searching 4×4 solutions',
           'gulli-download': 'Loading Gullicube search tables',

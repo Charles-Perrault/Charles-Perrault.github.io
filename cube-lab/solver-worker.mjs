@@ -18,8 +18,8 @@ async function shortCubePlan(cube, center, report) {
   const { size } = cube;
   if (cube.isSolved()) return { moves: [] };
   if (size <= 3) {
-    const { solveSmallCube } = await import('./small-cube-solver.mjs?v=18');
-    return { moves: await solveSmallCube(cube, report), backend: 'optimal search' };
+    const { solveSmallCube } = await import('./small-cube-solver.mjs?v=19');
+    return { moves: await solveSmallCube(cube, report), backend: size === 2 ? 'optimal search' : '3×3 search' };
   }
 
   const { findDirectSolution } = await import('./direct-cube-search.mjs?v=18');
@@ -47,8 +47,8 @@ async function shortCubePlan(cube, center, report) {
       moves = await solveFour(cube, report, { thorough: !fast });
       backend = '4×4 search';
     } else {
-      const { solveMediumCube } = await import('./medium-cube-search.mjs?v=18');
-      moves = await solveMediumCube(cube, report, { fast, compact: compactSmallTurns });
+      const { solveMediumCube } = await import('./medium-cube-search.mjs?v=19');
+      moves = await solveMediumCube(cube, report, { fast: fast && size !== 5, compact: compactSmallTurns });
       backend = 'Gullicube';
     }
     const result = verified(moves, backend);

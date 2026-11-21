@@ -39,7 +39,7 @@ export async function solveMediumCube(cube, report = () => {}, options = {}) {
   const budget = options.seconds ?? seconds[cube.size];
   if (!Number.isFinite(budget) || budget <= 0) throw new RangeError('The search needs a positive time budget.');
   if (cube.isSolved()) return [];
-  const worker = new Worker(new URL('./medium-cube-gullicube-worker.mjs', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./medium-cube-gullicube-worker.mjs?v=19', import.meta.url), { type: 'module' });
   return new Promise((resolve, reject) => {
     const started = performance.now();
     let best;
