@@ -130,8 +130,8 @@ function turnOptions() {
 }
 
 function controls() {
-  for (const id of ['solve', 'jumble']) get(id).disabled = busy();
-  for (const id of ['scramble', 'animate', 'jumble-scramble', 'paint']) get(id).disabled = busy() || Boolean(poses);
+  for (const id of ['solve', 'jumble', 'paint']) get(id).disabled = busy();
+  for (const id of ['scramble', 'animate', 'jumble-scramble']) get(id).disabled = busy() || Boolean(poses);
   edgeInput.disabled = busy();
   angleInput.disabled = busy() || !options.length;
   get('flip').disabled = busy() || !options.length;
