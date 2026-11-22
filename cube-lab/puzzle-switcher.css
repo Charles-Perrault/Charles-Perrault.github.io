@@ -1,0 +1,44 @@
+.puzzle-switcher {
+  position: absolute;
+  top: calc(var(--top, var(--edge)) + 29px);
+  left: var(--left, var(--edge));
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.puzzle-switcher > :is(a, span) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 2px 7px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--muted);
+  font: 600 12px "Segoe UI", sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.puzzle-switcher a:hover {
+  background: #202b37;
+  color: #edf2f3;
+}
+
+.puzzle-switcher [aria-current] {
+  border-color: var(--line);
+  background: #141e27;
+  color: var(--accent, var(--lime));
+}
+
+.puzzle-switcher a:focus-visible {
+  outline: 2px solid var(--accent, var(--lime));
+  outline-offset: 1px;
+}
+
+@media (max-width: 680px) {
+  .puzzle-switcher { top: calc(var(--top, var(--edge)) + 39px); }
+  .puzzle-switcher > :is(a, span) { min-height: 32px; }
+  .workbench .setup-dock { top: calc(var(--top) + 77px); }
+}

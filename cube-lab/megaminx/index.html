@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1017">
+    <title>Megaminx · Cube Lab</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../puzzle-switcher.css?v=1">
+  </head>
+  <body>
+    <main class="stage">
+      <canvas id="puzzle" tabindex="0" aria-label="Interactive Megaminx. Drag a sticker to turn or drag the background to orbit. Use brackets to turn the selected face."></canvas>
+      <header><h1 id="puzzle-name">Megaminx</h1></header>
+      <nav class="puzzle-switcher" aria-label="Puzzles">
+        <a href="../">Cube</a>
+        <span aria-current="page">Minx family</span>
+        <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
+      </nav>
+      <button class="reset-view" id="view" type="button">Reset view</button>
+      <div class="controls">
+        <form id="resize" class="row size-picker">
+          <label for="layers">Layers</label>
+          <input id="layers" type="number" min="2" max="100" required value="3" list="layer-presets">
+          <datalist id="layer-presets">
+            <option value="2" label="Kilominx"></option>
+            <option value="3" label="Megaminx"></option>
+            <option value="4" label="Master Kilominx"></option>
+            <option value="5" label="Gigaminx"></option>
+            <option value="6" label="Elite Kilominx"></option>
+            <option value="7" label="Teraminx"></option>
+          </datalist>
+          <button id="apply-size" type="submit">Resize</button>
+        </form>
+        <div class="row actions">
+          <button class="primary" id="solve" type="button">Solve Megaminx</button>
+          <button id="stop" type="button" disabled>Stop</button>
+        </div>
+        <section aria-labelledby="scramble-label">
+          <h2 id="scramble-label">Scramble</h2>
+          <div class="row">
+            <button id="instant" type="button">Instant scramble</button>
+            <button id="animate" type="button">Animate</button>
+          </div>
+          <div class="fields">
+            <label>Moves <input id="count" type="number" min="1" max="1000" value="70"></label>
+            <label>Turns/sec <input id="speed" type="number" min="1" step="any" value="8"></label>
+          </div>
+          <button class="reset-puzzle" id="reset" type="button">Reset puzzle</button>
+        </section>
+        <section class="turns" aria-labelledby="turn-label">
+          <h2 id="turn-label">Turn a face</h2>
+          <label class="face-picker"><span id="swatch"></span><select id="face" aria-label="Selected face"></select></label>
+          <label class="slice-picker" id="slice-picker" hidden>Layer <select id="slice"></select></label>
+          <div class="row">
+            <button id="left" type="button" title="[">Counterclockwise</button>
+            <button id="right" type="button" title="]">Clockwise</button>
+          </div>
+        </section>
+      </div>
+      <div class="status" role="status"><span id="state">Solved</span><span id="applied"></span></div>
+      <p class="hint">Drag a sticker to turn · Drag the background to orbit · Scroll or pinch to zoom</p>
+    </main>
+    <script type="module" src="app.mjs"></script>
+  </body>
+</html>

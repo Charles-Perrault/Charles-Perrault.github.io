@@ -4,9 +4,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Curvy Copter Plus · Cube Lab</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="../puzzle-switcher.css?v=1">
 <main class="stage">
   <canvas id="puzzle" tabindex="0" aria-label="Interactive Curvy Copter Plus"></canvas>
-  <header><h1>Curvy Copter Plus</h1><a href="../">Cube Lab</a></header>
+  <header><h1>Curvy Copter Plus</h1></header>
+  <nav class="puzzle-switcher" aria-label="Puzzles">
+    <a href="../">Cube</a>
+    <a href="../megaminx/">Minx family</a>
+    <span aria-current="page">Curvy Copter Plus</span>
+  </nav>
   <button class="reset-view" id="view" type="button">Reset view</button>
   <div class="controls">
     <section aria-label="Solver">
