@@ -26,12 +26,25 @@ a { color: var(--muted); font-size: 12px; text-underline-offset: 3px; }
 .controls { top: calc(var(--edge) + 62px); right: var(--edge); width: 244px; }
 h2 { margin: 0 0 8px; font-size: 14px; }
 .turns { margin-top: 22px; }
-.actions { margin: 0 0 20px; }
+.actions { margin: 16px 0 20px; }
 .actions #solve { flex: 1; }
 .actions #stop { flex: 0 0 auto; }
 .reset-puzzle { margin-top: 6px; }
-.size-picker { width: 100%; align-items: center; margin: 0 0 12px; }
-.size-picker input { width: 64px; }
+.section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.section-heading h2 { margin: 0; font-weight: 650; }
+.section-heading a:hover { color: #edf2f3; }
+.section-meta, #speed-rate { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.size-form { display: flex; gap: 6px; }
+.size-form input { width: 0; flex: 1; }
+.size-form :is(input, button) { min-height: 38px; }
+.setup-dock input { min-width: 0; background: #101821; font: 13px Consolas, monospace; caret-color: var(--accent); }
+.presets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.presets button { min-width: 0; min-height: 30px; padding: 0 3px; font-family: Consolas, monospace; }
+.presets button[aria-pressed="true"] { color: var(--accent); background: #30402c; border-color: #81965f; }
+.speed-row { display: grid; grid-template-columns: auto minmax(56px, 1fr) minmax(0, auto); gap: 8px; align-items: center; margin-top: 16px; font-size: 13px; }
+.speed-row input { width: 100%; min-height: 33px; padding: 0 6px; }
+#speed-rate { max-width: 74px; overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .slice-picker:not([hidden]) { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .slice-picker select { flex: 1; }
 button, input, select {
@@ -50,22 +63,20 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 canvas:focus-visible { outline-offset: -4px; }
 .primary { width: 100%; background: var(--accent); color: #152111; border-color: transparent; }
 .primary:hover:not(:disabled) { background: #defc9d; }
-.row, .fields { display: flex; gap: 6px; margin-top: 6px; }
-.row button, .fields label { flex: 1; }
-.fields label { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
-.fields input { width: 54px; min-height: 29px; background: #101821; font-family: Consolas, monospace; }
+.row { display: flex; gap: 6px; }
+.row button { flex: 1; }
 .face-picker { display: flex; align-items: center; gap: 8px; }
 .face-picker select { flex: 1; }
 #swatch { width: 16px; height: 16px; border-radius: 3px; }
 .status { left: var(--edge); bottom: var(--edge); display: flex; gap: 12px; font-size: 13px; }
+#turn-progress { position: absolute; bottom: 5px; left: var(--edge); width: calc(100% - 2 * var(--edge)); height: 3px; accent-color: var(--accent); }
 #applied, .hint { color: var(--muted); }
 .hint { bottom: var(--edge); left: 50%; transform: translateX(-50%); margin: 0; width: min(48vw, 450px); text-align: center; font-size: 12px; pointer-events: none; }
 @media (max-width: 700px) {
   .controls { top: auto; bottom: calc(var(--edge) + 34px); left: var(--edge); right: var(--edge); width: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .controls .actions, .controls .size-picker { grid-column: 1 / -1; flex-wrap: nowrap; margin: 0 0 4px; }
+  .controls .actions, .controls .setup-dock { grid-column: 1 / -1; margin: 0 0 4px; }
   .turns { margin: 0; }
   .row { flex-wrap: wrap; }
-  .fields { flex-wrap: wrap; }
   .hint { display: none; }
 }
 @media (max-width: 460px) {

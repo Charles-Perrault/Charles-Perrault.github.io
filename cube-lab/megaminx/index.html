@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b1017">
     <title>Megaminx · Cube Lab</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="stylesheet" href="../puzzle-switcher.css?v=1">
   </head>
   <body>
@@ -20,32 +20,43 @@
       </nav>
       <button class="reset-view" id="view" type="button">Reset view</button>
       <div class="controls">
-        <form id="resize" class="row size-picker">
-          <label for="layers">Layers</label>
-          <input id="layers" type="number" min="2" max="100" required value="3" list="layer-presets">
-          <datalist id="layer-presets">
-            <option value="2" label="Kilominx"></option>
-            <option value="3" label="Megaminx"></option>
-            <option value="4" label="Master Kilominx"></option>
-            <option value="5" label="Gigaminx"></option>
-            <option value="6" label="Elite Kilominx"></option>
-            <option value="7" label="Teraminx"></option>
-          </datalist>
-          <button id="apply-size" type="submit">Resize</button>
-        </form>
+        <div class="setup-dock">
+          <section aria-labelledby="size-heading">
+            <div class="section-heading">
+              <h2 id="size-heading">Minx size</h2>
+              <a id="size-link" href="#layers=3">Share size</a>
+            </div>
+            <form id="resize" class="size-form">
+              <label class="sr-only" for="layers">Minx size in layers</label>
+              <input id="layers" type="number" min="2" max="100" step="1" required value="3">
+              <button id="apply-size" type="submit">Resize</button>
+            </form>
+            <div class="presets" role="group" aria-label="Minx size presets">
+              <button type="button" data-size="2">2</button>
+              <button type="button" data-size="3" aria-pressed="true">3</button>
+              <button type="button" data-size="4">4</button>
+              <button type="button" data-size="5">5</button>
+              <button type="button" data-size="7">7</button>
+            </div>
+          </section>
+          <div class="speed-row">
+            <label for="speed" title="1 = 1 turn per second">Turn speed</label>
+            <input id="speed" type="number" min="0" step="any" required value="24" aria-describedby="speed-rate">
+            <span id="speed-rate">24 turns/sec</span>
+          </div>
+        </div>
         <div class="row actions">
           <button class="primary" id="solve" type="button">Solve Megaminx</button>
           <button id="stop" type="button" disabled>Stop</button>
         </div>
         <section aria-labelledby="scramble-label">
-          <h2 id="scramble-label">Scramble</h2>
+          <div class="section-heading">
+            <h2 id="scramble-label">Scramble</h2>
+            <span class="section-meta" id="count">60 moves</span>
+          </div>
           <div class="row">
             <button id="instant" type="button">Instant scramble</button>
-            <button id="animate" type="button">Animate</button>
-          </div>
-          <div class="fields">
-            <label>Moves <input id="count" type="number" min="1" max="1000" value="70"></label>
-            <label>Turns/sec <input id="speed" type="number" min="1" step="any" value="8"></label>
+            <button id="animate" type="button">Scramble</button>
           </div>
           <button class="reset-puzzle" id="reset" type="button">Reset puzzle</button>
         </section>
@@ -59,9 +70,10 @@
           </div>
         </section>
       </div>
-      <div class="status" role="status"><span id="state">Solved</span><span id="applied"></span></div>
+      <div class="status"><span id="state" role="status">Solved</span><span id="applied"></span></div>
+      <progress id="turn-progress" max="100" value="0" hidden aria-label="Turn progress"></progress>
       <p class="hint">Drag a sticker to turn · Drag the background to orbit · Scroll or pinch to zoom</p>
     </main>
-    <script type="module" src="app.mjs"></script>
+    <script type="module" src="app.mjs?v=2"></script>
   </body>
 </html>

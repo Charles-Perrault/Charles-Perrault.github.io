@@ -53,6 +53,7 @@ export class LayeredMinx {
     this.byPoint = new Map();
     this.permutations = new Map();
     this.cycles = new Map();
+    this.sliceIds = new Array(faces.length);
     const even = size % 2 === 0;
     const limits = limitsFor(size, this.depth - Number(even));
     for (const [face, ring] of faceVertices.entries()) {
@@ -91,9 +92,17 @@ export class LayeredMinx {
       const rotated = rotate(normal, axis, -step);
       return faces.findIndex(candidate => dot(candidate, rotated) > 1 - epsilon);
     });
+    if (!this.sliceIds[face]) {
+      const layers = Array.from({ length: this.depth + 1 }, () => []);
+      for (let id = 0; id < this.stickers.length; id++) {
+        const band = this.stickers[id].bands[face];
+        if (band) layers[band].push(id);
+      }
+      this.sliceIds[face] = layers;
+    }
     const entries = [];
-    for (const [id, tile] of this.stickers.entries()) {
-      if (!tileInLayer(tile, face, layer)) continue;
+    for (const id of this.sliceIds[face][layer]) {
+      const tile = this.stickers[id];
       const point = rotate(tile.point, axis, -step);
       const to = this.byPoint.get(bin(point, faceMap[tile.face]));
       if (to === undefined || !tileInLayer(this.stickers[to], face, layer)) throw new Error('Invalid layered turn');
@@ -101,6 +110,7 @@ export class LayeredMinx {
     }
     const result = Uint32Array.from(entries);
     this.permutations.set(key, result);
+    this.sliceIds[face][layer] = null;
     return result;
   }
 

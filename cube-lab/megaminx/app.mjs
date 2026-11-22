@@ -1,20 +1,31 @@
 import { Megaminx, stickers, faces, colors, add, cross, dot, scale, rotate, step, scramble } from './puzzle.mjs';
-import { LayeredMinx, layeredScramble, maxLayers, tileInLayer } from './layered-minx.mjs';
+import { LayeredMinx, layeredScramble, maxLayers, tileInLayer } from './layered-minx.mjs?v=2';
+import { FaceRenderer } from './face-renderer.mjs';
 
 const get = id => document.getElementById(id);
 const canvas = get('puzzle');
-const context = canvas.getContext('2d');
+const controls = document.querySelector('.controls');
+const gl = canvas.getContext('webgl2');
+const renderer = gl ? new FaceRenderer(gl) : null;
+const context = renderer ? null : canvas.getContext('2d');
 let puzzle = new Megaminx(), size = 3;
 const faceSelect = get('face'), sliceSelect = get('slice'), sizeInput = get('layers');
+const speedInput = get('speed'), progress = get('turn-progress');
+const sizeButtons = [...document.querySelectorAll('.presets button')];
+const speedFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 colors.forEach(([name], face) => faceSelect.add(new Option(name, face)));
 const pointers = new Map();
 let yaw = 0.59, pitch = 0.53, zoom = 1, selected = 0;
 let painted = [], gesture, playback, solverWorker, planning = false, frame = 0, total = 0;
+let stateDirty = false, rate = speedInput.valueAsNumber;
 const busy = () => Boolean(playback || planning);
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
 const names = ['Kilominx', 'Megaminx', 'Master Kilominx', 'Gigaminx', 'Elite Kilominx', 'Teraminx', 'Royal Kilominx', 'Petaminx'];
 const selectedLayer = () => Number(sliceSelect.value) || 1;
-const applyTurn = ({ face, direction, layer }) => puzzle.turn(face, direction, layer);
+const applyTurn = ({ face, direction, layer }) => {
+  puzzle.turn(face, direction, layer);
+  stateDirty = true;
+};
 const turnSelected = direction => play([{ face: selected, direction, layer: selectedLayer() }]);
 
 function path(points) {
@@ -31,8 +42,10 @@ function camera() {
   const right = [Math.cos(yaw), 0, -Math.sin(yaw)];
   const up = cross(forward, right);
   const distance = 5;
-  const lens = Math.min(width * (mobile ? 0.94 : 0.54), height * (mobile ? 0.51 : 0.76)) * zoom * 1.68;
-  const center = [width * (mobile ? 0.5 : 0.43), height * (mobile ? 0.35 : 0.50)];
+  const top = 92;
+  const room = mobile ? Math.max(44, controls.offsetTop - top) : height;
+  const lens = Math.min(width * (mobile ? 0.94 : 0.54), room * (mobile ? 1.05 : 0.76)) * zoom * 1.68;
+  const center = [width * (mobile ? 0.5 : 0.43), mobile ? top + room / 2 : height / 2];
   const project = v => {
     const magnification = lens / (distance - dot(v, forward));
     return [center[0] + dot(v, right) * magnification, center[1] - dot(v, up) * magnification];
@@ -42,7 +55,7 @@ function camera() {
     const ray = add(scale(forward, -1), add(scale(right, (x - center[0]) / lens), scale(up, (center[1] - y) / lens)));
     return add(eye, scale(ray, (1 - dot(eye, normal)) / dot(ray, normal)));
   };
-  return { width, height, forward, eye, project, onFace };
+  return { width, height, forward, right, up, center, lens, eye, project, onFace };
 }
 
 function dragTurn(tile, start, end) {
@@ -71,15 +84,23 @@ function dragTurn(tile, start, end) {
 }
 
 function draw(move, fraction = 0) {
-  const { width, height, forward, eye, project } = camera();
+  const view = camera();
+  const { width, height, forward, eye, project } = view;
   const density = Math.min(devicePixelRatio || 1, 2);
   if (canvas.width !== Math.round(width * density) || canvas.height !== Math.round(height * density)) {
     canvas.width = Math.round(width * density);
     canvas.height = Math.round(height * density);
   }
+  const angle = move ? -step * move.direction * fraction : 0;
+  if (renderer) {
+    if (!renderer.images) return;
+    if (stateDirty) renderer.sync(puzzle.state);
+    stateDirty = false;
+    renderer.draw(view, move, angle);
+    return;
+  }
   context.setTransform(density, 0, 0, density, 0, 0);
   context.clearRect(0, 0, width, height);
-  const angle = move ? -step * move.direction * fraction : 0;
   const tiles = puzzle.stickers ?? stickers;
   painted = [];
   for (let id = 0; id < tiles.length; id++) {
@@ -122,6 +143,7 @@ function updateStatus(message) {
 
 function lock(active) {
   for (const id of ['instant', 'animate', 'left', 'right', 'apply-size', 'layers', 'slice']) get(id).disabled = active;
+  for (const button of sizeButtons) button.disabled = active;
   get('solve').disabled = active;
   get('stop').disabled = !active;
 }
@@ -135,35 +157,50 @@ function stop(message) {
     planning = false;
   }
   lock(false);
+  progress.hidden = true;
   updateStatus(message);
   draw();
 }
 
 function animate(now) {
-  if (!playback) return;
-  const { moves, duration, started } = playback;
-  while (playback.index < moves.length && now >= started + (playback.index + 1) * duration) {
-    const move = moves[playback.index++];
+  const work = playback;
+  if (!work) return;
+  const { moves } = work;
+  work.credit = Math.min(moves.length - work.index, work.credit + clamp(now - work.last, 0, 100) * rate / 1000);
+  work.last = now;
+  const deadline = performance.now() + 7;
+  while (work.credit >= 1 && work.index < moves.length) {
+    const move = moves[work.index++];
     applyTurn(move);
+    work.credit--;
     total++;
+    if (performance.now() >= deadline) {
+      work.credit = Math.min(work.credit, 1);
+      break;
+    }
   }
-  if (playback.index === moves.length) {
+  if (work.index === moves.length) {
     stop();
     return;
   }
-  const stage = moves[playback.index].stage;
-  if (stage && stage !== playback.stage) {
-    playback.stage = stage;
+  const stage = moves[work.index].stage;
+  if (stage && stage !== work.stage) {
+    work.stage = stage;
     updateStatus(stage);
   }
-  draw(moves[playback.index], clamp((now - started) / duration - playback.index, 0, 1));
+  progress.value = work.index + work.credit;
+  get('applied').textContent = `${total.toLocaleString()} ${total === 1 ? 'move' : 'moves'}`;
+  if (rate > 100_000) draw();
+  else draw(moves[work.index], work.credit);
   frame = requestAnimationFrame(animate);
 }
 
 function play(moves) {
   if (busy() || !moves.length) return;
-  const speed = get('speed').valueAsNumber;
-  playback = { moves, index: 0, duration: 1000 / (speed >= 1 ? speed : 8), started: performance.now() };
+  playback = { moves, index: 0, credit: 0, last: performance.now(), stage: moves[0].stage };
+  progress.max = moves.length;
+  progress.value = 0;
+  progress.hidden = false;
   lock(true);
   const { face, layer, stage } = moves[0];
   const slice = layer > 1 ? ` · Layer ${layer}` : '';
@@ -171,11 +208,10 @@ function play(moves) {
   frame = requestAnimationFrame(animate);
 }
 
-function scrambleFromInput(animated) {
+function scramblePuzzle(animated) {
   if (busy()) return;
-  const input = get('count');
-  if (!input.reportValidity() || !Number.isInteger(input.valueAsNumber)) return;
-  const moves = size === 3 ? scramble(input.valueAsNumber) : layeredScramble(input.valueAsNumber, puzzle.depth);
+  const count = 20 * size;
+  const moves = size === 3 ? scramble(count) : layeredScramble(count, puzzle.depth);
   if (animated) play(moves);
   else {
     for (const move of moves) applyTurn(move);
@@ -190,6 +226,8 @@ function solve() {
   const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs', import.meta.url), { type: 'module' });
   planning = true;
   lock(true);
+  progress.removeAttribute('value');
+  progress.hidden = false;
   updateStatus('Planning solution…');
   worker.onmessage = ({ data }) => {
     if (!planning || solverWorker !== worker) return;
@@ -213,8 +251,9 @@ function solve() {
 }
 
 function hit(point) {
+  if (renderer) return renderer.hit(point, camera());
   // isPointInPath uses backing-store coordinates even though paths use CSS coordinates.
-  const ratio = canvas.getContext('2d').getTransform().a;
+  const ratio = context.getTransform().a;
   for (let i = painted.length - 1; i >= 0; i--) {
     path(painted[i].polygon);
     if (context.isPointInPath(point[0] * ratio, point[1] * ratio)) return painted[i];
@@ -284,27 +323,36 @@ canvas.addEventListener('keydown', event => {
   refresh();
 });
 get('view').onclick = () => { yaw = 0.59; pitch = 0.53; zoom = 1; refresh(); };
-get('instant').onclick = () => scrambleFromInput(false);
-get('animate').onclick = () => scrambleFromInput(true);
+get('instant').onclick = () => scramblePuzzle(false);
+get('animate').onclick = () => scramblePuzzle(true);
 get('solve').onclick = solve;
 get('stop').onclick = () => stop('Stopped');
-get('reset').onclick = () => { puzzle.reset(); total = 0; stop(); };
+get('reset').onclick = () => { puzzle.reset(); stateDirty = true; total = 0; stop(); };
 get('left').onclick = () => turnSelected(-1);
 get('right').onclick = () => turnSelected(1);
 faceSelect.onchange = () => select(Number(faceSelect.value));
 
-function resize(value) {
+function resize(value, updateHash = true) {
   if (busy() || !Number.isInteger(value) || value < 2 || value > maxLayers) return;
   if (value !== size) {
     puzzle = value === 3 ? new Megaminx() : new LayeredMinx(value);
     size = value;
     total = 0;
   }
+  if (renderer && (size !== renderer.size || !renderer.images)) {
+    renderer.setPuzzle(puzzle, size);
+    renderer.size = size;
+    stateDirty = false;
+  }
   const name = names[size - 2] ?? `${size}-layer Minx`;
   get('puzzle-name').textContent = name;
   document.title = `${name} · Cube Lab`;
   canvas.setAttribute('aria-label', `Interactive ${name}. Drag a sticker to turn or drag the background to orbit. Use brackets to turn the selected face and layer.`);
   sizeInput.value = size;
+  get('size-link').href = `#layers=${size}`;
+  if (updateHash) history.replaceState(null, '', get('size-link').href);
+  for (const button of sizeButtons) button.setAttribute('aria-pressed', String(Number(button.dataset.size) === size));
+  get('count').textContent = `${(20 * size).toLocaleString()} moves`;
   get('solve').textContent = size === 3 ? 'Solve Megaminx' : 'Solve puzzle';
   get('slice-picker').hidden = size < 4;
   sliceSelect.replaceChildren(...Array.from({ length: Math.floor(size / 2) }, (_, i) =>
@@ -318,9 +366,38 @@ get('resize').onsubmit = event => {
   event.preventDefault();
   if (!sizeInput.reportValidity()) return;
   resize(sizeInput.valueAsNumber);
-  history.replaceState(null, '', `#layers=${size}`);
 };
-new ResizeObserver(refresh).observe(canvas);
+for (const button of sizeButtons) button.onclick = () => resize(Number(button.dataset.size));
+get('size-link').onclick = async event => {
+  event.preventDefault();
+  const link = event.currentTarget.href;
+  try {
+    await navigator.clipboard.writeText(link);
+    updateStatus('Size link copied');
+  } catch {
+    history.replaceState(null, '', link);
+    updateStatus('Size link is in the address bar');
+  }
+};
+speedInput.oninput = () => {
+  const next = speedInput.valueAsNumber;
+  if (speedInput.validity.valid && Number.isFinite(next) && next > 0) {
+    rate = next;
+    const formatted = next < 0.01 || next >= 1e7 ? next.toExponential(2) : speedFormat.format(next);
+    get('speed-rate').textContent = `${formatted} ${next === 1 ? 'turn' : 'turns'}/sec`;
+  } else get('speed-rate').textContent = 'Enter a positive speed';
+};
+function useHash(initial = false) {
+  const value = new URLSearchParams(location.hash.slice(1)).get('layers') ?? '3';
+  const requested = /^\d+$/.test(value) ? Number(value) : NaN;
+  if (requested >= 2 && requested <= maxLayers) {
+    if (busy() && requested !== size) stop();
+    resize(requested, false);
+  } else if (initial) resize(3, false);
+}
+window.addEventListener('hashchange', () => useHash());
+const observer = new ResizeObserver(refresh);
+observer.observe(canvas);
+observer.observe(controls);
 select(0);
-const requested = Number(new URLSearchParams(location.hash.slice(1)).get('layers'));
-resize(Number.isInteger(requested) && requested >= 2 && requested <= maxLayers ? requested : 3);
+useHash(true);
