@@ -1,4 +1,4 @@
-import { LayeredMinx } from './layered-minx.mjs';
+import { LayeredMinx } from './layered-minx.mjs?v=3';
 import { stickers as megaminxStickers } from './puzzle.mjs';
 import { solveMegaminx } from './solver.mjs';
 import { simplify } from './solver-model.mjs';

@@ -1,6 +1,6 @@
 import { Megaminx, stickers, faces, colors, add, cross, dot, scale, rotate, step, scramble } from './puzzle.mjs';
-import { LayeredMinx, layeredScramble, maxLayers, tileInLayer } from './layered-minx.mjs?v=2';
-import { FaceRenderer } from './face-renderer.mjs';
+import { LayeredMinx, layeredScramble, stickerCount, tileInLayer } from './layered-minx.mjs?v=3';
+import { FaceRenderer } from './face-renderer.mjs?v=2';
 
 const get = id => document.getElementById(id);
 const canvas = get('puzzle');
@@ -223,7 +223,7 @@ function scramblePuzzle(animated) {
 
 function solve() {
   if (busy() || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=2', import.meta.url), { type: 'module' });
   planning = true;
   lock(true);
   progress.removeAttribute('value');
@@ -333,16 +333,36 @@ get('right').onclick = () => turnSelected(1);
 faceSelect.onchange = () => select(Number(faceSelect.value));
 
 function resize(value, updateHash = true) {
-  if (busy() || !Number.isInteger(value) || value < 2 || value > maxLayers) return;
-  if (value !== size) {
-    puzzle = value === 3 ? new Megaminx() : new LayeredMinx(value);
-    size = value;
-    total = 0;
+  if (busy()) return;
+  if (!Number.isSafeInteger(value) || value < 2) {
+    updateStatus('Enter a whole number of layers greater than one');
+    return;
   }
-  if (renderer && (size !== renderer.size || !renderer.images)) {
-    renderer.setPuzzle(puzzle, size);
-    renderer.size = size;
-    stateDirty = false;
+  let uploading = false;
+  try {
+    renderer?.checkCapacity(stickerCount(value));
+    const next = value === size ? puzzle : value === 3 ? new Megaminx() : new LayeredMinx(value);
+    if (renderer && (next !== puzzle || !renderer.images)) {
+      uploading = true;
+      renderer.setPuzzle(next, value);
+      stateDirty = false;
+    }
+    if (next !== puzzle) {
+      puzzle = next;
+      size = value;
+      total = 0;
+    }
+  } catch (error) {
+    if (renderer && (uploading || !renderer.images)) {
+      try {
+        renderer.setPuzzle(puzzle, size);
+        draw();
+      } catch {
+        renderer.images = null;
+      }
+    }
+    updateStatus(error.message);
+    return;
   }
   const name = names[size - 2] ?? `${size}-layer Minx`;
   get('puzzle-name').textContent = name;
@@ -390,7 +410,7 @@ speedInput.oninput = () => {
 function useHash(initial = false) {
   const value = new URLSearchParams(location.hash.slice(1)).get('layers') ?? '3';
   const requested = /^\d+$/.test(value) ? Number(value) : NaN;
-  if (requested >= 2 && requested <= maxLayers) {
+  if (Number.isSafeInteger(requested) && requested >= 2) {
     if (busy() && requested !== size) stop();
     resize(requested, false);
   } else if (initial) resize(3, false);

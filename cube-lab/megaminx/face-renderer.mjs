@@ -1,7 +1,5 @@
 import { colors, cross, dot, faceVertices, faces, rotate, stickers, unit } from './puzzle.mjs';
 
-const seam = 0x8000;
-const stateWidth = 512;
 const faceAxes = faceVertices.map((ring, face) => {
   const right = unit(ring[0].map((value, i) => value - faces[face][i]));
   const up = cross(faces[face], right);
@@ -30,11 +28,12 @@ void main() {
 const fragmentShader = `#version 300 es
 precision highp float;
 precision highp int;
-uniform highp usampler2DArray images;
-uniform highp usampler2D state, bands;
+uniform highp usampler2DArray images, bands;
+uniform highp usampler2D state;
 uniform vec3 palette[12], normals[12];
 uniform mat3 rotation;
-uniform int perFace, stateHeight, axis, layer;
+uniform int perFace, stateWidth, axis, layer;
+uniform uint seam;
 uniform float imageSide;
 uniform bool moving;
 flat in int face;
@@ -44,17 +43,17 @@ void main() {
   float footprint = imageSide * max(length(dFdx(uv)), length(dFdy(uv)));
   uint packedID = texture(images, vec3(uv, float(face))).r;
   if (packedID == 0u) discard;
-  int id = face * perFace + int(packedID & 32767u) - 1;
-  ivec2 texel = ivec2(id % 512, id / 512);
+  int id = face * perFace + int(packedID & (seam - 1u)) - 1;
+  ivec2 texel = ivec2(id % stateWidth, id / stateWidth);
   if (layer != 0) {
-    uint band = texelFetch(bands, texel + ivec2(0, axis * stateHeight), 0).r;
+    uint band = texelFetch(bands, ivec3(texel, axis), 0).r;
     if ((band == uint(layer)) != moving) discard;
   }
   vec3 normal = rotation * normals[face];
   float shade = 0.08 + 0.24 * (1.0 - max(0.0, dot(normal, vec3(-0.2, 0.59, 0.78))));
   vec3 color = palette[int(texelFetch(state, texel, 0).r)];
   color = mix(color, vec3(4.0, 12.0, 23.0) / 255.0, shade);
-  if ((packedID & 32768u) != 0u) {
+  if ((packedID & seam) != 0u) {
     float border = imageSide < 1024.0 ? 1.0 : 1.0 - smoothstep(1.25, 3.5, footprint);
     color = mix(color, vec3(8.0, 12.0, 18.0) / 255.0, border);
   }
@@ -102,11 +101,12 @@ const identity = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 export class FaceRenderer {
   constructor(gl) {
     this.gl = gl;
+    this.maxSide = gl.getParameter(gl.MAX_TEXTURE_SIZE);
     const program = programFor(gl);
     gl.useProgram(program);
     this.uniform = Object.fromEntries([
       'images', 'state', 'bands', 'palette[0]', 'normals[0]', 'rotation', 'forward', 'right', 'up',
-      'offset', 'lens', 'perFace', 'stateHeight', 'axis', 'layer', 'moving', 'imageSide',
+      'offset', 'lens', 'perFace', 'stateWidth', 'axis', 'layer', 'moving', 'imageSide', 'seam',
     ].map(name => [name, gl.getUniformLocation(program, name)]));
     gl.uniform3fv(this.uniform['normals[0]'], faces.flat());
     gl.uniform3fv(this.uniform['palette[0]'], colors.flatMap(([, hex]) =>
@@ -124,7 +124,7 @@ export class FaceRenderer {
       gl.vertexAttribPointer(index, count, gl.FLOAT, false, 24, offset);
     }
     this.vertexCount = vertices.length / 6;
-    for (const [unitIndex, name, target] of [[0, 'images', gl.TEXTURE_2D_ARRAY], [1, 'state', gl.TEXTURE_2D], [2, 'bands', gl.TEXTURE_2D]]) {
+    for (const [unitIndex, name, target] of [[0, 'images', gl.TEXTURE_2D_ARRAY], [1, 'state', gl.TEXTURE_2D], [2, 'bands', gl.TEXTURE_2D_ARRAY]]) {
       gl.activeTexture(gl.TEXTURE0 + unitIndex);
       gl.bindTexture(target, gl.createTexture());
       gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -138,26 +138,42 @@ export class FaceRenderer {
     gl.enable(gl.CULL_FACE);
   }
 
+  checkCapacity(count) {
+    if (count > this.maxSide ** 2) throw new RangeError('This size exceeds the graphics device’s texture capacity');
+  }
+
   setPuzzle(puzzle, size) {
     const gl = this.gl, tiles = puzzle.stickers ?? stickers;
-    this.side = size <= 36 ? 512 : 1024;
+    this.checkCapacity(tiles.length);
+    this.side = Math.min(this.maxSide, size <= 36 ? 512 : 2 ** Math.max(10, Math.ceil(Math.log2(size * 4))));
     this.perFace = tiles.length / faces.length;
+    const wideIDs = this.perFace > 0x7fff;
+    const IdPixels = wideIDs ? Uint32Array : Uint16Array;
+    this.seam = wideIDs ? 0x80000000 : 0x8000;
+    const idType = wideIDs ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+    const wideBands = Math.floor(size / 2) > 0xff;
+    const BandPixels = wideBands ? Uint16Array : Uint8Array;
     this.images = [];
-    this.stateHeight = Math.ceil(tiles.length / stateWidth);
-    const stride = stateWidth * this.stateHeight;
+    this.stateWidth = Math.max(512, Math.ceil(tiles.length / this.maxSide));
+    this.stateHeight = Math.ceil(tiles.length / this.stateWidth);
+    const stride = this.stateWidth * this.stateHeight;
     this.statePixels = new Uint8Array(stride);
-    const bands = new Uint8Array(stride * faces.length);
+    const bands = new BandPixels(stride * faces.length);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.R16UI, this.side, this.side, faces.length,
-      0, gl.RED_INTEGER, gl.UNSIGNED_SHORT, null);
+    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, wideIDs ? gl.R32UI : gl.R16UI, this.side, this.side, faces.length,
+      0, gl.RED_INTEGER, idType, null);
+    this.checkAllocation();
     for (const [face, toUV] of faceAxes.entries()) {
-      const image = new Uint16Array(this.side ** 2);
+      const image = new IdPixels(this.side ** 2);
       const toPixel = point => toUV(point).map(coord => coord * this.side);
       for (let local = 0; local < this.perFace; local++) {
         const id = face * this.perFace + local, tile = tiles[id];
-        rasterize(image, this.side, tile.polygon.map(toPixel), (local + 1) | seam);
-        rasterize(image, this.side, tile.inset.map(toPixel), local + 1);
+        const polygon = tile.polygon.map(toPixel);
+        const [x, y] = toPixel(tile.point);
+        const inset = polygon.map(([px, py]) => [0.91 * px + 0.09 * x, 0.91 * py + 0.09 * y]);
+        rasterize(image, this.side, polygon, (local + 1) | this.seam);
+        rasterize(image, this.side, inset, local + 1);
         if (tile.bands) {
           for (let axis = 0; axis < faces.length; axis++) bands[axis * stride + id] = tile.bands[axis];
         } else {
@@ -166,25 +182,33 @@ export class FaceRenderer {
       }
       this.images.push(image);
       gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, face, this.side, this.side, 1,
-        gl.RED_INTEGER, gl.UNSIGNED_SHORT, image);
+        gl.RED_INTEGER, idType, image);
     }
     gl.activeTexture(gl.TEXTURE2);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, stateWidth, this.stateHeight * faces.length,
-      0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, bands);
+    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, wideBands ? gl.R16UI : gl.R8UI, this.stateWidth, this.stateHeight, faces.length,
+      0, gl.RED_INTEGER, wideBands ? gl.UNSIGNED_SHORT : gl.UNSIGNED_BYTE, bands);
     gl.activeTexture(gl.TEXTURE1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, stateWidth, this.stateHeight,
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, this.stateWidth, this.stateHeight,
       0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, null);
     gl.uniform1i(this.uniform.perFace, this.perFace);
-    gl.uniform1i(this.uniform.stateHeight, this.stateHeight);
+    gl.uniform1i(this.uniform.stateWidth, this.stateWidth);
+    gl.uniform1ui(this.uniform.seam, this.seam);
     gl.uniform1f(this.uniform.imageSide, this.side);
     this.sync(puzzle.state);
+    this.checkAllocation();
+  }
+
+  checkAllocation() {
+    if (this.gl.getError() !== this.gl.NO_ERROR) {
+      throw new RangeError('The graphics device could not allocate this Minx');
+    }
   }
 
   sync(state) {
     const gl = this.gl;
     this.statePixels.set(state);
     gl.activeTexture(gl.TEXTURE1);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, stateWidth, this.stateHeight,
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.stateWidth, this.stateHeight,
       gl.RED_INTEGER, gl.UNSIGNED_BYTE, this.statePixels);
   }
 
@@ -213,11 +237,12 @@ export class FaceRenderer {
   }
 
   hit(point, { eye, onFace }) {
+    if (!this.images) return null;
     for (const [face, normal] of faces.entries()) {
       if (dot(eye, normal) <= 1) continue;
       const [x, y] = faceAxes[face](onFace(point, normal)).map(value => Math.floor(value * this.side));
       if (!(x >= 0 && y >= 0 && x < this.side && y < this.side)) continue;
-      const id = this.images[face][y * this.side + x] & (seam - 1);
+      const id = this.images[face][y * this.side + x] & (this.seam - 1);
       if (id) return { face, id: face * this.perFace + id - 1 };
     }
     return null;

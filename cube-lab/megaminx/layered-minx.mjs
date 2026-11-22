@@ -1,6 +1,5 @@
 import { add, dot, faceVertices, faces, rotate, scale, step } from './puzzle.mjs';
 
-export const maxLayers = 100;
 const vertexLevel = Math.sqrt(5) - 2;
 const epsilon = 1e-9;
 const average = vertices => scale(vertices.reduce(add), 1 / vertices.length);
@@ -22,13 +21,19 @@ function clip(polygon, axis, limit, sign) {
 
 function cutFace(polygon, cutAxes, cuts) {
   let regions = [polygon];
-  for (const axis of cutAxes) for (const threshold of cuts) {
+  for (const face of cutAxes) {
+    const axis = faces[face];
     const next = [];
     for (const region of regions) {
-      const values = region.map(point => dot(point, faces[axis]) - threshold);
-      if (values.some(x => x < -epsilon) && values.some(x => x > epsilon)) {
-        next.push(clip(region, faces[axis], threshold, 1), clip(region, faces[axis], threshold, -1));
-      } else next.push(region);
+      const values = region.map(point => dot(point, axis));
+      const bottom = Math.min(...values) + epsilon;
+      let rest = region;
+      // Descending cuts finish one band at a time in the original sticker order.
+      for (let i = bandIndex(cuts, Math.max(...values) - epsilon); cuts[i] > bottom; i++) {
+        next.push(clip(rest, axis, cuts[i], 1));
+        rest = clip(rest, axis, cuts[i], -1);
+      }
+      next.push(rest);
     }
     regions = next;
   }
@@ -40,13 +45,44 @@ const sharedEdge = (face, vertex, next) => faces.findIndex((axis, i) =>
 const limitsFor = (n, count) => Array.from({ length: count }, (_, i) => 1 - (1 - vertexLevel) * (i + 1) / n);
 const bin = (point, normal) => [normal, ...point.map(x => Math.round(x * 1e7))].join(',');
 
+function bandIndex(cuts, position) {
+  let low = 0, high = cuts.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (position > cuts[middle]) high = middle;
+    else low = middle + 1;
+  }
+  return low;
+}
+
+export function stickerCount(size) {
+  const depth = Math.floor(size / 2);
+  return faces.length * (size % 2 ? 5 * depth * (depth + 1) + 1 : 5 * depth ** 2);
+}
+
+class LayeredSticker {
+  constructor(face, point, polygon, bands) {
+    this.face = face;
+    this.normal = faces[face];
+    this.point = point;
+    this.polygon = polygon;
+    this.bands = bands;
+  }
+
+  get inset() {
+    const center = scale(this.point, 0.09);
+    return this.polygon.map(point => add(scale(point, 0.91), center));
+  }
+}
+
 export function tileInLayer(tile, face, layer) {
   return tile.bands ? tile.bands[face] === layer : layer === 1 && tile.layerFaces.includes(face);
 }
 
 export class LayeredMinx {
   constructor(size) {
-    if (!Number.isInteger(size) || size < 2 || size > maxLayers) throw new RangeError('Unsupported layer count');
+    if (!Number.isSafeInteger(size) || size < 2) throw new RangeError('Enter a whole number of layers greater than one');
+    if (stickerCount(size) > 0x7fffffff) throw new RangeError('This size exceeds the sticker index capacity');
     this.size = size;
     this.depth = Math.floor(size / 2);
     this.stickers = [];
@@ -56,6 +92,7 @@ export class LayeredMinx {
     this.sliceIds = new Array(faces.length);
     const even = size % 2 === 0;
     const limits = limitsFor(size, this.depth - Number(even));
+    const Bands = this.depth <= 0xff ? Uint8Array : Uint16Array;
     for (const [face, ring] of faceVertices.entries()) {
       const neighbors = ring.map((point, i) => sharedEdge(face, point, ring[(i + 1) % 5]));
       const sectors = even ? ring.map((point, i) => {
@@ -65,18 +102,17 @@ export class LayeredMinx {
       }) : [{ polygon: ring, axes: neighbors }];
       for (const { polygon, axes } of sectors) for (const cell of cutFace(polygon, axes, limits)) {
         const point = average(cell);
-        const bands = new Uint8Array(12);
+        const bands = new Bands(12);
         bands[face] = 1;
         for (const axis of axes) {
           const position = dot(point, faces[axis]);
-          const band = limits.findIndex(limit => position > limit);
-          if (band >= 0) bands[axis] = band + 1;
+          const band = bandIndex(limits, position);
+          if (band < limits.length) bands[axis] = band + 1;
           else if (even) bands[axis] = this.depth;
         }
         const id = this.stickers.length;
         this.byPoint.set(bin(point, face), id);
-        this.stickers.push({ face, normal: faces[face], point, polygon: cell, bands,
-          inset: cell.map(v => add(scale(v, 0.91), scale(point, 0.09))) });
+        this.stickers.push(new LayeredSticker(face, point, cell, bands));
       }
     }
     this.reset();
