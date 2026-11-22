@@ -20,6 +20,8 @@ let painted = [], gesture, playback, solverWorker, planning = false, frame = 0, 
 let stateDirty = false, rate = speedInput.valueAsNumber;
 const busy = () => Boolean(playback || planning);
 const clamp = (n, low, high) => Math.max(low, Math.min(high, n));
+const minZoom = 0.48, maxZoom = 64;
+const zoomBy = factor => { zoom = clamp(zoom * factor, minZoom, maxZoom); };
 const names = ['Kilominx', 'Megaminx', 'Master Kilominx', 'Gigaminx', 'Elite Kilominx', 'Teraminx', 'Royal Kilominx', 'Petaminx'];
 const selectedLayer = () => Number(sliceSelect.value) || 1;
 const applyTurn = ({ face, direction, layer }) => {
@@ -285,7 +287,7 @@ canvas.addEventListener('pointermove', event => {
   const other = [...pointers].find(([id]) => id !== event.pointerId)?.[1];
   pointers.set(event.pointerId, point);
   if (other) {
-    zoom = clamp(zoom * distance(point, other) / Math.max(1, distance(previous, other)), 0.48, 3);
+    zoomBy(distance(point, other) / Math.max(1, distance(previous, other)));
   } else if (gesture?.tile == null) {
     yaw -= (point[0] - previous[0]) * 0.008;
     pitch = clamp(pitch + (point[1] - previous[1]) * 0.008, -1.55, 1.55);
@@ -309,7 +311,7 @@ function release(event) {
 for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, release);
 canvas.addEventListener('wheel', event => {
   event.preventDefault();
-  zoom = clamp(zoom * Math.exp(-event.deltaY * 0.0017), 0.48, 3);
+  zoomBy(Math.exp(-event.deltaY * 0.0017));
   refresh();
 }, { passive: false });
 canvas.addEventListener('keydown', event => {
