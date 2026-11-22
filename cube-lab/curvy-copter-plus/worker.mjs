@@ -1,5 +1,5 @@
 import { solve } from './solver.mjs';
-import { applyPose, cubeSlots, findCubeShape, installShapeTable, remapColors, searchCubeShape } from './jumbling.mjs';
+import { applyPose, cubeSlots, findCubeShape, installShapeTable, remapColors, searchCubeShape, walkCubeShape } from './jumbling.mjs';
 
 let ready;
 self.onmessage = async ({ data: { state, poses } }) => {
@@ -13,11 +13,18 @@ self.onmessage = async ({ data: { state, poses } }) => {
       });
       await ready;
       self.postMessage({ stage: 'Searching for cube shape…' });
-      const moves = findCubeShape(poses) ?? searchCubeShape(poses, depth => {
+      let moves = findCubeShape(poses, 1200);
+      if (!moves) {
+        self.postMessage({ stage: 'Exploring alternate shape routes…' });
+        moves = walkCubeShape(poses, 180000, count => {
+          self.postMessage({ stage: `Exploring alternate shape routes · ${count.toLocaleString()} turns checked` });
+        });
+      }
+      moves ??= searchCubeShape(poses, depth => {
         self.postMessage({ stage: `Deeper shape search · depth ${depth}` });
       });
-      const slots = moves && cubeSlots(moves.reduce(applyPose, poses));
-      if (!slots) throw new Error('No route to cube shape found within the search limit.');
+      const slots = cubeSlots(moves.reduce(applyPose, poses));
+      if (!slots) throw new Error('The planned turns did not restore cube shape.');
       shape = [{ name: 'Restoring cube shape', moves }];
       aligned = remapColors(state, slots);
     }

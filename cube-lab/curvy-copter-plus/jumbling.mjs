@@ -52,6 +52,7 @@ for (let x = -12; x <= 12; x++) for (let y = -12; y <= 12; y++) for (let z = -12
 
 const centerStickers = edges.map((_, edge) => tiles.findIndex(t => t.kind === 'edge' && t.moving[0] === edge));
 const rotorParts = centerStickers.map(sticker => partOf[sticker]);
+const poseCuts = new WeakMap();
 const splitPartners = parts.flatMap((part, index) => {
   if (part.kind !== 'petal') return [];
   const tile = tiles[part.ids[0]];
@@ -76,12 +77,20 @@ export function edgeCut(poses, edge) {
   const center = cutCenters[edge];
   const captured = [];
   for (const [i, part] of parts.entries()) {
-    const local = poses[i].map(normal => dot(center, normal));
-    const signature = local.map(x => Math.round(x * 1e8)).join(',');
-    let side = part.cuts.get(signature);
-    if (side === undefined) {
-      side = cutSide(part, local);
-      part.cuts.set(signature, side);
+    const pose = poses[i];
+    let partCache = poseCuts.get(pose);
+    if (!partCache) poseCuts.set(pose, partCache = []);
+    const cache = partCache[i] ??= new Int8Array(edges.length).fill(-2);
+    let side = cache[edge];
+    if (side === -2) {
+      const local = pose.map(normal => dot(center, normal));
+      const signature = local.map(x => Math.round(x * 1e8)).join(',');
+      side = part.cuts.get(signature);
+      if (side === undefined) {
+        side = cutSide(part, local);
+        part.cuts.set(signature, side);
+      }
+      cache[edge] = side;
     }
     if (side === -1) return null;
     if (side === 1) captured.push(i);
@@ -120,6 +129,26 @@ export function optionsAt(poses, edge) {
 
 export function applyPose(poses, { edge, angle, capture }) {
   return poses.map((pose, i) => capture.includes(i) ? pose.map(v => rotate(v, edges[edge].axis, angle)) : pose);
+}
+
+const searchPoses = new Map();
+const poseTransitions = new WeakMap();
+
+function applySearchMove(poses, { edge, angle, capture }) {
+  const command = edge * 100000 + Math.round(angle * 10000);
+  return poses.map((pose, i) => {
+    if (!capture.includes(i)) return pose;
+    let turns = poseTransitions.get(pose);
+    if (!turns) poseTransitions.set(pose, turns = new Map());
+    const known = turns.get(command);
+    if (known) return known;
+    let next = pose.map(v => rotate(v, edges[edge].axis, angle));
+    const key = next.flat().map(value => Math.round(value * 1e9)).join(',');
+    if (searchPoses.has(key)) next = searchPoses.get(key);
+    else if (searchPoses.size < 2048) searchPoses.set(key, next);
+    if (searchPoses.size < 2048) turns.set(command, next);
+    return next;
+  });
 }
 
 export function remapColors(colors, slots) {
@@ -204,37 +233,46 @@ export const shapeFrames = axisOrders.flatMap((order, permutation) => [1, -1].fl
       const dest = map(axis);
       return edges.findIndex(other => dot(other.axis, dest) > 0.999);
     });
-    return { map, direction, forward, back: forward.map((_, i) => forward.indexOf(i)) };
+    return { map, order, signs, direction, forward, back: forward.map((_, i) => forward.indexOf(i)) };
   }))));
 
 const kinds = ['edge', 'corner', 'petal', 'tip'];
+const tileKinds = tiles.map(tile => kinds.indexOf(tile.kind));
+const packedStickers = new WeakMap();
+
+function stickerWords(pose, id) {
+  let stickers = packedStickers.get(pose);
+  if (!stickers) packedStickers.set(pose, stickers = []);
+  if (stickers[id]) return stickers[id];
+  const point = transform(anchors[id], pose);
+  const normal = transform(sides[tiles[id].face].axis, pose);
+  return stickers[id] = Float64Array.from(shapeFrames, ({ order, signs }) => {
+    let code = tileKinds[id];
+    for (let i = 0; i < 3; i++) code = code * 256 + Math.round(point[order[i]] * signs[i] * 64 + 128);
+    for (let i = 0; i < 3; i++) code = code * 256 + Math.round(normal[order[i]] * signs[i] * 64 + 128);
+    return code;
+  });
+}
+
 export function canonicalShape(poses) {
   const stops = edges.map((_, edge) => {
     const angle = rotationAngle(poses, edge);
     return Math.abs(Math.sin(angle)) < epsilon ? 0 : Math.sin(2 * angle) > 0 ? 1 : 2;
   });
   let minimum = Infinity, frames = [];
-  for (const frame of shapeFrames) {
+  for (const [index, frame] of shapeFrames.entries()) {
     let code = 0;
     for (const i of frame.back) code = code * 3 + (frame.direction < 0 && stops[i] ? 3 - stops[i] : stops[i]);
     if (code > minimum) continue;
     if (code < minimum) { minimum = code; frames = []; }
-    frames.push(frame);
+    frames.push(index);
   }
-  const data = tiles.map(({ face, kind }, id) => {
-    const pose = poses[partOf[id]];
-    return [kinds.indexOf(kind), transform(anchors[id], pose), transform(sides[face].axis, pose)];
-  });
+  const data = tiles.map((_, id) => stickerWords(poses[partOf[id]], id));
   let best, selected;
   for (const frame of frames) {
-    const keys = data.map(([kind, point, normal]) => {
-      let code = kind;
-      for (const value of frame.map(point)) code = code * 256 + Math.round(value * 64 + 128);
-      for (const value of frame.map(normal)) code = code * 256 + Math.round(value * 64 + 128);
-      return code;
-    }).sort((a, b) => a - b);
+    const keys = Float64Array.from(data, words => words[frame]).sort();
     const id = keys.findIndex((code, i) => code !== best?.[i]);
-    if (id !== -1 && (!best || keys[id] < best[id])) { best = keys; selected = frame; }
+    if (id !== -1 && (!best || keys[id] < best[id])) { best = keys; selected = shapeFrames[frame]; }
   }
   // Two independent 32-bit hashes retain the sorted geometry without long string keys.
   let a = 2166136261, b = 0x9e3779b9;
@@ -318,7 +356,7 @@ export function findCubeShape(origin, budget = 28000) {
     for (const { edge, angle } of [...fromCube].reverse()) {
       const move = optionsAt(poses, edge).find(option => Math.abs(Math.sin((option.angle + angle) / 2)) < epsilon);
       if (!move) return null;
-      poses = applyPose(poses, move);
+      poses = applySearchMove(poses, move);
       suffix.push(move);
     }
     return cubeSlots(poses) ? suffix : null;
@@ -333,7 +371,7 @@ export function findCubeShape(origin, budget = 28000) {
       if (performance.now() > deadline) return null;
       if (word.at(-1)?.edge === edge) continue;
       for (const move of optionsAt(poses, edge)) {
-        const result = applyPose(poses, move), canonical = canonicalShape(result);
+        const result = applySearchMove(poses, move), canonical = canonicalShape(result);
         const key = hashKey(...canonical.hash);
         if (seen.has(key) || proposed.has(key)) continue;
         proposed.add(key);
@@ -363,6 +401,48 @@ export function findCubeShape(origin, budget = 28000) {
   return null;
 }
 
+// Some shapes need several turns that move away from the solved silhouette
+// before the blocked edges open up. Explore alternate routes to the table.
+export function walkCubeShape(origin, visitLimit = 180000, report = () => {}) {
+  if (!knownShapes) return null;
+  const start = canonicalShape(origin);
+  const direct = tablePath(origin, start);
+  if (direct) return direct;
+  let seed = start.hash[0] ^ start.hash[1];
+  const random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296;
+  const seen = new Set();
+  let visits = 0;
+  for (let trial = 0; visits < visitLimit; trial++) {
+    let poses = origin;
+    const word = [];
+    const tiltWeight = trial % 3 - 1;
+    for (let step = 0; step < 12 + trial % 45 && visits < visitLimit; step++) {
+      const options = edges.flatMap((_, edge) => edge === word.at(-1)?.edge ? [] : optionsAt(poses, edge));
+      if (!options.length) {
+        if (step === 0) return null;
+        break;
+      }
+      let best, score = Infinity;
+      for (let i = 0; options.length && i <= trial % 4 && visits < visitLimit; i++) {
+        const [move] = options.splice(Math.floor(random() * options.length), 1);
+        const next = applySearchMove(poses, move);
+        const info = canonicalShape(next);
+        const suffix = tablePath(next, info);
+        if (suffix) return [...word, move, ...suffix];
+        const key = hashKey(...info.hash);
+        const rank = tiltWeight * info.tilted + random() * 3 + (seen.has(key) ? 3 : 0);
+        seen.add(key);
+        if (rank < score) { best = { move, next }; score = rank; }
+        if (++visits % 10000 === 0) report(visits);
+      }
+      if (!best) break;
+      poses = best.next;
+      word.push(best.move);
+    }
+  }
+  return null;
+}
+
 // Iterative deepening retains a finite frontier per pass. The worker can be
 // stopped while this searches branches that the fast beam discarded.
 export function searchCubeShape(origin, report = () => {}) {
@@ -379,7 +459,7 @@ export function searchCubeShape(origin, report = () => {}) {
     const children = [];
     for (const edge of edges.keys()) {
       for (const move of optionsAt(poses, edge)) {
-        const next = applyPose(poses, move), frame = canonicalShape(next);
+        const next = applySearchMove(poses, move), frame = canonicalShape(next);
         const known = tablePath(next, frame);
         if (known) return [...path, move, ...known];
         if (!knownShapes && cubeSlots(next)) return [...path, move];
