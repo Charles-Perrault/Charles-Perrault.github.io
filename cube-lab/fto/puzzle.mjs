@@ -34,8 +34,8 @@ export function layerAt(size, axis, point) {
   return Math.min(size, Math.floor((1 - (a[0] * point[0] + a[1] * point[1] + a[2] * point[2])) * size / 2) + 1);
 }
 
-export function* scrambleMoves(size, random = Math.random) {
-  const depth = moveDepth(size);
+export function* scrambleMoves(size, random = Math.random, outerOnly = false) {
+  const depth = outerOnly ? 1 : moveDepth(size);
   let previous = -1;
   for (let i = 0; i < 20 * size; i++) {
     const range = 8 * depth;
@@ -62,7 +62,7 @@ export class Octahedron {
   }
 
   get solved() {
-    return this.state.every((color, id) => color === Math.floor(id / this.faceArea));
+    return this.state.every((color, id) => color === this.state[id - id % this.faceArea]);
   }
 
   turn(axis, layer = 1, direction = 1) {

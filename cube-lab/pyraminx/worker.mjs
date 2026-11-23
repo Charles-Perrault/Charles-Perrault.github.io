@@ -1,4 +1,4 @@
-import { solve } from './solver.mjs';
+import { solve } from './solver.mjs?v=2';
 
 self.onmessage = ({ data: { size, state } }) => {
   try {

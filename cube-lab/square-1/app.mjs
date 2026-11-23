@@ -23,7 +23,8 @@ const outer = { top: 1, bottom: -1 };
 const gap = 0.025;
 const fixedCorners = Array.from({ length: 4 }, (_, i) => polar(edgeStart + step + i * Math.PI / 2, Math.SQRT2));
 let yaw = 0.62, pitch = 0.49, zoom = 1, projected = [], gesture, playback, frame = 0;
-let rate = speed.valueAsNumber, applied = 0;
+let rate = speed.valueAsNumber, applied = 0, planning = false, worker;
+const busy = () => planning || Boolean(playback);
 
 function rotateLayer([x, y, z], angle) {
   const c = Math.cos(angle), s = Math.sin(angle);
@@ -159,9 +160,10 @@ function update(message) {
   find('state').textContent = message ?? (model.solved ? 'Solved' : 'Scrambled');
   find('moves').textContent = `${applied.toLocaleString()} ${applied === 1 ? 'move' : 'moves'}`;
   find('slice-status').textContent = model.canSlash ? 'Slice ready' : 'Turn the layers to line up the slice';
-  for (const id of ['turn', 'instant', 'animate', 'top', 'bottom']) find(id).disabled = Boolean(playback);
-  find('slash').disabled = Boolean(playback) || !model.canSlash;
-  find('stop').disabled = !playback;
+  for (const id of ['turn', 'instant', 'animate', 'top', 'bottom']) find(id).disabled = busy();
+  find('slash').disabled = busy() || !model.canSlash;
+  find('solve').disabled = busy() || model.solved;
+  find('stop').disabled = !busy();
 }
 
 function apply(move) {
@@ -173,6 +175,11 @@ function apply(move) {
 function stop(message) {
   cancelAnimationFrame(frame);
   playback = null;
+  if (planning) {
+    worker.terminate();
+    worker = undefined;
+    planning = false;
+  }
   progress.hidden = true;
   update(message);
   draw();
@@ -189,18 +196,55 @@ function animate(now) {
   }
   if (work.index === work.moves.length) return stop();
   progress.value = work.index + work.credit;
+  if (work.moves[work.index].stage) showSolvePosition(work);
   draw(work.moves[work.index], work.credit);
   frame = requestAnimationFrame(animate);
 }
 
 function play(moves, message) {
-  if (playback || !moves.length) return;
+  if (busy() || !moves.length) return;
   playback = { moves, index: 0, credit: 0, last: performance.now() };
   progress.max = moves.length;
   progress.value = 0;
   progress.hidden = false;
   update(message);
+  if (moves[0].stage) showSolvePosition(playback);
   frame = requestAnimationFrame(animate);
+}
+
+function showSolvePosition(work) {
+  const stage = work.moves[work.index].stage;
+  if (stage !== work.stage) {
+    work.stage = stage;
+    find('state').textContent = stage;
+  }
+  if (work.shown !== work.index) {
+    work.shown = work.index;
+    find('moves').textContent = `Move ${work.index + 1}/${work.moves.length}`;
+  }
+}
+
+function solve() {
+  if (busy() || model.solved) return;
+  const active = worker ??= new Worker(new URL('./worker.mjs', import.meta.url), { type: 'module' });
+  planning = true;
+  progress.removeAttribute('value');
+  progress.hidden = false;
+  update('Planning solution…');
+  active.onmessage = ({ data }) => {
+    if (worker !== active || !planning) return;
+    if (data.status) {
+      find('state').textContent = `Planning · ${data.status}`;
+      return;
+    }
+    if (data.error) return stop(data.error);
+    planning = false;
+    const moves = data.stages.flatMap(({ name, moves }) => moves.map(move => ({ ...move, stage: name })));
+    if (moves.length) play(moves, moves[0].stage);
+    else stop();
+  };
+  active.onerror = () => { if (worker === active) stop('Could not load the Square-1 solver'); };
+  active.postMessage({ top: model.top, bottom: model.bottom, flipped: model.flipped });
 }
 
 function turn(top, bottom) {
@@ -208,11 +252,11 @@ function turn(top, bottom) {
 }
 
 function slash() {
-  if (!playback && model.canSlash) play([{ slash: true }], 'Turning the right half');
+  if (!busy() && model.canSlash) play([{ slash: true }], 'Turning the right half');
 }
 
 function scramble(animated) {
-  if (playback) return;
+  if (busy()) return;
   const moves = model.planScramble();
   if (animated) play(moves, 'Scrambling');
   else {
@@ -230,6 +274,7 @@ find('slash').onclick = slash;
 find('stop').onclick = () => stop('Stopped');
 find('instant').onclick = () => scramble(false);
 find('animate').onclick = () => scramble(true);
+find('solve').onclick = solve;
 find('reset').onclick = () => { model.reset(); applied = 0; stop(); };
 find('view').onclick = () => { yaw = 0.62; pitch = 0.49; zoom = 1; if (!playback) draw(); };
 speed.oninput = () => {
@@ -261,7 +306,7 @@ canvas.addEventListener('pointerdown', event => {
   const point = position(event);
   pointers.set(event.pointerId, point);
   gesture = pointers.size === 1
-    ? { id: event.pointerId, start: point, part: !playback && event.button === 0 ? pick(point) : null } : null;
+    ? { id: event.pointerId, start: point, part: !busy() && event.button === 0 ? pick(point) : null } : null;
 });
 canvas.addEventListener('pointermove', event => {
   const prior = pointers.get(event.pointerId);
@@ -282,7 +327,7 @@ function release(event) {
   if (gesture?.id !== event.pointerId) return;
   const { start, part } = gesture;
   gesture = null;
-  if (event.type !== 'pointerup' || part?.layer == null || playback) return;
+  if (event.type !== 'pointerup' || part?.layer == null || busy()) return;
   const drag = minus(position(event), start), distance = Math.hypot(...drag);
   if (distance < 9) return;
   const { project } = camera();

@@ -1,13 +1,16 @@
-import { faces, layerAt, Octahedron, scrambleMoves, sizeIsValid } from './puzzle.mjs';
+import { faces, layerAt, Octahedron, scrambleMoves, sizeIsValid } from './puzzle.mjs?v=2';
 import { add, cross, dot, FaceRenderer, rotate, scale } from './renderer.mjs';
 
 const get = id => document.getElementById(id);
 const canvas = get('puzzle'), controls = document.querySelector('.controls');
-const selectors = [...controls.querySelectorAll('button, input, select')].filter(element => element.id !== 'reset-view');
+const selectors = [...controls.querySelectorAll('button, input, select')]
+  .filter(element => element.id !== 'reset-view' && element.id !== 'stop-solve');
 const presets = [...document.querySelectorAll('[data-size]')];
 const sizeInput = get('size'), faceInput = get('face'), sliceInput = get('slice');
 const status = get('status'), moveCount = get('moves');
+const solveButton = get('solve'), stopButton = get('stop-solve'), outerScramble = get('outer-scramble');
 let renderer, puzzle, moves = 0, working = false;
+let solverWorker, solving = false, planningSolve = false, solveFrame = 0;
 let yaw = 0.62, pitch = 0.48, zoom = 1;
 let drag;
 const pointers = new Map();
@@ -41,6 +44,9 @@ function draw(move, fraction) {
 function lock(active) {
   working = active;
   for (const element of selectors) element.disabled = active;
+  solveButton.disabled = active || !puzzle || puzzle.size < 3;
+  sliceInput.disabled = active || puzzle?.depth === 1;
+  stopButton.disabled = !solving;
 }
 
 function updateStatus() {
@@ -73,6 +79,9 @@ function resize(size, share = true) {
   sliceInput.max = puzzle.depth;
   sliceInput.value = clamp(Number(sliceInput.value) || 1, 1, puzzle.depth);
   sliceInput.disabled = puzzle.depth === 1;
+  solveButton.disabled = size < 3;
+  outerScramble.hidden = size < 4;
+  get('solver-credit').firstChild.textContent = size > 3 ? 'Outer-turn solver · ' : '3-layer solver · ';
   get('name').textContent = size === 2 ? 'Skewb Diamond' : size === 3 ? 'Face-Turning Octahedron' : `${size} × ${size} FTO`;
   for (const preset of presets) preset.setAttribute('aria-pressed', String(Number(preset.dataset.size) === size));
   if (share) history.replaceState(null, '', `#layers=${size}`);
@@ -80,35 +89,104 @@ function resize(size, share = true) {
   draw();
 }
 
-function play(move) {
-  if (!puzzle || working) return;
+function playTurns(sequence, solution = false) {
+  if (!puzzle || (working && !solution)) return;
+  let index = 0;
   lock(true);
-  const name = faces[move.axis].name;
-  status.textContent = move.layer === 1 ? `Turning ${name}` : `Turning ${name} · Slice ${move.layer}`;
-  const start = performance.now();
+  let start = performance.now();
+  const describe = () => {
+    const { axis, layer } = sequence[index];
+    const name = faces[axis].name;
+    status.textContent = solution ? `Move ${index + 1}/${sequence.length}` :
+      layer === 1 ? `Turning ${name}` : `Turning ${name} · Slice ${layer}`;
+  };
+  describe();
   function animate(now) {
-    const fraction = clamp((now - start) / 180, 0, 1);
+    const move = sequence[index];
+    const fraction = clamp((now - start) / (solution ? 130 : 180), 0, 1);
     if (fraction < 1) {
       draw(move, fraction ** 2 * (3 - 2 * fraction));
-      requestAnimationFrame(animate);
+      solveFrame = requestAnimationFrame(animate);
       return;
     }
     puzzle.turn(move.axis, move.layer, move.direction);
     moves++;
     renderer.sync(puzzle);
+    index++;
+    if (index < sequence.length) {
+      start = now;
+      describe();
+      solveFrame = requestAnimationFrame(animate);
+      return;
+    }
+    solving = false;
     lock(false);
-    sliceInput.disabled = puzzle.depth === 1;
     updateStatus();
     draw();
   }
-  requestAnimationFrame(animate);
+  solveFrame = requestAnimationFrame(animate);
 }
 
-function scramble() {
+const play = move => playTurns([move]);
+
+function solve() {
+  if (!puzzle || puzzle.size < 3 || working || puzzle.solved) return;
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs', import.meta.url), { type: 'module' });
+  solving = true;
+  planningSolve = true;
+  lock(true);
+  status.textContent = 'Preparing solve…';
+  const fail = message => {
+    if (solverWorker !== worker) return;
+    planningSolve = false;
+    solving = false;
+    lock(false);
+    status.textContent = message;
+  };
+  worker.onmessage = ({ data }) => {
+    if (solverWorker !== worker || !solving) return;
+    if (data.status) status.textContent = data.status;
+    else if (data.error) fail(data.error);
+    else if (data.moves?.length) {
+      planningSolve = false;
+      playTurns(data.moves, true);
+    }
+    else {
+      planningSolve = false;
+      solving = false;
+      lock(false);
+      updateStatus();
+    }
+  };
+  worker.onerror = () => {
+    fail('Could not start the FTO solver. Check your connection and try again.');
+    worker.terminate();
+    if (solverWorker === worker) solverWorker = null;
+  };
+  const state = puzzle.state.slice();
+  worker.postMessage({ size: puzzle.size, state }, [state.buffer]);
+}
+
+function stopSolve() {
+  if (!solving) return;
+  cancelAnimationFrame(solveFrame);
+  if (planningSolve) {
+    solverWorker?.terminate();
+    solverWorker = null;
+  }
+  planningSolve = false;
+  solving = false;
+  lock(false);
+  updateStatus();
+  status.textContent = 'Solve stopped';
+  draw();
+}
+
+function scramble(outerOnly = false) {
   if (!puzzle || working) return;
   lock(true);
   status.textContent = 'Scrambling…';
-  const sequence = scrambleMoves(puzzle.size);
+  const sequence = scrambleMoves(puzzle.size, Math.random, outerOnly);
   function advance() {
     const deadline = performance.now() + 9;
     do {
@@ -245,7 +323,10 @@ get('resize').onsubmit = event => {
 for (const preset of presets) preset.onclick = () => resize(Number(preset.dataset.size));
 get('left').onclick = () => manual(-1);
 get('right').onclick = () => manual(1);
-get('scramble').onclick = scramble;
+get('scramble').onclick = () => scramble();
+outerScramble.onclick = () => scramble(true);
+solveButton.onclick = solve;
+stopButton.onclick = stopSolve;
 get('reset').onclick = () => {
   if (!puzzle || working) return;
   puzzle.reset();

@@ -1,5 +1,7 @@
 import { forEachTransfer, Pyraminx } from './puzzle.mjs';
 import { solveCenters } from './center-solver.mjs';
+import { solveCore } from './core-solver.mjs';
+import { solveWings } from './wing-solver.mjs';
 
 const inverse = move => ({ ...move, direction: -move.direction });
 let mainSearch;
@@ -198,6 +200,11 @@ export function solve(size, state, report = () => {}) {
     return 0;
   }
   if (misplaced) misplaced = improve(puzzle, misplaced, report);
+  if (misplaced) {
+    solveCore(puzzle, moves => report(moves));
+    if (!puzzle.solved) solveWings(puzzle, moves => report(moves));
+    misplaced = countMisplaced(puzzle);
+  }
   if (misplaced) {
     solveCenters(puzzle, moves => {
       // The generated commutator touches one center orbit, but its setup

@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0b1017">
     <title>Face-Turning Octahedron · Cube Lab</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
     <link rel="stylesheet" href="../puzzle-switcher.css?v=3">
   </head>
   <body>
@@ -48,11 +48,17 @@
           <button id="scramble" type="button">Scramble</button>
           <button id="reset" type="button">Reset puzzle</button>
         </div>
+        <button id="outer-scramble" type="button" hidden>Scramble outer faces</button>
+        <div class="row">
+          <button id="solve" type="button">Solve</button>
+          <button id="stop-solve" type="button" disabled>Stop</button>
+        </div>
+        <p id="solver-credit">3-layer solver · <a href="https://omelettehedron.arhan.sh/" target="_blank" rel="noopener noreferrer">Omelettehedron by Arhan Chaudhary</a></p>
         <button id="reset-view" type="button">Reset view</button>
       </aside>
       <div class="status"><span id="status" role="status">Solved</span><span id="moves">0 moves</span></div>
       <p class="hint">Drag a sticker to turn · Right-drag or drag the background to orbit · Scroll or pinch to zoom</p>
     </main>
-    <script type="module" src="app.mjs"></script>
+    <script type="module" src="app.mjs?v=2"></script>
   </body>
 </html>

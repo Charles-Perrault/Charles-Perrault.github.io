@@ -47,13 +47,16 @@
           <input id="speed" type="number" min="0" step="any" value="7" required aria-describedby="speed-rate">
           <span id="speed-rate">7 turns/sec</span>
         </div>
-        <button id="reset" type="button">Reset puzzle</button>
+        <div class="row">
+          <button id="solve" type="button" class="primary">Solve</button>
+          <button id="reset" type="button">Reset puzzle</button>
+        </div>
       </section>
     </aside>
     <p class="hint">Drag a layer to turn · Drag the background to orbit · Scroll or pinch to zoom</p>
     <div class="status"><span id="state" role="status">Solved</span><span id="moves">0 moves</span></div>
     <progress id="progress" max="1" value="0" hidden aria-label="Move progress"></progress>
   </main>
-  <script type="module" src="app.mjs"></script>
+  <script type="module" src="app.mjs?v=2"></script>
 </body>
 </html>

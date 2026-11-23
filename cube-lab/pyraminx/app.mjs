@@ -78,7 +78,6 @@ function resize(size, share = true) {
   sliceInput.value = clamp(Number(sliceInput.value) || 1, 1, puzzle.depth);
   sliceInput.disabled = puzzle.depth === 1;
   get('name').textContent = size === 2 ? 'Tip Pyraminx' : size === 3 ? 'Pyraminx' : `${size}-layer Pyraminx`;
-  get('solve').textContent = size <= 3 ? 'Solve' : 'Improve puzzle';
   for (const preset of presets) preset.setAttribute('aria-pressed', String(Number(preset.dataset.size) === size));
   if (share) history.replaceState(null, '', `#layers=${size}`);
   updateStatus();
@@ -187,7 +186,7 @@ function playSolution(now) {
 
 function solvePuzzle() {
   if (!puzzle || working || puzzle.solved) return;
-  const worker = new Worker(new URL('./worker.mjs', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./worker.mjs?v=2', import.meta.url), { type: 'module' });
   const run = { worker, moves: [], index: 0, credit: 0, last: performance.now(), finished: false };
   solution = run;
   lock(true);
