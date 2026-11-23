@@ -282,6 +282,11 @@ export function solveLayeredMinx(size, state, report = () => {}) {
   const actions = facesFor(puzzle);
   const model = { ...rigidPieces(puzzle, actions), actions, cycleCache: new Map(),
     home: Uint8Array.from(puzzle.stickers, tile => tile.face) };
+  if (puzzle.depth >= 3) {
+    report('Batching center cycles', { generated });
+    addStage('Batched centers', batchCenters(puzzle, model, decode));
+    if (puzzle.solved) return stages;
+  }
   findSeeds(model, actions, puzzle.depth);
   const { orbits } = model;
   // Coupled center orbits go before pure cycles can overwrite their working space.
@@ -351,4 +356,127 @@ function facesFor(puzzle) {
     }
     return { forward, backward, word: [i * 2] };
   });
+}
+
+function combineSlices(turns) {
+  const forward = new Map(), backward = new Map();
+  const word = [];
+  // These turns are distinct slices along one axis, so their supports are disjoint.
+  for (const turn of turns) {
+    for (const [from, to] of turn.forward) forward.set(from, to);
+    for (const [from, to] of turn.backward) backward.set(from, to);
+    word.push(...turn.word);
+  }
+  return { forward, backward, word };
+}
+
+function batchCenters(puzzle, model, decode) {
+  const { depth, state } = puzzle;
+  const { actions, home, pieces, pieceOf, orbitOf } = model;
+  const moves = [];
+  for (let face = 1; face < 12; face++) {
+    for (let layer = 1; layer < depth; layer++) {
+      const cross = commutation(actions[0], actions[face * depth + layer]);
+      if (!cross.forward.size) continue;
+      for (const reversed of [false, true]) {
+        const turns = [], expected = new Map(), usedOrbits = new Set();
+        let totalGain = 0;
+        for (let slice = 1; slice < depth; slice++) {
+          const turn = actions[slice];
+          const single = commutation(cross, turn);
+          const forward = reversed ? single.backward : single.forward;
+          if (forward.size !== 3) continue;
+          const IDs = [...forward.keys()];
+          const orbit = orbitOf[pieceOf[IDs[0]]];
+          if (usedOrbits.has(orbit) || IDs.some(id => pieces[pieceOf[id]].length !== 1 || orbitOf[pieceOf[id]] !== orbit)) continue;
+          let gain = 0;
+          for (const [from, to] of forward) gain += Number(state[from] === home[to]) - Number(state[from] === home[from]);
+          if (gain <= 0) continue;
+          turns.push(turn);
+          totalGain += gain;
+          usedOrbits.add(orbit);
+          for (const [from, to] of forward) expected.set(from, to);
+        }
+        if (turns.length < 2 || totalGain < turns.length * 2) continue;
+        const batch = commutation(cross, combineSlices(turns));
+        const actual = reversed ? batch.backward : batch.forward;
+        if (actual.size !== expected.size || [...expected].some(([from, to]) => actual.get(from) !== to)) continue;
+        for (const move of simplify(reversed ? inverse(batch.word) : batch.word).map(decode)) {
+          puzzle.turn(move.face, move.direction, move.layer);
+          moves.push(move);
+        }
+      }
+    }
+  }
+  return moves;
+}
+
+export function generateCenterCommutators(size) {
+  const puzzle = new LayeredMinx(size);
+  const { depth } = puzzle;
+  const actions = facesFor(puzzle);
+  const model = rigidPieces(puzzle, actions);
+  const results = new Map();
+
+  function record(action) {
+    const cycles = new Map();
+    for (const [slot, to] of action.forward) {
+      const piece = model.pieceOf[slot];
+      if (model.pieces[piece].length !== 1) return;
+      const orbit = model.orbitOf[piece];
+      if (!cycles.has(orbit)) cycles.set(orbit, new Map());
+      cycles.get(orbit).set(slot, to);
+    }
+    if (!cycles.size) return;
+    for (const changes of cycles.values()) {
+      if (changes.size !== 3) return;
+      const a = changes.keys().next().value;
+      const b = changes.get(a), c = changes.get(b);
+      if (changes.get(c) !== a) return;
+    }
+    const signature = [...action.forward].sort(([a], [b]) => a - b).join(';');
+    const word = simplify(action.word);
+    if (!results.has(signature) || results.get(signature).word.length > word.length) results.set(signature, {
+      word,
+      cycles: [...cycles].map(([orbit, changes]) => {
+        const a = changes.keys().next().value, b = changes.get(a);
+        return { orbit, stickers: [a, b, changes.get(b)] };
+      }),
+    });
+    return [...cycles.keys()];
+  }
+
+  for (let face = 1; face < 12; face++) {
+    for (let layer = 0; layer < depth; layer++) {
+      const cross = commutation(actions[0], actions[face * depth + layer]);
+      if (!cross.forward.size) continue;
+      record(cross);
+      for (let axis = 0; axis < 12; axis++) {
+        const batch = [], included = new Set();
+        for (let first = 1; first < depth; first++) {
+          const a = actions[axis * depth + first];
+          if (!a.forward.size) continue;
+          const isolated = record(commutation(cross, a));
+          if (isolated && isolated.every(orbit => !included.has(orbit))) {
+            batch.push(a);
+            for (const orbit of isolated) included.add(orbit);
+          }
+          for (let second = first + 1; second < depth; second++) {
+            const b = actions[axis * depth + second];
+            record(commutation(cross, combineSlices([a, b])));
+          }
+        }
+        if (batch.length > 2) record(commutation(cross, combineSlices(batch)));
+      }
+    }
+  }
+
+  return [...results.values()].map(({ word, cycles }) => ({
+    moves: word.map(turn => ({
+      face: Math.floor((turn >> 1) / depth),
+      layer: (turn >> 1) % depth + 1,
+      direction: turn % 2 ? -1 : 1,
+    })),
+    cycles,
+  })).sort((a, b) => b.cycles.length - a.cycles.length || a.moves.length - b.moves.length);
 }

@@ -241,7 +241,7 @@ function scramblePuzzle(animated) {
 
 function solve() {
   if (busy() || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=4', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=5', import.meta.url), { type: 'module' });
   planning = true;
   lock(true);
   progress.removeAttribute('value');
