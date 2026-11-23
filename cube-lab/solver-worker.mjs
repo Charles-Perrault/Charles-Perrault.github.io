@@ -1,12 +1,12 @@
 import { Cube } from './cube.mjs?v=14';
-import { PackedTurns, unpackTurns } from './packed-turns.mjs';
+import { maxPackedSize, PackedTurns, unpackTurns } from './packed-turns.mjs';
 import { brobdicubeInput } from './brobdicube-input.mjs';
-import { solveEdges } from './edge-solver.mjs?v=14';
-import { orientWhitePlanningCube, solveAllCenters, solveWhiteBlocks, solveWhiteCenter, solveYellowCenter } from './solver.mjs?v=14';
+import { solveEdges } from './edge-solver.mjs?v=15';
+import { orientWhitePlanningCube, solveAllCenters, solveWhiteBlocks, solveWhiteCenter, solveYellowCenter } from './solver.mjs?v=15';
 
 const solvers = {
-  fast: async (cube, report) => (await import('./full-solver.mjs?v=14')).solveCubeFast(cube, report),
-  full: async (cube, report, candidates) => (await import('./full-solver.mjs?v=14')).solveCube(cube, report, candidates),
+  fast: async (cube, report, candidates, emit) => (await import('./full-solver.mjs?v=15')).solveCubeFast(cube, report, candidates, emit),
+  full: async (cube, report, candidates, emit) => (await import('./full-solver.mjs?v=15')).solveCube(cube, report, candidates, emit),
   edges: solveEdges,
   all: solveAllCenters,
   yellow: solveYellowCenter,
@@ -156,11 +156,28 @@ self.onmessage = async ({ data: { size, faces, orientations, center, cuda, brobd
   try {
     const cube = new Cube(size, faces, orientations);
     const solve = solvers[center];
+    const compact = size <= maxPackedSize;
+    let pending = compact ? new PackedTurns() : [];
+    let streamedMoves = false;
+    const flush = () => {
+      if (!pending.length) return;
+      if (compact) {
+        const batch = pending.view();
+        self.postMessage({ batch, backend: '' }, [batch.buffer]);
+      } else self.postMessage({ movesBatch: pending });
+      streamedMoves = true;
+      pending = compact ? new PackedTurns() : [];
+    };
+    const emit = move => {
+      pending.push(move);
+      if (pending.length >= 128) flush();
+    };
     let lastPhase;
     let lastReport = -Infinity;
     const report = (phase, fraction) => {
       const now = performance.now();
       if (phase === lastPhase && now - lastReport < 250) return;
+      flush();
       lastPhase = phase;
       lastReport = now;
       self.postMessage({ progress: { phase, fraction } });
@@ -195,14 +212,18 @@ self.onmessage = async ({ data: { size, faces, orientations, center, cuda, brobd
         report('cuda', 0);
         const candidates = await searchCuda(oriented);
         if (Array.isArray(candidates)) {
-          const moves = await solve(oriented, report, candidates);
-          self.postMessage({ moves: orientation.concat(moves) });
+          for (const move of orientation) emit(move);
+          await solve(oriented, report, candidates, emit);
+          flush();
+          self.postMessage(streamedMoves ? { streamEnd: true } : { moves: [] });
           return;
         }
       }
     }
-    const moves = await solve(cube, report);
-    if (moves instanceof PackedTurns) {
+    const moves = await solve(cube, report, undefined, emit);
+    flush();
+    if (streamedMoves) self.postMessage({ streamEnd: true });
+    else if (moves instanceof PackedTurns) {
       const packed = moves.view();
       self.postMessage({ packed }, [packed.buffer]);
     } else self.postMessage({ moves });

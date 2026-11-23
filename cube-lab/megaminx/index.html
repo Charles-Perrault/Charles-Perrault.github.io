@@ -7,17 +7,19 @@
     <title>Megaminx · Cube Lab</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css?v=3">
-    <link rel="stylesheet" href="../puzzle-switcher.css?v=1">
+    <link rel="stylesheet" href="../puzzle-switcher.css?v=2">
   </head>
   <body>
     <main class="stage">
       <canvas id="puzzle" tabindex="0" aria-label="Interactive Megaminx. Drag a sticker to turn or drag the background to orbit. Use brackets to turn the selected face."></canvas>
       <header><h1 id="puzzle-name">Megaminx</h1></header>
       <nav class="puzzle-switcher" aria-label="Puzzles">
-        <a href="../">Cube</a>
-        <span aria-current="page">Minx family</span>
-        <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
-      </nav>
+  <a href="../">Cube</a>
+  <span aria-current="page">Minx family</span>
+  <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
+  <a href="../fto/">FTO</a>
+  <a href="../square-1/">Square-1</a>
+</nav>
       <button class="reset-view" id="view" type="button">Reset view</button>
       <div class="controls">
         <div class="setup-dock">
@@ -70,10 +72,10 @@
           </div>
         </section>
       </div>
-      <div class="status"><span id="state" role="status">Solved</span><span id="applied"></span></div>
+      <div class="status"><span id="state" role="status">Solved</span><span id="applied"></span><span id="solve-planning" hidden></span></div>
       <progress id="turn-progress" max="100" value="0" hidden aria-label="Turn progress"></progress>
       <p class="hint">Drag a sticker to turn · Drag the background to orbit · Scroll or pinch to zoom</p>
     </main>
-    <script type="module" src="app.mjs?v=8"></script>
+    <script type="module" src="app.mjs?v=9"></script>
   </body>
 </html>

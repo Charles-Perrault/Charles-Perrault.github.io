@@ -1,10 +1,9 @@
-import { solve } from './solver.mjs';
+import { solve } from './solver.mjs?v=2';
 import { applyPose, cubeSlots, findCubeShape, installShapeTable, remapColors, searchCubeShape, walkCubeShape } from './jumbling.mjs';
 
 let ready;
 self.onmessage = async ({ data: { state, poses } }) => {
   try {
-    let shape = [];
     let aligned = state;
     if (poses) {
       ready ??= fetch(new URL('./shapes.bin', import.meta.url)).then(async response => {
@@ -25,11 +24,12 @@ self.onmessage = async ({ data: { state, poses } }) => {
       });
       const slots = cubeSlots(moves.reduce(applyPose, poses));
       if (!slots) throw new Error('The planned turns did not restore cube shape.');
-      shape = [{ name: 'Restoring cube shape', moves }];
       aligned = remapColors(state, slots);
+      if (moves.length) self.postMessage({ batch: { name: 'Restoring cube shape', moves } });
     }
     self.postMessage({ stage: 'Planning the color solve…' });
-    self.postMessage({ plan: [...shape, ...solve(aligned)] });
+    solve(aligned, batch => self.postMessage({ batch }));
+    self.postMessage({ done: true });
   } catch (error) {
     ready = undefined;
     self.postMessage({ error: error.message });

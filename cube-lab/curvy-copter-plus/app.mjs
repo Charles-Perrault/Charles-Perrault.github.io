@@ -180,7 +180,15 @@ function tick(now) {
     if (move.regular || move.startAligned) settle();
     perform(move);
   }
-  if (p.index === p.moves.length) { settle(); stop(p.message); return; }
+  if (p.index === p.moves.length) {
+    settle();
+    if (planning) {
+      p.waiting = true;
+      status.textContent = 'Waiting for more solution moves…';
+      draw();
+    } else stop(p.message);
+    return;
+  }
   const move = p.moves[p.index];
   if (move.regular || move.startAligned) settle();
   const active = p.nodes[p.index];
@@ -189,22 +197,36 @@ function tick(now) {
     active.classList.add('current');
     list.scrollTop = Math.max(0, active.offsetTop - 28);
     p.active = active;
-    status.textContent = `${move.name} · ${p.index + 1} of ${p.moves.length} · ${moveName(move)}`;
+    status.textContent = `${move.name} · Move ${p.index + 1}/${p.moves.length}${planning ? '+' : ''} · ${moveName(move)}`;
   }
   draw(move, clamp((now - p.start) / p.duration - p.index, 0, 1));
   frame = requestAnimationFrame(tick);
 }
 
-function play(stages, message) {
+function play(stages, message, append = false) {
   const moves = stages.flatMap(({ name, moves }) => moves.map(move => Number.isInteger(move)
     ? { ...flips[move], name, regular: true } : { ...move, name }));
-  if (!moves.length) { stop(); return; }
+  if (!moves.length) { if (!append) stop(); return; }
   const speed = get('speed').valueAsNumber;
   const nodes = moves.map(move => {
     const span = document.createElement('span');
     span.textContent = moveName(move);
     return span;
   });
+  if (append && playback) {
+    const p = playback;
+    p.moves.push(...moves);
+    p.nodes.push(...nodes);
+    list.append(...nodes);
+    if (p.waiting) {
+      p.waiting = false;
+      const now = performance.now();
+      p.start = now - p.index * p.duration;
+      if (p.paused) p.paused = now;
+      else frame = requestAnimationFrame(tick);
+    }
+    return;
+  }
   list.replaceChildren(...nodes);
   playback = { moves, nodes, message, index: 0, start: performance.now(), duration: 1000 / (speed > 0 ? speed : 10) };
   controls();
@@ -223,12 +245,14 @@ get('solve').onclick = () => {
   if (busy()) return;
   setPaint(false);
   if (!poses && isSolved(state)) { stop(); return; }
-  worker ??= new Worker(new URL('./worker.mjs', import.meta.url), { type: 'module' });
+  worker ??= new Worker(new URL('./worker.mjs?v=2', import.meta.url), { type: 'module' });
   worker.onmessage = ({ data }) => {
-    if (data.stage) { status.textContent = data.stage; return; }
+    if (data.stage) { if (!playback || playback.waiting) status.textContent = data.stage; return; }
+    if (data.batch) { play([data.batch], undefined, true); return; }
+    if (data.error) { stop(data.error); return; }
     planning = false;
-    if (data.error) stop(data.error);
-    else play(data.plan, data.message);
+    if (!playback || playback.waiting) stop();
+    else controls();
   };
   worker.onerror = () => stop('Could not load the solver');
   planning = true;

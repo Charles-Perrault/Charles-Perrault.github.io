@@ -107,15 +107,25 @@ function cornerAnchors(state) {
   });
 }
 
-export function solve(state) {
+export function solve(state, onStage) {
+  let checkpoint = state;
+  const committed = [];
+  const emit = (stage, next) => {
+    if (!onStage) return;
+    checkpoint = next;
+    committed.push(stage);
+    onStage(stage);
+  };
   try {
-    return solveAligned(state, false);
+    return solveAligned(state, false, emit);
   } catch {
-    return solveAligned(state, true);
+    if (!onStage) return solveAligned(state, true);
+    solveAligned(checkpoint, true, emit);
+    return committed;
   }
 }
 
-function solveAligned(state, mixed) {
+function solveAligned(state, mixed, emit = () => {}) {
   if (isSolved(state)) return [];
   const { basics, twists, orbits } = tables();
   const plan = [];
@@ -125,8 +135,12 @@ function solveAligned(state, mixed) {
       if (reduced.at(-1) === move) reduced.pop();
       else reduced.push(move);
     }
-    if (reduced.length) plan.push({ name, moves: reduced });
     state = replay(state, reduced);
+    if (reduced.length) {
+      const stage = { name, moves: reduced };
+      plan.push(stage);
+      emit(stage, state);
+    }
   };
   const mix = (name, algorithms) => {
     const moves = [];
@@ -134,7 +148,11 @@ function solveAligned(state, mixed) {
       moves.push({ ...turns[0], startAligned: true }, ...turns.slice(1));
       state = remapColors(state, perm);
     }
-    if (moves.length) plan.push({ name, moves });
+    if (moves.length) {
+      const stage = { name, moves };
+      plan.push(stage);
+      emit(stage, state);
+    }
   };
 
   step('Orienting edges', edges.flatMap(id => state[id] === solved[id] ? [] : tiles[id].moving));

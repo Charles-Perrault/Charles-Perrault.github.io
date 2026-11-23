@@ -52,7 +52,7 @@ function cycleInsertion(source, target, locked) {
   return best;
 }
 
-export function solveMegaminx(state, onStage = () => {}) {
+export function solveMegaminx(state, onStage = () => {}, onMoves = () => {}) {
   let labels = identify(state);
   const stages = [];
   let generated = 0;
@@ -61,6 +61,7 @@ export function solveMegaminx(state, onStage = () => {}) {
     const planned = simplify(word).map(turn => moves[turn]);
     stages.push({ name, moves: planned });
     generated += planned.length;
+    if (planned.length) onMoves(name, planned);
   };
 
   for (const { name, pieces: targets } of layerStages) {

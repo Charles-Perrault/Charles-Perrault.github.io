@@ -1,8 +1,8 @@
 import { LayeredMinx } from './layered-minx.mjs?v=3';
 import { dot, faces, stickers as megaminxStickers } from './puzzle.mjs';
-import { solveMegaminx } from './solver.mjs';
+import { solveMegaminx } from './solver.mjs?v=3';
 import { simplify } from './solver-model.mjs';
-import { greedyCenterMoves } from './greedy-centers.mjs?v=2';
+import { greedyCenterMoves } from './greedy-centers.mjs?v=3';
 
 const inverse = word => word.slice().reverse().map(move => move ^ 1);
 const commutator = (a, b) => [...a, ...b, ...inverse(a), ...inverse(b)];
@@ -255,7 +255,7 @@ function buildCycleTable(rows, roots, size) {
   return { parents, via, distance };
 }
 
-export function solveLayeredMinx(size, state, report = () => {}) {
+export function solveLayeredMinx(size, state, report = () => {}, onMoves = () => {}) {
   const puzzle = new LayeredMinx(size);
   if (state.length !== puzzle.state.length) throw new Error('Layer count does not match the puzzle');
   puzzle.state = state.slice();
@@ -267,19 +267,28 @@ export function solveLayeredMinx(size, state, report = () => {}) {
     layer: (move >> 1) % puzzle.depth + 1,
     direction: move % 2 ? -1 : 1,
   });
-  const addStage = (name, moves) => {
+  const recordStage = (name, moves) => {
     if (moves.length) stages.push({ name, moves });
     generated += moves.length;
   };
+  const addStage = (name, moves) => {
+    if (moves.length) onMoves(name, moves);
+    recordStage(name, moves);
+  };
   if (size >= 4) {
     report('Greedy centers');
-    addStage('Greedy centers', greedyCenterMoves(puzzle, (stage, count) => report(stage, { generated: count })));
+    recordStage('Greedy centers', greedyCenterMoves(puzzle,
+      (stage, count) => report(stage, { generated: count }),
+      moves => onMoves('Greedy centers', moves)));
     if (puzzle.solved) return stages;
   }
   report('Corners and middle edges', { generated });
-  const core = solveMegaminx(projection(puzzle)).flatMap(stage => stage.moves);
-  for (const { face, direction } of core) puzzle.turn(face, direction);
-  addStage('Corners and middle edges', core);
+  const coreName = 'Corners and middle edges';
+  const core = solveMegaminx(projection(puzzle), () => {}, (_, moves) => {
+    for (const { face, direction } of moves) puzzle.turn(face, direction);
+    onMoves(coreName, moves);
+  }).flatMap(stage => stage.moves);
+  recordStage(coreName, core);
   if (puzzle.solved) return stages;
 
   report('Generating slice algorithms', { generated });
@@ -304,10 +313,13 @@ export function solveLayeredMinx(size, state, report = () => {}) {
     orbit.seeds.sort((a, b) => a.conflicts.length - b.conflicts.length || a.action.word.length - b.action.word.length);
     return [{ id, priority: orbit.seeds[0]?.conflicts.length ?? Infinity }];
   }).sort((a, b) => b.priority - a.priority);
-  const batchedFinish = finishOrbits(puzzle, model, order, decode, report, generated + batch.length);
+  const compareFinishes = batch.length > 0 && size <= 50;
+  if (!compareFinishes && batch.length) onMoves('Batched centers', batch);
+  const batchedFinish = finishOrbits(puzzle, model, order, decode, report, generated + batch.length,
+    compareFinishes ? null : moves => onMoves('Wings and centers', moves));
   let finish = batchedFinish;
   // Share orbit tables across both finishes and bound the cost of a second pass.
-  if (batch.length && size <= 50) {
+  if (compareFinishes) {
     puzzle.state.set(beforeBatch);
     report('Comparing finish without batches', { generated });
     const directFinish = finishOrbits(puzzle, model, order, decode, report, generated);
@@ -316,15 +328,22 @@ export function solveLayeredMinx(size, state, report = () => {}) {
       batch = [];
     }
   }
-  addStage('Batched centers', batch);
-  addStage('Wings and centers', finish);
+  const save = compareFinishes ? addStage : recordStage;
+  save('Batched centers', batch);
+  save('Wings and centers', finish);
   return stages;
 }
 
-function finishOrbits(puzzle, model, order, decode, report, generated) {
+function finishOrbits(puzzle, model, order, decode, report, generated, commit = null) {
   const { orbits } = model;
   const done = new Set();
-  const sequence = [];
+  let pending = [];
+  const published = [];
+  const publish = turns => {
+    const moves = turns.map(decode);
+    for (const move of moves) published.push(move);
+    if (moves.length) commit(moves);
+  };
   const orbitStart = performance.now();
   let lastUpdate = orbitStart;
   for (const [i, { id }] of order.entries()) {
@@ -346,21 +365,32 @@ function finishOrbits(puzzle, model, order, decode, report, generated) {
         const { face, direction, layer } = decode(turn);
         puzzle.turn(face, direction, layer);
       }
-      sequence.push(...word);
+      pending.push(...word);
+    }
+    if (commit && pending.length >= 2048) {
+      pending = simplifySlices(pending, puzzle.depth);
+      // Keep a tail so upcoming orbits can still cancel nearby moves.
+      if (pending.length > 128) {
+        publish(pending.slice(0, -128));
+        pending = pending.slice(-128);
+      }
     }
     done.add(id);
     const completed = i + 1, now = performance.now();
     if (now - lastUpdate >= 150 || completed === order.length) {
       lastUpdate = now;
       report(`Slice orbit ${completed.toLocaleString()} of ${order.length.toLocaleString()}`, {
-        generated: generated + sequence.length,
+        generated: generated + published.length + pending.length,
         completed, total: order.length,
         remainingSeconds: (now - orbitStart) / completed * (order.length - completed) / 1000,
       });
     }
   }
   if (!puzzle.solved) throw new Error('The generated solution did not verify');
-  return simplifySlices(sequence, puzzle.depth).map(decode);
+  const tail = simplifySlices(pending, puzzle.depth);
+  if (!commit) return tail.map(decode);
+  publish(tail);
+  return published;
 }
 
 function planOrbit(offsets, table, seed, depth) {

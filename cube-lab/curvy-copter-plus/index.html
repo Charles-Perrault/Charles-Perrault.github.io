@@ -4,15 +4,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Curvy Copter Plus · Cube Lab</title>
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="../puzzle-switcher.css?v=1">
+<link rel="stylesheet" href="../puzzle-switcher.css?v=2">
 <main class="stage">
   <canvas id="puzzle" tabindex="0" aria-label="Interactive Curvy Copter Plus"></canvas>
   <header><h1>Curvy Copter Plus</h1></header>
   <nav class="puzzle-switcher" aria-label="Puzzles">
-    <a href="../">Cube</a>
-    <a href="../megaminx/">Minx family</a>
-    <span aria-current="page">Curvy Copter Plus</span>
-  </nav>
+  <a href="../">Cube</a>
+  <a href="../megaminx/">Minx family</a>
+  <span aria-current="page">Curvy Copter Plus</span>
+  <a href="../fto/">FTO</a>
+  <a href="../square-1/">Square-1</a>
+</nav>
   <button class="reset-view" id="view" type="button">Reset view</button>
   <div class="controls">
     <section aria-label="Solver">
@@ -42,5 +44,5 @@
   <div class="status" id="status" role="status">Solved</div>
   <p class="hint" id="hint">Click an edge to select it · Drag to orbit · Scroll to zoom</p>
 </main>
-<script type="module" src="app.mjs"></script>
+<script type="module" src="app.mjs?v=2"></script>
 </html>

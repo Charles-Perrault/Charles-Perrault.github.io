@@ -319,7 +319,7 @@ function beginTurns(moves, count, { scramble = false, center = '', start = 0, gr
   const playingMessage = greedy
     ? 'Picking the best turn for white on D'
     : center
-      ? live ? 'Solving while Brobdicube plans ahead' : `Solving in ${solveCount} turns`
+      ? live ? 'Solving while planning ahead' : `Solving in ${solveCount} turns`
       : scramble
         ? `Playing ${countFormat.format(count)} turns`
         : count === 1
@@ -335,8 +335,8 @@ function beginTurns(moves, count, { scramble = false, center = '', start = 0, gr
     greedy,
     label,
     playingMessage,
-    paused: Boolean(center),
-    started: !center,
+    paused: false,
+    started: true,
     progress: start,
     done: 0,
     lastTime: performance.now(),
@@ -350,13 +350,13 @@ function beginTurns(moves, count, { scramble = false, center = '', start = 0, gr
           : 'Sequence complete',
   };
   renderer.cancelDrag();
-  setBusy(true, center ? 'Solution ready' : label);
+  setBusy(true, label);
   playbackButton.hidden = false;
-  playbackButton.textContent = center ? 'Start solution' : 'Pause';
+  playbackButton.textContent = 'Pause';
   if (center) {
     const source = backend ? ` from ${backend}` : '';
-    const detail = live ? 'More moves on the way' : `${solveCount} turns`;
-    showMessage(`Solution ready${source} · ${detail}`);
+    const detail = live ? 'Planning ahead' : `${solveCount} turns`;
+    showMessage(`Solving${source} · ${detail}`);
   } else showMessage(playingMessage);
   progress.max = count;
   progress.value = 0;
@@ -370,14 +370,15 @@ function beginTurns(moves, count, { scramble = false, center = '', start = 0, gr
   if (!task.paused) frame = requestAnimationFrame(animate);
 }
 
-function acceptSolutionBatch(batch, center) {
+function acceptSolutionBatch(batch, center, packed = true, backend = '') {
   if (!task) {
-    const sequence = new PackedTurns();
-    sequence.appendWords(batch);
-    beginTurns(null, sequence.length, { center, backend: 'Brobdicube', sequence, live: true });
+    const sequence = packed ? new PackedTurns() : batch;
+    if (packed) sequence.appendWords(batch);
+    beginTurns(null, sequence.length, { center, backend, sequence, live: true });
     return;
   }
-  task.sequence.appendWords(batch);
+  if (packed) task.sequence.appendWords(batch);
+  else task.sequence.push(...batch);
   task.count = task.sequence.length;
   if (!task.move) {
     task.move = task.sequence.at(task.done);
@@ -403,8 +404,7 @@ function finishSolutionStream() {
   work.playingMessage = `Solving in ${total} turns`;
   progress.max = work.count;
   progress.value = work.done;
-  if (!work.started) showMessage(`Solution ready from Brobdicube · ${total} turns`);
-  else if (!work.paused) showMessage(work.playingMessage);
+  if (!work.paused) showMessage(work.playingMessage);
   solutionList.update(work, cube.size, { snap: rate > animationLimit, force: true });
 }
 
@@ -450,7 +450,7 @@ function startSolve(center) {
   solutionList.clear();
   renderer.cancelDrag();
   try {
-    const job = new Worker(new URL('./solver-worker.mjs?v=20', import.meta.url), { type: 'module' });
+    const job = new Worker(new URL('./solver-worker.mjs?v=21', import.meta.url), { type: 'module' });
     worker = job;
     let bestSearch;
     let phase = 'white';
@@ -500,17 +500,22 @@ function startSolve(center) {
         return;
       }
       if (data.progress) {
-        showPlanningProgress(data.progress.phase, data.progress.fraction);
+        if (!task) showPlanningProgress(data.progress.phase, data.progress.fraction);
         return;
       }
       if (data.batch) {
-        acceptSolutionBatch(data.batch, center);
+        acceptSolutionBatch(data.batch, center, true, data.backend ?? 'Brobdicube');
+        return;
+      }
+      if (data.movesBatch) {
+        acceptSolutionBatch(data.movesBatch, center, false);
         return;
       }
       if (data.streamEnd) {
         finishSolutionStream();
         return;
       }
+      if (data.error) { settle(data.error); return; }
       stopWork();
       const count = data.packed?.length ?? data.moves?.length ?? 0;
       if (data.error || !count) {

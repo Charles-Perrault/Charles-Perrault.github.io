@@ -949,34 +949,34 @@ export function orientWhitePlanningCube(cube) {
   return moves;
 }
 
-export function solveWhiteCenter(source, onProgress, candidates) {
-  return solveCenters(source, 'white', onProgress, candidates);
+export function solveWhiteCenter(source, onProgress, candidates, onMove) {
+  return solveCenters(source, 'white', onProgress, candidates, onMove);
 }
 
-export function solveYellowCenter(source, onProgress, candidates) {
-  return solveCenters(source, 'yellow', onProgress, candidates);
+export function solveYellowCenter(source, onProgress, candidates, onMove) {
+  return solveCenters(source, 'yellow', onProgress, candidates, onMove);
 }
 
-export function solveAllCenters(source, onProgress, candidates) {
-  return solveCenters(source, 'all', onProgress, candidates);
+export function solveAllCenters(source, onProgress, candidates, onMove) {
+  return solveCenters(source, 'all', onProgress, candidates, onMove);
 }
 
-export function planAllCentersInPlace(cube, onProgress, candidates) {
-  return solveCentersInPlace(cube, 'all', onProgress, candidates);
+export function planAllCentersInPlace(cube, onProgress, candidates, onMove) {
+  return solveCentersInPlace(cube, 'all', onProgress, candidates, undefined, onMove);
 }
 
 const fastCenterStrategy = { white: fastWhiteCenter, stageYellowBars: false };
 
-export function planFastCentersInPlace(cube, onProgress) {
-  return solveCentersInPlace(cube, 'all', onProgress, undefined, fastCenterStrategy);
+export function planFastCentersInPlace(cube, onProgress, candidates, onMove) {
+  return solveCentersInPlace(cube, 'all', onProgress, undefined, fastCenterStrategy, onMove);
 }
 
 export function solveWhiteCenterFast(source, onProgress) {
   return solveCentersInPlace(source.clone(), 'white', onProgress, undefined, fastCenterStrategy);
 }
 
-export function solveWhiteBlocks(source, onProgress) {
-  return solveCenters(source, 'blocks', onProgress);
+export function solveWhiteBlocks(source, onProgress, candidates, onMove) {
+  return solveCenters(source, 'blocks', onProgress, undefined, onMove);
 }
 
 function upperBlock(cube, { x, width, z, height, whites }) {
@@ -1083,11 +1083,11 @@ function whiteBlocks(cube, emit, report) {
   }
 }
 
-function solveCenters(source, mode, onProgress, candidates) {
-  return solveCentersInPlace(source.clone(), mode, onProgress, candidates);
+function solveCenters(source, mode, onProgress, candidates, onMove) {
+  return solveCentersInPlace(source.clone(), mode, onProgress, candidates, undefined, onMove);
 }
 
-function solveCentersInPlace(cube, mode, onProgress = () => {}, candidates, strategy) {
+function solveCentersInPlace(cube, mode, onProgress = () => {}, candidates, strategy, onMove = () => {}) {
   const { size } = cube;
   if (size === 2) return [];
   onProgress('white', 0);
@@ -1098,6 +1098,7 @@ function solveCentersInPlace(cube, mode, onProgress = () => {}, candidates, stra
     for (const move of sequence) {
       if (!alreadyApplied) cube.apply(move);
       record(move);
+      onMove(move);
     }
   };
   // An already white D is the preferred orientation when continuing to yellow.

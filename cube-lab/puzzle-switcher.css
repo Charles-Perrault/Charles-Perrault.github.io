@@ -42,3 +42,8 @@
   .puzzle-switcher > :is(a, span) { min-height: 32px; }
   .workbench .setup-dock { top: calc(var(--top) + 77px); }
 }
+
+@media (max-width: 410px) {
+  .puzzle-switcher { gap: 2px; }
+  .puzzle-switcher > :is(a, span) { padding-inline: 3px; font-size: 11px; }
+}

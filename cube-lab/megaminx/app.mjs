@@ -11,6 +11,7 @@ const context = renderer ? null : canvas.getContext('2d');
 let puzzle = new Megaminx(), size = 3;
 const faceSelect = get('face'), sliceSelect = get('slice'), sizeInput = get('layers');
 const speedInput = get('speed'), progress = get('turn-progress');
+const solvePlanning = get('solve-planning');
 const sizeButtons = [...document.querySelectorAll('.presets button')];
 const speedFormat = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 colors.forEach(([name], face) => faceSelect.add(new Option(name, face)));
@@ -144,8 +145,10 @@ function updateStatus(message) {
 }
 
 function showPlaybackCount(work) {
-  if (work.stage) get('applied').textContent =
-    `Move ${(work.index + 1).toLocaleString()}/${work.moves.length.toLocaleString()}`;
+  if (work.stage) {
+    const count = work.stream && planning ? '?' : work.moves.length.toLocaleString();
+    get('applied').textContent = `Move ${(work.index + 1).toLocaleString()}/${count}`;
+  }
   else get('applied').textContent = `${total.toLocaleString()} ${total === 1 ? 'move' : 'moves'}`;
 }
 
@@ -167,6 +170,7 @@ function lock(active) {
 
 function stop(message) {
   cancelAnimationFrame(frame);
+  frame = 0;
   playback = null;
   if (planning) {
     solverWorker.terminate();
@@ -175,11 +179,13 @@ function stop(message) {
   }
   lock(false);
   progress.hidden = true;
+  solvePlanning.hidden = true;
   updateStatus(message);
   draw();
 }
 
 function animate(now) {
+  frame = 0;
   const work = playback;
   if (!work) return;
   const { moves } = work;
@@ -197,7 +203,10 @@ function animate(now) {
     }
   }
   if (work.index === moves.length) {
-    stop();
+    if (work.stream && planning) {
+      work.waiting();
+      draw();
+    } else stop();
     return;
   }
   const stage = moves[work.index].stage;
@@ -241,37 +250,68 @@ function scramblePuzzle(animated) {
 
 function solve() {
   if (busy() || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=6', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=7', import.meta.url), { type: 'module' });
   planning = true;
   lock(true);
   progress.removeAttribute('value');
   progress.hidden = false;
   updateStatus('Planning solution…');
+  let phase = 'Planning solution…', orbitProgress;
   let generated = 0;
+  const generatedText = () => `${generated.toLocaleString()} moves generated`;
+  const showConcurrentPlanning = () => {
+    solvePlanning.textContent = `${phase} · ${generatedText()}`;
+    solvePlanning.hidden = false;
+  };
   const showPlanningCount = () => {
-    get('applied').textContent = `${generated.toLocaleString()} moves generated`;
+    solvePlanning.hidden = true;
+    get('state').textContent = phase;
+    get('applied').textContent = generatedText();
+    if (orbitProgress) {
+      progress.value = 0;
+      progress.max = orbitProgress.total;
+      progress.value = orbitProgress.completed;
+    } else {
+      progress.removeAttribute('value');
+    }
   };
   showPlanningCount();
   worker.onmessage = ({ data }) => {
     if (!planning || solverWorker !== worker) return;
     if (data.stage) {
-      if (data.total) {
-        progress.max = data.total;
-        progress.value = data.completed;
-      }
-      get('state').textContent = `Planning · ${data.stage} · ${estimatedTime(data.remainingSeconds)}`;
+      orbitProgress = data.total ? data : null;
+      phase = `Planning · ${data.stage} · ${estimatedTime(data.remainingSeconds)}`;
       generated = data.generated ?? generated;
-      showPlanningCount();
+      if (frame) showConcurrentPlanning();
+      else showPlanningCount();
       return;
     }
     if (data.error) {
       stop(data.error);
       return;
     }
-    planning = false;
-    const moves = data.stages.flatMap(({ name, moves }) => moves.map(move => ({ ...move, stage: name })));
-    if (moves.length) play(moves);
-    else stop();
+    if (data.commit) {
+      const { name, moves } = data.commit;
+      playback ??= { moves: [], index: 0, credit: 0, stream: true, waiting: showPlanningCount };
+      for (const move of moves) playback.moves.push({ ...move, stage: name });
+      generated = Math.max(generated, playback.moves.length);
+      if (!frame) {
+        playback.stage = name;
+        get('state').textContent = name;
+        showPlaybackCount(playback);
+        playback.last = performance.now();
+        frame = requestAnimationFrame(animate);
+      }
+      progress.max = playback.moves.length;
+      showConcurrentPlanning();
+      return;
+    }
+    if (data.done) {
+      planning = false;
+      solvePlanning.hidden = true;
+      if (!frame) stop();
+      else showPlaybackCount(playback);
+    }
   };
   worker.onerror = () => {
     if (solverWorker === worker) stop('Could not load the solver');
@@ -294,7 +334,7 @@ function position(event) {
   return [event.clientX - rect.left, event.clientY - rect.top];
 }
 const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-const refresh = () => { if (!playback) draw(); };
+const refresh = () => { if (!frame) draw(); };
 
 canvas.addEventListener('contextmenu', event => event.preventDefault());
 canvas.addEventListener('pointerdown', event => {

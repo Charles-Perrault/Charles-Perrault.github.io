@@ -6,7 +6,7 @@ const forward = faces.map(axis => faces.map(normal => {
 }));
 const backward = forward.map(mapping => mapping.map((_, face) => mapping.indexOf(face)));
 
-export function greedyCenterMoves(puzzle, report = () => {}) {
+export function greedyCenterMoves(puzzle, report = () => {}, onMoves = () => {}) {
   const { stickers, state, depth } = puzzle;
   const gains = new Int32Array(faces.length * depth * 2);
   const centers = new Uint8Array(stickers.length);
@@ -41,7 +41,11 @@ export function greedyCenterMoves(puzzle, report = () => {}) {
       best = i;
       gain = gains[i];
     }
-    if (best < 0) return moves;
+    if (best < 0) {
+      const remaining = moves.length % 64;
+      if (remaining) onMoves(moves.slice(-remaining));
+      return moves;
+    }
     const slice = Math.floor(best / 2);
     const face = Math.floor(slice / depth), layer = slice % depth + 1;
     const direction = best % 2 ? -1 : 1;
@@ -57,6 +61,9 @@ export function greedyCenterMoves(puzzle, report = () => {}) {
     }
     puzzle.turn(face, direction, layer);
     moves.push({ face, direction, layer });
-    if (moves.length % 64 === 0) report('Greedy centers', moves.length);
+    if (moves.length % 64 === 0) {
+      report('Greedy centers', moves.length);
+      onMoves(moves.slice(-64));
+    }
   }
 }

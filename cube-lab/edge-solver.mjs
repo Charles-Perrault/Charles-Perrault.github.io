@@ -1,5 +1,5 @@
 import { Cube, faceCoordinates, parseMoves, solvedColors } from './cube.mjs?v=14';
-import { planAllCentersInPlace } from './solver.mjs?v=14';
+import { planAllCentersInPlace } from './solver.mjs?v=15';
 
 // White-side edges first, then yellow-side edges, then the four between them.
 const edgeFaces = [
@@ -138,14 +138,14 @@ function pairWingOrbit(cube, depth, middle, emit) {
   }
 }
 
-export function solveEdges(source, onProgress, candidates) {
-  return planEdgesInPlace(source.clone(), onProgress, candidates);
+export function solveEdges(source, onProgress, candidates, onMove) {
+  return planEdgesInPlace(source.clone(), onProgress, candidates, undefined, onMove);
 }
 
-export function planEdgesInPlace(cube, onProgress = () => {}, candidates, planCenters = planAllCentersInPlace) {
+export function planEdgesInPlace(cube, onProgress = () => {}, candidates, planCenters = planAllCentersInPlace, onMove = () => {}) {
   const { size } = cube;
   if (size === 2) return [];
-  const moves = planCenters(cube, onProgress, candidates);
+  const moves = planCenters(cube, onProgress, candidates, onMove);
   onProgress('edges', 0);
   if (cube.hasPairedEdges()) return moves;
 
@@ -156,7 +156,10 @@ export function planEdgesInPlace(cube, onProgress = () => {}, candidates, planCe
     slots.map(({ face, row, col }) => [face, cube.stickerAt(face, row, col)]),
   )) : null;
   const emit = (sequence) => {
-    for (const move of sequence) cube.apply(move);
+    for (const move of sequence) {
+      cube.apply(move);
+      onMove(move);
+    }
     moves.push(...sequence);
   };
   for (let depth = 1; depth <= orbitCount; depth++) {

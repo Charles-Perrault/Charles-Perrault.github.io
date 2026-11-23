@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1017">
+  <title>Square-1 · Cube Lab</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../puzzle-switcher.css?v=2">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <canvas id="puzzle" tabindex="0" aria-label="Square-1. Drag a layer to turn, or drag the background to orbit. Press U or D to turn a layer or slash to flip the right half. Use Shift to reverse a layer turn."></canvas>
+    <header><h1>Square-1</h1></header>
+    <nav class="puzzle-switcher" aria-label="Puzzles">
+  <a href="../">Cube</a>
+  <a href="../megaminx/">Minx family</a>
+  <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
+  <a href="../fto/">FTO</a>
+  <span aria-current="page">Square-1</span>
+</nav>
+    <button class="reset-view" id="view" type="button">Reset view</button>
+    <aside class="controls" aria-label="Square-1 controls">
+      <section>
+        <h2>Turns</h2>
+        <form id="turn-form" class="turn-form">
+          <label>Top <input id="top" type="number" min="-5" max="6" step="1" value="0" required></label>
+          <label>Bottom <input id="bottom" type="number" min="-5" max="6" step="1" value="0" required></label>
+          <button id="turn" type="submit" title="Apply the two layer turns">Turn</button>
+        </form>
+        <div class="row">
+          <button id="slash" type="button" class="primary" aria-describedby="slice-status">Slash /</button>
+          <button id="stop" type="button" disabled>Stop</button>
+        </div>
+        <p id="slice-status">Slice ready</p>
+      </section>
+      <section>
+        <h2>Scramble</h2>
+        <div class="row">
+          <button id="instant" type="button">Instant scramble</button>
+          <button id="animate" type="button">Scramble</button>
+        </div>
+        <div class="speed-row">
+          <label for="speed">Turn speed</label>
+          <input id="speed" type="number" min="0" step="any" value="7" required aria-describedby="speed-rate">
+          <span id="speed-rate">7 turns/sec</span>
+        </div>
+        <button id="reset" type="button">Reset puzzle</button>
+      </section>
+    </aside>
+    <p class="hint">Drag a layer to turn · Drag the background to orbit · Scroll or pinch to zoom</p>
+    <div class="status"><span id="state" role="status">Solved</span><span id="moves">0 moves</span></div>
+    <progress id="progress" max="1" value="0" hidden aria-label="Move progress"></progress>
+  </main>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import { parseMoves, solvedColors } from './cube.mjs?v=14';
-import { planEdgesInPlace } from './edge-solver.mjs?v=14';
-import { planFastCentersInPlace } from './solver.mjs?v=14';
+import { planEdgesInPlace } from './edge-solver.mjs?v=15';
+import { planFastCentersInPlace } from './solver.mjs?v=15';
 import ThreeByThree from './vendor/cubejs/solve.mjs';
 
 let initialized = false;
@@ -26,24 +26,25 @@ function oddPermutation(pieces) {
   return odd;
 }
 
-export function solveCube(source, report = () => {}, candidates) {
-  return solveReducedCube(source, report, candidates);
+export function solveCube(source, report = () => {}, candidates, onMove) {
+  return solveReducedCube(source, report, candidates, undefined, onMove);
 }
 
-export function solveCubeFast(source, report = () => {}) {
-  return solveReducedCube(source, report, undefined, planFastCentersInPlace);
+export function solveCubeFast(source, report = () => {}, candidates, onMove) {
+  return solveReducedCube(source, report, undefined, planFastCentersInPlace, onMove);
 }
 
-function solveReducedCube(source, report, candidates, planCenters) {
+function solveReducedCube(source, report, candidates, planCenters, onMove = () => {}) {
   if (source.size < 3) throw new Error('Full solve is available for cubes size 3 and up.');
   if (source.isSolved()) return [];
   const { size } = source;
   const cube = source.clone();
-  const moves = planEdgesInPlace(cube, report, candidates, planCenters);
+  const moves = planEdgesInPlace(cube, report, candidates, planCenters, onMove);
   const emit = (notation) => {
     for (const move of parseMoves(notation, size)) {
       cube.apply(move);
       moves.push(move);
+      onMove(move);
     }
   };
   report('finish', 0);
