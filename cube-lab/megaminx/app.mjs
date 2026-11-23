@@ -143,6 +143,21 @@ function updateStatus(message) {
   get('applied').textContent = `${total.toLocaleString()} ${total === 1 ? 'move' : 'moves'}`;
 }
 
+function showPlaybackCount(work) {
+  if (work.stage) get('applied').textContent =
+    `Move ${(work.index + 1).toLocaleString()}/${work.moves.length.toLocaleString()}`;
+  else get('applied').textContent = `${total.toLocaleString()} ${total === 1 ? 'move' : 'moves'}`;
+}
+
+function estimatedTime(seconds) {
+  if (!Number.isFinite(seconds)) return 'Estimating time left…';
+  const rounded = Math.ceil(seconds);
+  if (rounded < 60) return `~${rounded}s left`;
+  const minutes = Math.ceil(rounded / 60);
+  if (minutes < 60) return `~${minutes}m left`;
+  return `~${Math.floor(minutes / 60)}h ${minutes % 60}m left`;
+}
+
 function lock(active) {
   for (const id of ['instant', 'animate', 'left', 'right', 'apply-size', 'layers', 'slice']) get(id).disabled = active;
   for (const button of sizeButtons) button.disabled = active;
@@ -191,7 +206,7 @@ function animate(now) {
     updateStatus(stage);
   }
   progress.value = work.index + work.credit;
-  get('applied').textContent = `${total.toLocaleString()} ${total === 1 ? 'move' : 'moves'}`;
+  showPlaybackCount(work);
   if (rate > 100_000) draw();
   else draw(moves[work.index], work.credit);
   frame = requestAnimationFrame(animate);
@@ -207,6 +222,7 @@ function play(moves) {
   const { face, layer, stage } = moves[0];
   const slice = layer > 1 ? ` · Layer ${layer}` : '';
   updateStatus(stage ?? (moves.length === 1 ? `Turning ${colors[face][0]}${slice}` : 'Scrambling'));
+  showPlaybackCount(playback);
   frame = requestAnimationFrame(animate);
 }
 
@@ -225,16 +241,27 @@ function scramblePuzzle(animated) {
 
 function solve() {
   if (busy() || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=3', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=4', import.meta.url), { type: 'module' });
   planning = true;
   lock(true);
   progress.removeAttribute('value');
   progress.hidden = false;
   updateStatus('Planning solution…');
+  let generated = 0;
+  const showPlanningCount = () => {
+    get('applied').textContent = `${generated.toLocaleString()} moves generated`;
+  };
+  showPlanningCount();
   worker.onmessage = ({ data }) => {
     if (!planning || solverWorker !== worker) return;
     if (data.stage) {
-      updateStatus(`Planning · ${data.stage}`);
+      if (data.total) {
+        progress.max = data.total;
+        progress.value = data.completed;
+      }
+      get('state').textContent = `Planning · ${data.stage} · ${estimatedTime(data.remainingSeconds)}`;
+      generated = data.generated ?? generated;
+      showPlanningCount();
       return;
     }
     if (data.error) {

@@ -57,6 +57,6 @@ export function greedyCenterMoves(puzzle, report = () => {}) {
     }
     puzzle.turn(face, direction, layer);
     moves.push({ face, direction, layer });
-    if (moves.length % 64 === 0) report(`Greedy centers · ${moves.length.toLocaleString()} turns`);
+    if (moves.length % 64 === 0) report('Greedy centers', moves.length);
   }
 }

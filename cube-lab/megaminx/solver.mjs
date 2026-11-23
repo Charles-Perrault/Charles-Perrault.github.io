@@ -55,13 +55,16 @@ function cycleInsertion(source, target, locked) {
 export function solveMegaminx(state, onStage = () => {}) {
   let labels = identify(state);
   const stages = [];
+  let generated = 0;
   const locked = new Uint8Array(pieces.length);
   const record = (name, word) => {
-    stages.push({ name, moves: simplify(word).map(turn => moves[turn]) });
+    const planned = simplify(word).map(turn => moves[turn]);
+    stages.push({ name, moves: planned });
+    generated += planned.length;
   };
 
   for (const { name, pieces: targets } of layerStages) {
-    onStage(name);
+    onStage(name, { generated });
     const word = [];
     // Give already-correct pieces priority so later insertions preserve them.
     const ordered = [...targets].sort((a, b) => Number(labels[b[0]] === b[0]) - Number(labels[a[0]] === a[0]));

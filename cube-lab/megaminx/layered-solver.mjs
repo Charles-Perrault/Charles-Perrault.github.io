@@ -2,7 +2,7 @@ import { LayeredMinx } from './layered-minx.mjs?v=3';
 import { stickers as megaminxStickers } from './puzzle.mjs';
 import { solveMegaminx } from './solver.mjs';
 import { simplify } from './solver-model.mjs';
-import { greedyCenterMoves } from './greedy-centers.mjs';
+import { greedyCenterMoves } from './greedy-centers.mjs?v=2';
 
 const inverse = word => word.slice().reverse().map(move => move ^ 1);
 const commutator = (a, b) => [...a, ...b, ...inverse(a), ...inverse(b)];
@@ -46,16 +46,24 @@ function rigidPieces(puzzle, actions) {
   const orbits = [];
   for (const [root, slots] of pieces.entries()) {
     if (orbitOf[root] !== -1) continue;
-    const orbit = { pieces: [root], seeds: [], core: slots.length === 3 ||
+    const orbit = { pieces: [root], turns: new Set(), seeds: [], core: slots.length === 3 ||
       (slots.length === 2 && puzzle.stickers[slots[0]].bands.every(band => band < 2)) };
     const id = orbits.push(orbit) - 1;
     orbitOf[root] = id;
-    for (const piece of orbit.pieces) for (const action of actions) {
-      const next = pieceOf[destination(action.forward, pieces[piece][0])];
-      if (orbitOf[next] !== -1) continue;
-      orbitOf[next] = id;
-      orbit.pieces.push(next);
+    for (const piece of orbit.pieces) {
+      const slot = pieces[piece][0];
+      // Every sticker on a rigid piece has the same slice memberships.
+      for (const [face, layer] of puzzle.stickers[slot].bands.entries()) {
+        if (!layer) continue;
+        const turn = face * puzzle.depth + layer - 1;
+        orbit.turns.add(turn);
+        const next = pieceOf[destination(actions[turn].forward, slot)];
+        if (orbitOf[next] !== -1) continue;
+        orbitOf[next] = id;
+        orbit.pieces.push(next);
+      }
     }
+    orbit.turns = [...orbit.turns].sort((a, b) => a - b);
   }
   return { pieces, pieceOf, orbits, orbitOf };
 }
@@ -177,7 +185,8 @@ function cycleTable(model, orbit, seed) {
   const pack = (a, b, c) => a * square + b * size + c;
   const moves = [];
   const seen = new Set();
-  for (const [i, action] of model.actions.entries()) for (const direction of [0, 1]) {
+  for (const i of orbit.turns) for (const direction of [0, 1]) {
+    const action = model.actions[i];
     const perm = direction ? action.backward : action.forward;
     const row = Uint8Array.from(orbit.pieces, piece =>
       ids.get(model.pieceOf[destination(perm, model.pieces[piece][0])]));
@@ -248,6 +257,7 @@ export function solveLayeredMinx(size, state, report = () => {}) {
   puzzle.state = state.slice();
   if (puzzle.solved) return [];
   const stages = [];
+  let generated = 0;
   const decode = move => ({
     face: Math.floor((move >> 1) / puzzle.depth),
     layer: (move >> 1) % puzzle.depth + 1,
@@ -255,19 +265,20 @@ export function solveLayeredMinx(size, state, report = () => {}) {
   });
   const addStage = (name, moves) => {
     if (moves.length) stages.push({ name, moves });
+    generated += moves.length;
   };
   if (size >= 4) {
     report('Greedy centers');
-    addStage('Greedy centers', greedyCenterMoves(puzzle, report));
+    addStage('Greedy centers', greedyCenterMoves(puzzle, (stage, count) => report(stage, { generated: count })));
     if (puzzle.solved) return stages;
   }
-  report('Corners and middle edges');
+  report('Corners and middle edges', { generated });
   const core = solveMegaminx(projection(puzzle)).flatMap(stage => stage.moves);
   for (const { face, direction } of core) puzzle.turn(face, direction);
   addStage('Corners and middle edges', core);
   if (puzzle.solved) return stages;
 
-  report('Generating slice algorithms');
+  report('Generating slice algorithms', { generated });
   const actions = facesFor(puzzle);
   const model = { ...rigidPieces(puzzle, actions), actions, cycleCache: new Map(),
     home: Uint8Array.from(puzzle.stickers, tile => tile.face) };
@@ -281,13 +292,14 @@ export function solveLayeredMinx(size, state, report = () => {}) {
   }).sort((a, b) => b.priority - a.priority);
   const done = new Set();
   const sequence = [];
+  const orbitStart = performance.now();
+  let lastUpdate = orbitStart;
   for (const [i, { id }] of order.entries()) {
     const orbit = orbits[id];
     const offsets = assignTargets(model, puzzle, orbit);
     if (offsets.some((target, j) => target !== j)) {
       const seed = orbit.seeds.find(candidate => candidate.conflicts.every(other => !done.has(other)));
       if (!seed) throw new Error('Could not generate an insertion for this orbit');
-      report(`Slice orbit ${i + 1} of ${order.length}`);
       const table = cycleTable(model, orbit, seed);
       for (;;) {
         const open = [...offsets.keys()].filter(j => offsets[j] !== j);
@@ -314,6 +326,15 @@ export function solveLayeredMinx(size, state, report = () => {}) {
       }
     }
     done.add(id);
+    const completed = i + 1, now = performance.now();
+    if (now - lastUpdate >= 150 || completed === order.length) {
+      lastUpdate = now;
+      report(`Slice orbit ${completed.toLocaleString()} of ${order.length.toLocaleString()}`, {
+        generated: generated + sequence.length,
+        completed, total: order.length,
+        remainingSeconds: (now - orbitStart) / completed * (order.length - completed) / 1000,
+      });
+    }
   }
   addStage('Wings and centers', simplify(sequence).map(decode));
   if (!puzzle.solved) throw new Error('The generated solution did not verify');

@@ -68,7 +68,8 @@ canvas:focus-visible { outline-offset: -4px; }
 .face-picker { display: flex; align-items: center; gap: 8px; }
 .face-picker select { flex: 1; }
 #swatch { width: 16px; height: 16px; border-radius: 3px; }
-.status { left: var(--edge); bottom: var(--edge); display: flex; gap: 12px; font-size: 13px; }
+.status { left: var(--edge); right: var(--edge); bottom: var(--edge); display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 13px; pointer-events: none; }
+.stage:has(#turn-progress:not([hidden])) .hint { display: none; }
 #turn-progress { position: absolute; bottom: 5px; left: var(--edge); width: calc(100% - 2 * var(--edge)); height: 3px; accent-color: var(--accent); }
 #applied, .hint { color: var(--muted); }
 .hint { bottom: var(--edge); left: 50%; transform: translateX(-50%); margin: 0; width: min(48vw, 450px); text-align: center; font-size: 12px; pointer-events: none; }
