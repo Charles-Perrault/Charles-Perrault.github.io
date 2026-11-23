@@ -1,5 +1,5 @@
 import { LayeredMinx } from './layered-minx.mjs?v=3';
-import { stickers as megaminxStickers } from './puzzle.mjs';
+import { dot, faces, stickers as megaminxStickers } from './puzzle.mjs';
 import { solveMegaminx } from './solver.mjs';
 import { simplify } from './solver-model.mjs';
 import { greedyCenterMoves } from './greedy-centers.mjs?v=2';
@@ -7,6 +7,7 @@ import { greedyCenterMoves } from './greedy-centers.mjs?v=2';
 const inverse = word => word.slice().reverse().map(move => move ^ 1);
 const commutator = (a, b) => [...a, ...b, ...inverse(a), ...inverse(b)];
 const destination = (action, slot) => action.get(slot) ?? slot;
+const parallelAxes = faces.map((normal, face) => Math.min(face, faces.findIndex(other => dot(normal, other) < -0.999999)));
 
 // AB and BA can only differ on the overlap of the two moves and its preimages.
 function commutation(a, b) {
@@ -146,7 +147,7 @@ function colorKeys(model, orbit) {
   return keys;
 }
 
-function assignTargets(model, puzzle, orbit) {
+function assignTargets(model, puzzle, orbit, rotateTargets = false) {
   const { home } = model, keys = colorKeys(model, orbit);
   const destinations = new Int16Array(orbit.pieces.length);
   const missing = [];
@@ -158,6 +159,9 @@ function assignTargets(model, puzzle, orbit) {
     if (!targets.has(expected)) targets.set(expected, []);
     targets.get(expected).push(i);
     missing.push([i, color]);
+  }
+  if (rotateTargets) for (const slots of targets.values()) {
+    if (slots.length > 1) slots.unshift(slots.pop());
   }
   for (const [i, color] of missing) {
     const target = targets.get(color)?.pop();
@@ -282,10 +286,15 @@ export function solveLayeredMinx(size, state, report = () => {}) {
   const actions = facesFor(puzzle);
   const model = { ...rigidPieces(puzzle, actions), actions, cycleCache: new Map(),
     home: Uint8Array.from(puzzle.stickers, tile => tile.face) };
-  if (puzzle.depth >= 3) {
+  const beforeBatch = puzzle.depth >= 3 ? puzzle.state.slice() : null;
+  let batch = [];
+  if (beforeBatch) {
     report('Batching center cycles', { generated });
-    addStage('Batched centers', batchCenters(puzzle, model, decode));
-    if (puzzle.solved) return stages;
+    batch = batchCenters(puzzle, model, decode);
+    if (puzzle.solved) {
+      addStage('Batched centers', batch);
+      return stages;
+    }
   }
   findSeeds(model, actions, puzzle.depth);
   const { orbits } = model;
@@ -295,6 +304,25 @@ export function solveLayeredMinx(size, state, report = () => {}) {
     orbit.seeds.sort((a, b) => a.conflicts.length - b.conflicts.length || a.action.word.length - b.action.word.length);
     return [{ id, priority: orbit.seeds[0]?.conflicts.length ?? Infinity }];
   }).sort((a, b) => b.priority - a.priority);
+  const batchedFinish = finishOrbits(puzzle, model, order, decode, report, generated + batch.length);
+  let finish = batchedFinish;
+  // Share orbit tables across both finishes and bound the cost of a second pass.
+  if (batch.length && size <= 50) {
+    puzzle.state.set(beforeBatch);
+    report('Comparing finish without batches', { generated });
+    const directFinish = finishOrbits(puzzle, model, order, decode, report, generated);
+    if (directFinish.length <= batch.length + batchedFinish.length) {
+      finish = directFinish;
+      batch = [];
+    }
+  }
+  addStage('Batched centers', batch);
+  addStage('Wings and centers', finish);
+  return stages;
+}
+
+function finishOrbits(puzzle, model, order, decode, report, generated) {
+  const { orbits } = model;
   const done = new Set();
   const sequence = [];
   const orbitStart = performance.now();
@@ -306,29 +334,19 @@ export function solveLayeredMinx(size, state, report = () => {}) {
       const seed = orbit.seeds.find(candidate => candidate.conflicts.every(other => !done.has(other)));
       if (!seed) throw new Error('Could not generate an insertion for this orbit');
       const table = cycleTable(model, orbit, seed);
-      for (;;) {
-        const open = [...offsets.keys()].filter(j => offsets[j] !== j);
-        if (!open.length) break;
-        let best, cost = Infinity;
-        for (const a of open) {
-          const b = offsets[a];
-          for (const c of open) {
-            if (c === a || c === b) continue;
-            const gain = 1 + Number(offsets[b] === c) + Number(offsets[c] === a);
-            const price = (seed.action.word.length + 2 * table.score(a, b, c)) / gain;
-            if (price < cost) { best = [a, b, c]; cost = price; }
-          }
+      let word = planOrbit(offsets.slice(), table, seed, puzzle.depth);
+      if (!seed.conflicts.length && model.pieces[orbit.pieces[0]].length === 1) {
+        const alternative = assignTargets(model, puzzle, orbit, true);
+        if (alternative.some((target, i) => target !== offsets[i])) {
+          const candidate = planOrbit(alternative, table, seed, puzzle.depth);
+          if (candidate.length < word.length) word = candidate;
         }
-        if (!best || table.score(...best) === 255) throw new Error('Could not place the remaining orbit pieces');
-        const [a, b, c] = best;
-        const word = table.word(a, b, c);
-        for (const turn of word) {
-          const { face, direction, layer } = decode(turn);
-          puzzle.turn(face, direction, layer);
-        }
-        sequence.push(...word);
-        [offsets[b], offsets[c], offsets[a]] = [offsets[a], offsets[b], offsets[c]];
       }
+      for (const turn of word) {
+        const { face, direction, layer } = decode(turn);
+        puzzle.turn(face, direction, layer);
+      }
+      sequence.push(...word);
     }
     done.add(id);
     const completed = i + 1, now = performance.now();
@@ -341,9 +359,58 @@ export function solveLayeredMinx(size, state, report = () => {}) {
       });
     }
   }
-  addStage('Wings and centers', simplify(sequence).map(decode));
   if (!puzzle.solved) throw new Error('The generated solution did not verify');
-  return stages;
+  return simplifySlices(sequence, puzzle.depth).map(decode);
+}
+
+function planOrbit(offsets, table, seed, depth) {
+  const sequence = [];
+  for (;;) {
+    const open = [...offsets.keys()].filter(j => offsets[j] !== j);
+    if (!open.length) return simplifySlices(sequence, depth);
+    let best, cost = Infinity;
+    for (const a of open) {
+      const b = offsets[a];
+      for (const c of open) {
+        if (c === a || c === b) continue;
+        const distance = table.score(a, b, c);
+        if (distance === 255) continue;
+        const gain = 1 + Number(offsets[b] === c) + Number(offsets[c] === a);
+        const price = (seed.action.word.length + 2 * distance) / gain;
+        if (price < cost) { best = [a, b, c]; cost = price; }
+      }
+    }
+    if (!best) throw new Error('Could not place the remaining orbit pieces');
+    const [a, b, c] = best;
+    sequence.push(...table.word(a, b, c));
+    [offsets[b], offsets[c], offsets[a]] = [offsets[a], offsets[b], offsets[c]];
+  }
+}
+
+// Parallel slice turns commute. Keep each run in first-seen order while
+// cancelling powers modulo five, including when an entire run disappears.
+function simplifySlices(sequence, depth) {
+  const runs = [];
+  for (const turn of sequence) {
+    const slice = turn >> 1, axis = parallelAxes[Math.floor(slice / depth)];
+    let run = runs.at(-1);
+    if (run?.axis !== axis) {
+      run = { axis, powers: new Map() };
+      runs.push(run);
+    }
+    const previous = run.powers.get(slice) ?? 0;
+    const power = (previous + (turn % 2 ? -1 : 1) + 7) % 5 - 2;
+    if (power) run.powers.set(slice, power);
+    else run.powers.delete(slice);
+    if (!run.powers.size) runs.pop();
+  }
+  const result = [];
+  for (const { powers } of runs) {
+    for (const [slice, power] of powers) {
+      for (let i = 0; i < Math.abs(power); i++) result.push(slice * 2 + Number(power < 0));
+    }
+  }
+  return result;
 }
 
 function facesFor(puzzle) {
