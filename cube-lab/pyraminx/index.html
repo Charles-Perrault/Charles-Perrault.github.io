@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1017">
+    <title>Pyraminx · Cube Lab</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../puzzle-switcher.css?v=3">
+  </head>
+  <body>
+    <main>
+      <canvas id="puzzle" tabindex="0" aria-label="Pyraminx. Drag a sticker to turn, drag the background to orbit, or use the arrow and bracket keys."></canvas>
+      <header><h1 id="name">Pyraminx</h1></header>
+      <nav class="puzzle-switcher" aria-label="Puzzles">
+        <a href="../">Cube</a>
+        <a href="../megaminx/">Minx family</a>
+        <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
+        <a href="../fto/">FTO</a>
+        <span aria-current="page">Pyraminx</span>
+        <a href="../square-1/">Square-1</a>
+      </nav>
+      <aside class="controls" aria-label="Pyraminx controls">
+        <form id="resize">
+          <label for="size">Layers</label>
+          <div class="row">
+            <input id="size" name="size" type="number" min="2" step="1" required value="3">
+            <button type="submit">Resize</button>
+          </div>
+        </form>
+        <div class="presets" role="group" aria-label="Layer presets">
+          <button type="button" data-size="2">2</button>
+          <button type="button" data-size="3" aria-pressed="true">3</button>
+          <button type="button" data-size="4">4</button>
+          <button type="button" data-size="5">5</button>
+          <button type="button" data-size="10">10</button>
+        </div>
+        <div class="turn-settings">
+          <label>Tip <select id="face"></select></label>
+          <label>Slice <input id="slice" type="number" min="1" step="1" required value="1"></label>
+        </div>
+        <div class="row">
+          <button id="left" type="button" title="Counterclockwise ([)">Counterclockwise</button>
+          <button id="right" type="button" title="Clockwise (])">Clockwise</button>
+        </div>
+        <div class="row">
+          <button id="scramble" type="button">Scramble</button>
+          <button id="reset" type="button">Reset puzzle</button>
+        </div>
+        <div class="row">
+          <button id="solve" type="button">Solve</button>
+          <button id="stop" type="button" disabled>Stop</button>
+        </div>
+        <label class="speed">Turn speed <input id="speed" type="number" value="24" min="0.01" step="any" required> turns/sec</label>
+        <button id="reset-view" type="button">Reset view</button>
+      </aside>
+      <div class="status"><span id="status" role="status">Solved</span><span id="moves">0 moves</span></div>
+      <p class="hint">Drag a sticker to turn · Right-drag or drag the background to orbit · Scroll or pinch to zoom</p>
+    </main>
+    <script type="module" src="app.mjs"></script>
+  </body>
+</html>

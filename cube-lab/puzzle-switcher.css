@@ -44,6 +44,11 @@
 }
 
 @media (max-width: 410px) {
-  .puzzle-switcher { gap: 2px; }
+  .puzzle-switcher { right: var(--left, var(--edge)); gap: 2px; flex-wrap: wrap; }
   .puzzle-switcher > :is(a, span) { padding-inline: 3px; font-size: 11px; }
+}
+
+@media (max-width: 350px) {
+  .puzzle-switcher { gap: 0; }
+  .puzzle-switcher > :is(a, span) { padding-inline: 2px; font-size: 10px; }
 }

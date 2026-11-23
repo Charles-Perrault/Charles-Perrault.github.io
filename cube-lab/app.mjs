@@ -31,9 +31,11 @@ const solveBlocksButton = get('solve-white-blocks');
 const solveYellowButton = get('solve-yellow');
 const solveCubeButton = get('solve-cube');
 const solveFastButton = get('solve-fast');
+const solveBlindButton = get('solve-blind');
 const solveMessages = {
   full: { solved: 'Cube solved', alreadySolved: 'Cube already solved' },
   fast: { solved: 'Cube solved', alreadySolved: 'Cube already solved' },
+  blind: { solved: 'Cube solved with Old Pochmann', alreadySolved: 'Cube already solved' },
   yellow: { solved: 'White and yellow centers solved', alreadySolved: 'White and yellow centers already solved' },
   blocks: { solved: 'White center solved with blocks', alreadySolved: 'White center already solved' },
   white: { solved: 'White center solved', alreadySolved: 'White center already solved' },
@@ -41,7 +43,7 @@ const solveMessages = {
 const incompleteSolve = 'Solve incomplete. Try again.';
 
 function solveGoalReached(stage) {
-  if (stage === 'full' || stage === 'fast') return cube.isSolved();
+  if (stage === 'full' || stage === 'fast' || stage === 'blind') return cube.isSolved();
   return cube.hasSolvedCenters(stage === 'yellow' ? [3, 0] : [3]);
 }
 const faceButtons = [...document.querySelectorAll('[data-move]')];
@@ -88,6 +90,7 @@ function setBusy(busy, label) {
   for (const button of [solveWhiteButton, greedyWhiteButton, solveBlocksButton, solveYellowButton, solveCubeButton, solveFastButton, ...faceButtons]) {
     button.disabled = locked;
   }
+  solveBlindButton.disabled = locked || cube.size !== 3;
   get('move-form').querySelector('button').disabled = locked;
   get('reset-cube').disabled = editing;
   get('size-form').querySelector('button').disabled = editing;
@@ -309,6 +312,7 @@ function togglePlayback() {
 
 function beginTurns(moves, count, { scramble = false, center = '', start = 0, greedy = false, backend = '', sequence, live = false } = {}) {
   if (paintDraft || task || (worker && !live) || !count) return;
+  if (center !== 'blind') get('blind-memo').hidden = true;
   const move = sequence ? sequence.at(0) : moves.next().value;
   if (greedy && !move) {
     showMessage(greedyWhiteResult());
@@ -443,14 +447,18 @@ function instantScramble() {
 
 function startSolve(center) {
   if (paintDraft || task || worker) return;
+  if (center === 'blind' && cube.size !== 3) return;
   if (cube.size === 2 && center !== 'full' && center !== 'fast') {
     showMessage('A 2 × 2 × 2 cube has no centers');
     return;
   }
   solutionList.clear();
+  const blindMemo = get('blind-memo');
+  blindMemo.replaceChildren();
+  blindMemo.hidden = true;
   renderer.cancelDrag();
   try {
-    const job = new Worker(new URL('./solver-worker.mjs?v=21', import.meta.url), { type: 'module' });
+    const job = new Worker(new URL('./solver-worker.mjs?v=22', import.meta.url), { type: 'module' });
     worker = job;
     let bestSearch;
     let phase = 'white';
@@ -508,6 +516,12 @@ function startSolve(center) {
         return;
       }
       if (data.movesBatch) {
+        if (data.blindStage) {
+          const line = document.createElement('div');
+          line.textContent = `${data.blindStage} · ${data.memo.length ? data.memo.join(' ') : 'Ra permutation'}`;
+          blindMemo.append(line);
+          blindMemo.hidden = false;
+        }
         acceptSolutionBatch(data.movesBatch, center, false);
         return;
       }
@@ -542,12 +556,15 @@ function startSolve(center) {
         beginTurns(null, bestSearch.length, { center, backend: 'Gullicube', sequence: bestSearch });
       };
     }
-    showMessage(center === 'blocks' ? 'Planning the white center with blocks' : 'Planning the white center');
+    showMessage(center === 'blind' ? 'Planning Old Pochmann' : center === 'blocks' ? 'Planning the white center with blocks' : 'Planning the white center');
     progress.max = 100;
     progress.setAttribute('aria-label', 'Planning progress for the white center');
     progress.hidden = false;
     planningEstimate.hidden = false;
-    showPlanningProgress('white', 0);
+    if (center === 'blind') {
+      progress.removeAttribute('value');
+      progress.setAttribute('aria-label', 'Planning Old Pochmann');
+    } else showPlanningProgress('white', 0);
     job.postMessage({
       size: cube.size,
       faces: cube.faces,
@@ -645,6 +662,7 @@ function initialize() {
   solveYellowButton.addEventListener('click', () => startSolve('yellow'));
   solveCubeButton.addEventListener('click', () => startSolve('full'));
   solveFastButton.addEventListener('click', () => startSolve('fast'));
+  solveBlindButton.addEventListener('click', () => startSolve('blind'));
   stopButton.addEventListener('click', () => settle('Stopped'));
   playbackButton.addEventListener('click', togglePlayback);
   get('reset-cube').addEventListener('click', () => {

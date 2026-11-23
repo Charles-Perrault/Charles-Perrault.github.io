@@ -182,6 +182,15 @@ self.onmessage = async ({ data: { size, faces, orientations, center, cuda, brobd
       lastReport = now;
       self.postMessage({ progress: { phase, fraction } });
     };
+    if (center === 'blind') {
+      const { solveBlind } = await import('./blind-solver.mjs');
+      solveBlind(cube, ({ name, memo, moves }) => {
+        self.postMessage({ blindStage: name, memo, movesBatch: moves });
+        streamedMoves = true;
+      });
+      self.postMessage(streamedMoves ? { streamEnd: true } : { moves: [] });
+      return;
+    }
     if ((center === 'full' || center === 'fast') && size <= 7) {
       const result = await shortCubePlan(cube, center, report);
       if (result) {

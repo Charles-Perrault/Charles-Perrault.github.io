@@ -7,7 +7,7 @@
     <title>Cube Lab</title>
     <link rel="icon" type="image/png" href="cube-lab-icon.png?v=2" />
     <link rel="stylesheet" href="styles.css?v=20" />
-    <link rel="stylesheet" href="puzzle-switcher.css?v=2" />
+    <link rel="stylesheet" href="puzzle-switcher.css?v=3" />
   </head>
   <body>
     <main class="workbench">
@@ -23,12 +23,13 @@
       </header>
 
       <nav class="puzzle-switcher" aria-label="Puzzles">
-  <span aria-current="page">Cube</span>
-  <a href="./megaminx/">Minx family</a>
-  <a href="./curvy-copter-plus/">Curvy Copter Plus</a>
-  <a href="./fto/">FTO</a>
-  <a href="./square-1/">Square-1</a>
-</nav>
+        <span aria-current="page">Cube</span>
+        <a href="./megaminx/">Minx family</a>
+        <a href="./curvy-copter-plus/">Curvy Copter Plus</a>
+        <a href="./fto/">FTO</a>
+        <a href="./pyraminx/">Pyraminx</a>
+        <a href="./square-1/">Square-1</a>
+      </nav>
 
       <aside class="controls" aria-label="Cube controls">
         <div class="setup-dock">
@@ -121,6 +122,7 @@
               <button class="button" id="solve-yellow" type="button">Yellow center</button>
               <button class="button" id="solve-cube" type="button">Solve cube</button>
               <button class="button" id="solve-fast" type="button">Solve cube fast</button>
+              <button class="button" id="solve-blind" type="button" title="Old Pochmann for 3 × 3 × 3">Blind solving method</button>
               <button class="button" id="end-search" type="button" hidden>End search</button>
             </div>
           </section>
@@ -134,6 +136,7 @@
               <span id="solution-current-label">Next move</span>
               <code id="solution-current"></code>
             </div>
+            <div class="section-meta" id="blind-memo" aria-label="Old Pochmann memo" hidden></div>
             <ol class="solution-list" aria-label="Planned moves" role="list" tabindex="0"></ol>
             <div class="solution-nav" aria-label="Browse solution moves" role="group">
               <button class="button" id="solution-prev" type="button" aria-label="Previous moves">Prev</button>
@@ -194,6 +197,6 @@
         ><span class="touch-hint">Pinch to zoom</span>
       </p>
     </main>
-    <script type="module" src="app.mjs?v=21"></script>
+    <script type="module" src="app.mjs?v=22"></script>
   </body>
 </html>
