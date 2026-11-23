@@ -2,6 +2,7 @@ import { LayeredMinx } from './layered-minx.mjs?v=3';
 import { stickers as megaminxStickers } from './puzzle.mjs';
 import { solveMegaminx } from './solver.mjs';
 import { simplify } from './solver-model.mjs';
+import { greedyCenterMoves } from './greedy-centers.mjs';
 
 const inverse = word => word.slice().reverse().map(move => move ^ 1);
 const commutator = (a, b) => [...a, ...b, ...inverse(a), ...inverse(b)];
@@ -255,6 +256,11 @@ export function solveLayeredMinx(size, state, report = () => {}) {
   const addStage = (name, moves) => {
     if (moves.length) stages.push({ name, moves });
   };
+  if (size >= 4) {
+    report('Greedy centers');
+    addStage('Greedy centers', greedyCenterMoves(puzzle, report));
+    if (puzzle.solved) return stages;
+  }
   report('Corners and middle edges');
   const core = solveMegaminx(projection(puzzle)).flatMap(stage => stage.moves);
   for (const { face, direction } of core) puzzle.turn(face, direction);

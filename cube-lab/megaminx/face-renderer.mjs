@@ -30,21 +30,63 @@ precision highp float;
 precision highp int;
 uniform highp usampler2DArray images, bands;
 uniform highp usampler2D state;
+uniform highp sampler2DArray outlines;
 uniform vec3 palette[12], normals[12];
 uniform mat3 rotation;
-uniform int perFace, stateWidth, axis, layer;
+uniform int perFace, stateWidth, axis, layer, edgeCount;
 uniform uint seam;
 uniform float imageSide;
 uniform bool moving;
 flat in int face;
 in vec2 uv;
 out vec4 pixel;
+
+ivec2 stickerTexel(uint indexedID) {
+  int id = face * perFace + int(indexedID) - 1;
+  return ivec2(id % stateWidth, id / stateWidth);
+}
+
+vec2 edgeDistances(uint indexedID) {
+  ivec2 texel = stickerTexel(indexedID);
+  vec2 distances = vec2(1.0);
+  for (int i = 0; i < edgeCount; i++) {
+    vec4 line = texelFetch(outlines, ivec3(texel, i), 0);
+    if (line.x == 0.0 && line.y == 0.0) continue;
+    distances = min(distances, dot(uv, line.xy) - line.zw);
+  }
+  return distances;
+}
+
 void main() {
-  float footprint = imageSide * max(length(dFdx(uv)), length(dFdy(uv)));
+  float pixelWidth = max(length(dFdx(uv)), length(dFdy(uv)));
+  float footprint = imageSide * pixelWidth;
+  uint idMask = seam - 1u;
   uint packedID = texture(images, vec3(uv, float(face))).r;
-  if (packedID == 0u) discard;
-  int id = face * perFace + int(packedID & (seam - 1u)) - 1;
-  ivec2 texel = ivec2(id % stateWidth, id / stateWidth);
+  uint indexedID = packedID & idMask;
+  float border = (packedID & seam) == 0u ? 0.0 :
+    (imageSide < 1024.0 ? 1.0 : 1.0 - smoothstep(1.25, 3.5, footprint));
+  if (footprint < 1.5) {
+    vec2 distances = indexedID == 0u ? vec2(-1.0) : edgeDistances(indexedID);
+    // Texels nominate a sticker. Its polygon supplies the actual edges.
+    if (distances.x < -0.0000002) {
+      int side = int(imageSide);
+      ivec2 cell = ivec2(floor(uv * imageSide));
+      for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+        ivec2 neighbor = clamp(cell + ivec2(x, y), ivec2(0), ivec2(side - 1));
+        uint candidate = texelFetch(images, ivec3(neighbor, face), 0).r & idMask;
+        if (candidate == 0u || candidate == indexedID) continue;
+        vec2 candidateDistances = edgeDistances(candidate);
+        if (candidateDistances.x > distances.x) {
+          indexedID = candidate;
+          distances = candidateDistances;
+        }
+      }
+    }
+    float antialias = max(pixelWidth * 0.55, 0.0000001);
+    border = 1.0 - smoothstep(-antialias, antialias, distances.y);
+  }
+  if (indexedID == 0u) discard;
+  ivec2 texel = stickerTexel(indexedID);
   if (layer != 0) {
     uint band = texelFetch(bands, ivec3(texel, axis), 0).r;
     if ((band == uint(layer)) != moving) discard;
@@ -53,10 +95,7 @@ void main() {
   float shade = 0.08 + 0.24 * (1.0 - max(0.0, dot(normal, vec3(-0.2, 0.59, 0.78))));
   vec3 color = palette[int(texelFetch(state, texel, 0).r)];
   color = mix(color, vec3(4.0, 12.0, 23.0) / 255.0, shade);
-  if ((packedID & seam) != 0u) {
-    float border = imageSide < 1024.0 ? 1.0 : 1.0 - smoothstep(1.25, 3.5, footprint);
-    color = mix(color, vec3(8.0, 12.0, 18.0) / 255.0, border);
-  }
+  color = mix(color, vec3(8.0, 12.0, 18.0) / 255.0, border);
   pixel = vec4(color, 1.0);
 }`;
 
@@ -96,6 +135,20 @@ function rasterize(image, side, polygon, value) {
   }
 }
 
+function writeOutlines(outlines, id, polygon, center) {
+  for (let i = 0; i < polygon.length; i++) {
+    const [x, y] = polygon[i];
+    const [nextX, nextY] = polygon[(i + 1) % polygon.length];
+    const length = Math.hypot(nextX - x, nextY - y);
+    if (!length) continue;
+    const normalX = (y - nextY) / length;
+    const normalY = (nextX - x) / length;
+    const edge = normalX * x + normalY * y;
+    const inset = edge * 0.91 + (normalX * center[0] + normalY * center[1]) * 0.09;
+    outlines[i].set([normalX, normalY, edge, inset], 4 * id);
+  }
+}
+
 const identity = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
 export class FaceRenderer {
@@ -105,8 +158,8 @@ export class FaceRenderer {
     const program = programFor(gl);
     gl.useProgram(program);
     this.uniform = Object.fromEntries([
-      'images', 'state', 'bands', 'palette[0]', 'normals[0]', 'rotation', 'forward', 'right', 'up',
-      'offset', 'lens', 'perFace', 'stateWidth', 'axis', 'layer', 'moving', 'imageSide', 'seam',
+      'images', 'state', 'bands', 'outlines', 'palette[0]', 'normals[0]', 'rotation', 'forward', 'right', 'up',
+      'offset', 'lens', 'perFace', 'stateWidth', 'axis', 'layer', 'moving', 'imageSide', 'seam', 'edgeCount',
     ].map(name => [name, gl.getUniformLocation(program, name)]));
     gl.uniform3fv(this.uniform['normals[0]'], faces.flat());
     gl.uniform3fv(this.uniform['palette[0]'], colors.flatMap(([, hex]) =>
@@ -124,7 +177,11 @@ export class FaceRenderer {
       gl.vertexAttribPointer(index, count, gl.FLOAT, false, 24, offset);
     }
     this.vertexCount = vertices.length / 6;
-    for (const [unitIndex, name, target] of [[0, 'images', gl.TEXTURE_2D_ARRAY], [1, 'state', gl.TEXTURE_2D], [2, 'bands', gl.TEXTURE_2D_ARRAY]]) {
+    const textures = [
+      [0, 'images', gl.TEXTURE_2D_ARRAY], [1, 'state', gl.TEXTURE_2D],
+      [2, 'bands', gl.TEXTURE_2D_ARRAY], [3, 'outlines', gl.TEXTURE_2D_ARRAY],
+    ];
+    for (const [unitIndex, name, target] of textures) {
       gl.activeTexture(gl.TEXTURE0 + unitIndex);
       gl.bindTexture(target, gl.createTexture());
       gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -159,6 +216,8 @@ export class FaceRenderer {
     const stride = this.stateWidth * this.stateHeight;
     this.statePixels = new Uint8Array(stride);
     const bands = new BandPixels(stride * faces.length);
+    const edges = tiles.reduce((max, tile) => Math.max(max, tile.polygon.length), 0);
+    this.outlines = Array.from({ length: edges }, () => new Float32Array(4 * stride));
 
     gl.activeTexture(gl.TEXTURE0);
     gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, wideIDs ? gl.R32UI : gl.R16UI, this.side, this.side, faces.length,
@@ -166,11 +225,14 @@ export class FaceRenderer {
     this.checkAllocation();
     for (const [face, toUV] of faceAxes.entries()) {
       const image = new IdPixels(this.side ** 2);
-      const toPixel = point => toUV(point).map(coord => coord * this.side);
+      const toPixel = point => point.map(coord => coord * this.side);
       for (let local = 0; local < this.perFace; local++) {
         const id = face * this.perFace + local, tile = tiles[id];
-        const polygon = tile.polygon.map(toPixel);
-        const [x, y] = toPixel(tile.point);
+        const shape = tile.polygon.map(toUV);
+        const center = toUV(tile.point);
+        writeOutlines(this.outlines, id, shape, center);
+        const polygon = shape.map(toPixel);
+        const [x, y] = toPixel(center);
         const inset = polygon.map(([px, py]) => [0.91 * px + 0.09 * x, 0.91 * py + 0.09 * y]);
         rasterize(image, this.side, polygon, (local + 1) | this.seam);
         rasterize(image, this.side, inset, local + 1);
@@ -187,6 +249,14 @@ export class FaceRenderer {
     gl.activeTexture(gl.TEXTURE2);
     gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, wideBands ? gl.R16UI : gl.R8UI, this.stateWidth, this.stateHeight, faces.length,
       0, gl.RED_INTEGER, wideBands ? gl.UNSIGNED_SHORT : gl.UNSIGNED_BYTE, bands);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA32F, this.stateWidth, this.stateHeight, edges,
+      0, gl.RGBA, gl.FLOAT, null);
+    this.checkAllocation();
+    for (const [edge, data] of this.outlines.entries()) {
+      gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, edge, this.stateWidth, this.stateHeight, 1,
+        gl.RGBA, gl.FLOAT, data);
+    }
     gl.activeTexture(gl.TEXTURE1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.R8UI, this.stateWidth, this.stateHeight,
       0, gl.RED_INTEGER, gl.UNSIGNED_BYTE, null);
@@ -194,6 +264,7 @@ export class FaceRenderer {
     gl.uniform1i(this.uniform.stateWidth, this.stateWidth);
     gl.uniform1ui(this.uniform.seam, this.seam);
     gl.uniform1f(this.uniform.imageSide, this.side);
+    gl.uniform1i(this.uniform.edgeCount, edges);
     this.sync(puzzle.state);
     this.checkAllocation();
   }
@@ -240,10 +311,29 @@ export class FaceRenderer {
     if (!this.images) return null;
     for (const [face, normal] of faces.entries()) {
       if (dot(eye, normal) <= 1) continue;
-      const [x, y] = faceAxes[face](onFace(point, normal)).map(value => Math.floor(value * this.side));
+      const [u, v] = faceAxes[face](onFace(point, normal));
+      const x = Math.floor(u * this.side), y = Math.floor(v * this.side);
       if (!(x >= 0 && y >= 0 && x < this.side && y < this.side)) continue;
-      const id = this.images[face][y * this.side + x] & (this.seam - 1);
-      if (id) return { face, id: face * this.perFace + id - 1 };
+      const image = this.images[face], tested = new Set();
+      const primary = image[y * this.side + x] & (this.seam - 1);
+      const test = local => {
+        if (!local || tested.has(local)) return null;
+        tested.add(local);
+        const id = face * this.perFace + local - 1;
+        const offset = 4 * id;
+        for (const edge of this.outlines) {
+          if (edge[offset] * u + edge[offset + 1] * v < edge[offset + 2] - 0.0000002) return null;
+        }
+        return { face, id };
+      };
+      const match = test(primary);
+      if (match) return match;
+      for (let row = Math.max(0, y - 1); row <= Math.min(y + 1, this.side - 1); row++) {
+        for (let column = Math.max(0, x - 1); column <= Math.min(x + 1, this.side - 1); column++) {
+          const match = test(image[row * this.side + column] & (this.seam - 1));
+          if (match) return match;
+        }
+      }
     }
     return null;
   }
