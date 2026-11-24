@@ -1,6 +1,6 @@
 import solids from './solids.mjs';
-import { dodecacopter } from './dodecacopter.mjs';
-import { styleRedi } from './redi-style.mjs';
+import { dodecacopter } from './dodecacopter.mjs?v=2';
+import { styleRedi } from './redi-style.mjs?v=2';
 import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 
 const signs = [1, -1];
@@ -93,7 +93,7 @@ export function spatialPuzzle(kind, n) {
   const moves = normalizedAxes.flatMap(({ normal, order, cuts, ranges }, axis) =>
     ranges.map(([low, high]) => ({ normal, order, cuts, low, high, name: `Axis ${axis + 1} · ${low + 1}${low === high ? '' : '–' + (high + 1)}` })));
   const state = home.slice();
-  const palette = kind === 'redi' ? styleRedi(stickers) : undefined;
+  const palette = kind === 'redi' ? styleRedi(stickers, n) : undefined;
   return { stickers, moves, home, state, palette, turn(move, direction) {
     const { normal, order } = move;
     const angle = direction * 2 * Math.PI / order;

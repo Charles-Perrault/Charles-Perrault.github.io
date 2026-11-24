@@ -10,6 +10,7 @@ const sizeInput = get('size'), faceInput = get('face'), sliceInput = get('slice'
 const status = get('status'), moveCount = get('moves');
 const solveButton = get('solve'), stopButton = get('stop-solve'), outerScramble = get('outer-scramble');
 const scrambleButton = get('scramble');
+const speedInput = get('turn-speed');
 let renderer, puzzle, moves = 0, working = false;
 let solverWorker, solving = false, scrambling = false, planningSolve = false, solveFrame = 0;
 let yaw = 0.62, pitch = 0.48, zoom = 1;
@@ -103,10 +104,12 @@ function playTurns(sequence, solution = false, scramble = false) {
     status.textContent = solution || scramble ? `Move ${index + 1}/${sequence.length}` :
       layer === 1 ? `Turning ${name}` : `Turning ${name} · Slice ${layer}`;
   };
+  const speed = speedInput.valueAsNumber;
+  const duration = Number.isFinite(speed) && speed > 0 ? 1000 / speed : 100;
   describe();
   function animate(now) {
     const move = sequence[index];
-    const fraction = clamp((now - start) / (scramble ? 100 : solution ? 130 : 180), 0, 1);
+    const fraction = speed > 100_000 ? 1 : clamp((now - start) / duration, 0, 1);
     if (fraction < 1) {
       draw(move, fraction ** 2 * (3 - 2 * fraction));
       solveFrame = requestAnimationFrame(animate);
@@ -196,27 +199,15 @@ function scramble(outerOnly = false, instant = false) {
   }
   lock(true);
   status.textContent = 'Scrambling…';
-  const sequence = scrambleMoves(puzzle.size, Math.random, outerOnly);
-  function advance() {
-    const deadline = performance.now() + 9;
-    do {
-      const { value, done } = sequence.next();
-      if (done) {
-        renderer.sync(puzzle);
-        lock(false);
-        sliceInput.disabled = puzzle.depth === 1;
-        updateStatus();
-        draw();
-        return;
-      }
-      puzzle.turn(value.axis, value.layer, value.direction);
-      moves++;
-    } while (performance.now() < deadline);
-    renderer.sync(puzzle);
-    draw();
-    requestAnimationFrame(advance);
+  for (const move of scrambleMoves(puzzle.size, Math.random, outerOnly)) {
+    puzzle.turn(move.axis, move.layer, move.direction);
+    moves++;
   }
-  requestAnimationFrame(advance);
+  renderer.sync(puzzle);
+  lock(false);
+  sliceInput.disabled = puzzle.depth === 1;
+  updateStatus();
+  draw();
 }
 
 function hit([x, y], view) {

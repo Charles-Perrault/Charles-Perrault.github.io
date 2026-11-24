@@ -90,8 +90,10 @@ function play(move) {
   const name = faces[move.axis].name;
   status.textContent = move.layer === 1 ? `Turning ${name}` : `Turning ${name} · Slice ${move.layer}`;
   const start = performance.now();
+  const rate = get('speed').valueAsNumber;
+  const duration = Number.isFinite(rate) && rate > 0 ? 1000 / rate : 180;
   function animate(now) {
-    const fraction = clamp((now - start) / 180, 0, 1);
+    const fraction = rate > 100_000 ? 1 : clamp((now - start) / duration, 0, 1);
     if (fraction < 1) {
       draw(move, fraction ** 2 * (3 - 2 * fraction));
       requestAnimationFrame(animate);
@@ -108,10 +110,17 @@ function play(move) {
   requestAnimationFrame(animate);
 }
 
-function scramble() {
+function scramble(instant = false) {
   if (!puzzle || working) return;
+  if (!instant) {
+    solution = { moves: [...scrambleMoves(puzzle.size)], index: 0, credit: 0,
+      last: performance.now(), finished: true, remaining: 0 };
+    lock(true);
+    solveFrame = requestAnimationFrame(playSolution);
+    return;
+  }
   lock(true);
-  status.textContent = 'Scrambling…';
+  status.textContent = 'Applying scramble…';
   const sequence = scrambleMoves(puzzle.size);
   function advance() {
     const deadline = performance.now() + 9;
@@ -128,8 +137,6 @@ function scramble() {
       puzzle.turn(value.axis, value.layer, value.direction);
       moves++;
     } while (performance.now() < deadline);
-    renderer.sync(puzzle);
-    draw();
     requestAnimationFrame(advance);
   }
   requestAnimationFrame(advance);
@@ -137,7 +144,7 @@ function scramble() {
 
 function stopSolution(message) {
   if (!solution) return;
-  solution.worker.terminate();
+  solution.worker?.terminate();
   solution = undefined;
   cancelAnimationFrame(solveFrame);
   solveFrame = 0;
@@ -326,7 +333,8 @@ get('resize').onsubmit = event => {
 for (const preset of presets) preset.onclick = () => resize(Number(preset.dataset.size));
 get('left').onclick = () => manual(-1);
 get('right').onclick = () => manual(1);
-get('scramble').onclick = scramble;
+get('scramble').onclick = () => scramble();
+get('instant-scramble').onclick = () => scramble(true);
 get('solve').onclick = solvePuzzle;
 get('stop').onclick = () => stopSolution('Stopped');
 get('reset').onclick = () => {

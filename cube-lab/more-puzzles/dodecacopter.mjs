@@ -1,4 +1,5 @@
 import solids from './solids.mjs';
+import { jumblingDodecacopter } from './dodeca-jumble.mjs';
 import { add, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 
 const length = point => Math.hypot(...point);
@@ -25,8 +26,9 @@ const faces = solids.dodecahedron.map(([normal, , corners]) => {
     const b = ids[(i + 1) % ids.length], key = edgeKey(a, b);
     if (!edgesByKey.has(key)) {
       edgesByKey.set(key, edges.length);
+      const subscript = String(edges.length + 1).replace(/\d/g, digit => '₀₁₂₃₄₅₆₇₈₉'[Number(digit)]);
       edges.push({ a, b, normal: unit(add(vertices[a], vertices[b])), order: 2, edge: edges.length,
-        name: `Edge ${edges.length + 1}` });
+        name: `E${subscript}` });
     }
     return edgesByKey.get(key);
   });
@@ -43,6 +45,7 @@ const sample = (curve, from, to) => Array.from({ length: 9 }, (_, i) => curve(fr
 const stickerKey = (face, vertex, band) => `${face}:${vertex}:${band}`;
 
 export function dodecacopter(n) {
+  if (n === 3) return jumblingDodecacopter(faces, vertices, edges, palette);
   const stickers = [], ids = new Map();
   const fullArc = curve => Array.from({ length: 8 * n + 1 }, (_, i) => curve(i / (8 * n)));
   function addTile(face, vertex, band, polygon, turns) {

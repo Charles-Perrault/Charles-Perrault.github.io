@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Skewb · Cube Lab</title>
-  <link rel="stylesheet" href="../fto/style.css">
+  <link rel="stylesheet" href="../fto/style.css?v=3">
   <link rel="stylesheet" href="../puzzle-switcher.css?v=5">
 </head>
 <body>
@@ -32,6 +32,10 @@
       </form>
       <label class="row" id="section-control" hidden>Cell slice <input id="section" type="number" min="1" value="1" step="1"></label>
       <label class="row">Move <select id="move"></select></label>
+      <div id="jumble-controls" hidden>
+        <label class="row">Edge alignment <select id="jumble-angle"></select></label>
+        <button id="jumble" type="button">Jumble</button>
+      </div>
       <div class="row">
         <button id="reverse" type="button">Reverse</button><button id="turn" type="button">Turn</button>
       </div>
@@ -39,6 +43,7 @@
         <button id="scramble" type="button">Scramble</button><button id="reset" type="button">Reset puzzle</button>
       </div>
       <div class="row"><button id="instant" type="button">Instant scramble</button><button id="stop" type="button" disabled>Stop</button></div>
+      <label class="speed-row">Turn speed <input id="speed" type="number" min="0.01" step="any" value="7" required> turns/sec</label>
     </aside>
     <div class="status"><span id="status" role="status"></span></div>
   </main>
@@ -47,6 +52,6 @@
     .controls select { flex: 1; width: 0; }
     .controls [hidden] { display: none; }
   </style>
-  <script type="module" src="app.mjs?v=2"></script>
+  <script type="module" src="app.mjs?v=3"></script>
 </body>
 </html>
