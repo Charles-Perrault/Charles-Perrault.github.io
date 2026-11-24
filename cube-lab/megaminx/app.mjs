@@ -1,5 +1,5 @@
 import { Megaminx, stickers, faces, colors, add, cross, dot, scale, rotate, step, scramble } from './puzzle.mjs';
-import { LayeredMinx, layeredScramble, stickerCount, tileInLayer } from './layered-minx.mjs?v=3';
+import { LayeredMinx, layeredScramble, stickerCount, tileInLayer } from './layered-minx.mjs?v=4';
 import { FaceRenderer } from './face-renderer.mjs?v=3';
 
 const get = id => document.getElementById(id);
@@ -250,7 +250,7 @@ function scramblePuzzle(animated) {
 
 function solve() {
   if (busy() || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=7', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=8', import.meta.url), { type: 'module' });
   planning = true;
   lock(true);
   progress.removeAttribute('value');

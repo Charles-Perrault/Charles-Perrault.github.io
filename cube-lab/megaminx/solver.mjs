@@ -1,7 +1,7 @@
 import { identify, identity, layerStages, pieces, pieceIndex, basicMacros, cycles, apply, moves, simplify } from './solver-model.mjs';
 import { lookup } from './last-layer.mjs';
 import { oll, pll } from './last-layer-data.mjs';
-import { findTripleBridge, findTripleInsertion } from './triple-search.mjs';
+import { findTripleBridge, findTripleInsertion } from './triple-search.mjs?v=2';
 
 function shortInsertion(source, target, locked) {
   const available = basicMacros().filter(item => item.touched.every(i => !locked[i]));

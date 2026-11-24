@@ -16,6 +16,15 @@ export const pieces = Array.from({ length: 16 }, (_, id) => {
 
 const home = faceColors.map((_, layer) =>
   Array.from({ length: 8 }, (_, position) => Array(pieces[layer * 8 + position].width).fill(layer * 8 + position)).flat());
+const splitPieces = home.flatMap(ring => {
+  const offsets = new Map();
+  return ring.map(id => {
+    const piece = pieces[id], offset = offsets.get(id) ?? 0;
+    offsets.set(id, offset + 1);
+    return { ...piece, width: 1, sides: [piece.sides[offset]] };
+  });
+});
+const splitHome = faceColors.map((_, layer) => Array.from({ length: slots }, (_, i) => layer * slots + i));
 const modulo = value => ((value % slots) + slots) % slots;
 
 function turnRing(ring, steps) {
@@ -27,16 +36,20 @@ function atCut(ring) {
 }
 
 export function readRing(ring) {
-  return ring.flatMap((id, i) => ring[modulo(i - 1)] === id ? [] : [{ id, start: i, width: pieces[id].width }]);
+  return ring.flatMap((id, i) => ring[modulo(i - 1)] === id ? [] :
+    [{ id, start: i, width: ring[modulo(i + 1)] === id ? 2 : 1 }]);
 }
 
 export class Square1 {
-  constructor() {
+  constructor(split = false) {
+    this.split = split;
+    this.pieces = split ? splitPieces : pieces;
+    this.home = split ? splitHome : home;
     this.reset();
   }
 
   reset() {
-    [this.top, this.bottom] = home.map(ring => ring.slice());
+    [this.top, this.bottom] = this.home.map(ring => ring.slice());
     this.flipped = false;
   }
 
@@ -45,7 +58,7 @@ export class Square1 {
   }
 
   get solved() {
-    return !this.flipped && [this.top, this.bottom].every((ring, layer) => ring.every((id, i) => id === home[layer][i]));
+    return !this.flipped && [this.top, this.bottom].every((ring, layer) => ring.every((id, i) => id === this.home[layer][i]));
   }
 
   turn(top, bottom) {
@@ -66,7 +79,7 @@ export class Square1 {
   }
 
   planScramble(length = 12, random = Math.random) {
-    const draft = new Square1();
+    const draft = new Square1(this.split);
     draft.top = this.top.slice();
     draft.bottom = this.bottom.slice();
     draft.flipped = this.flipped;

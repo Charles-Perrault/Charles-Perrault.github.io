@@ -1,4 +1,4 @@
-import { forEachTransfer, Pyraminx } from './puzzle.mjs';
+import { forEachTransfer, Pyraminx } from './puzzle.mjs?v=2';
 import { solveCenters } from './center-solver.mjs';
 import { solveCore } from './core-solver.mjs';
 import { solveWings } from './wing-solver.mjs';

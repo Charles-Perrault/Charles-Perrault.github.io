@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1017">
   <title>Square-1 · Cube Lab</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="../puzzle-switcher.css?v=3">
+  <link rel="stylesheet" href="../puzzle-switcher.css?v=4">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,6 +20,8 @@
       <a href="../fto/">FTO</a>
       <a href="../pyraminx/">Pyraminx</a>
       <span aria-current="page">Square-1</span>
+      <a id="square2-link" href="?square2">Square-2</a>
+      <a href="../more-puzzles/">More</a>
     </nav>
     <button class="reset-view" id="view" type="button">Reset view</button>
     <aside class="controls" aria-label="Square-1 controls">
@@ -57,6 +59,6 @@
     <div class="status"><span id="state" role="status">Solved</span><span id="moves">0 moves</span></div>
     <progress id="progress" max="1" value="0" hidden aria-label="Move progress"></progress>
   </main>
-  <script type="module" src="app.mjs?v=2"></script>
+  <script type="module" src="app.mjs?v=4"></script>
 </body>
 </html>

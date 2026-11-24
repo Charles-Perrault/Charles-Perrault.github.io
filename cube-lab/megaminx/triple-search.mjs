@@ -22,20 +22,29 @@ function threeTurnPaths() {
 
 function reach(groups, source, paths, limit) {
   const routes = new Array(identity.length);
+  // Reuse the per-group landing index instead of allocating a full sticker
+  // array for every anchor signature. A bridge query can contain thousands
+  // of signatures, so these short-lived arrays otherwise create avoidable
+  // allocation and garbage-collection work.
+  const seen = new Int32Array(identity.length);
+  const forward = new Int32Array(identity.length);
+  const landings = [];
+  let groupId = 0;
   for (const group of groups.values()) {
     if (group.length < 2) continue;
-    const forward = new Array(identity.length);
-    const landings = [];
+    groupId++;
+    landings.length = 0;
     for (const index of group) {
       const path = paths[index], position = path.permutation[source];
-      if (forward[position]) continue;
-      forward[position] = path;
+      if (seen[position] === groupId) continue;
+      seen[position] = groupId;
+      forward[position] = index;
       landings.push(position);
     }
     for (const index of group) {
       const back = paths[index];
       for (const position of landings) {
-        const front = forward[position], cost = front.word.length + back.word.length;
+        const front = paths[forward[position]], cost = front.word.length + back.word.length;
         if (cost >= limit) break;
         const goal = back.inverse[position];
         if (goal !== source && cost < (routes[goal]?.cost ?? limit)) routes[goal] = { front, back, cost };

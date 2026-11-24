@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>More puzzles · Cube Lab</title>
+  <link rel="stylesheet" href="../fto/style.css">
+  <link rel="stylesheet" href="../puzzle-switcher.css?v=4">
+</head>
+<body>
+  <main>
+    <canvas id="puzzle" aria-label="Twisty puzzle. Drag to orbit and scroll to zoom."></canvas>
+    <header><h1 id="name">More puzzles</h1></header>
+    <nav class="puzzle-switcher" aria-label="Puzzles">
+      <a href="../">Cube</a>
+      <a href="../megaminx/">Minx family</a>
+      <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
+      <a href="../fto/">FTO</a>
+      <a href="../pyraminx/">Pyraminx</a>
+      <a href="../square-1/">Square-1</a>
+      <span aria-current="page">More</span>
+    </nav>
+    <aside class="controls" aria-label="Puzzle controls">
+      <label class="row">Puzzle <select id="variant"></select></label>
+      <a href="../square-1/?square2">Square-2</a>
+      <form id="resize">
+        <label for="size">Layers</label>
+        <div class="row"><input id="size" type="number" step="1" required><button>Resize</button></div>
+      </form>
+      <label class="row" id="section-control" hidden>Cell slice <input id="section" type="number" min="1" value="1" step="1"></label>
+      <label class="row">Move <select id="move"></select></label>
+      <div class="row">
+        <button id="reverse" type="button">Reverse</button><button id="turn" type="button">Turn</button>
+      </div>
+      <div class="row">
+        <button id="scramble" type="button">Instant scramble</button><button id="reset" type="button">Reset puzzle</button>
+      </div>
+    </aside>
+    <div class="status"><span id="status" role="status"></span></div>
+  </main>
+  <style>
+    .controls label.row { align-items: center; }
+    .controls select { flex: 1; width: 0; }
+    .controls [hidden] { display: none; }
+  </style>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

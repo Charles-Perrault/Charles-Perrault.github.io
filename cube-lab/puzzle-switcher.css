@@ -43,7 +43,7 @@
   .workbench .setup-dock { top: calc(var(--top) + 77px); }
 }
 
-@media (max-width: 410px) {
+@media (max-width: 520px) {
   .puzzle-switcher { right: var(--left, var(--edge)); gap: 2px; flex-wrap: wrap; }
   .puzzle-switcher > :is(a, span) { padding-inline: 3px; font-size: 11px; }
 }

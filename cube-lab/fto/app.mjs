@@ -9,6 +9,7 @@ const presets = [...document.querySelectorAll('[data-size]')];
 const sizeInput = get('size'), faceInput = get('face'), sliceInput = get('slice');
 const status = get('status'), moveCount = get('moves');
 const solveButton = get('solve'), stopButton = get('stop-solve'), outerScramble = get('outer-scramble');
+const scrambleButton = get('scramble');
 let renderer, puzzle, moves = 0, working = false;
 let solverWorker, solving = false, planningSolve = false, solveFrame = 0;
 let yaw = 0.62, pitch = 0.48, zoom = 1;
@@ -81,7 +82,8 @@ function resize(size, share = true) {
   sliceInput.disabled = puzzle.depth === 1;
   solveButton.disabled = size < 3;
   outerScramble.hidden = size < 4;
-  get('solver-credit').firstChild.textContent = size > 3 ? 'Outer-turn solver · ' : '3-layer solver · ';
+  scrambleButton.textContent = size > 3 ? 'Scramble all slices' : 'Scramble';
+  get('solver-credit').firstChild.textContent = size > 3 ? 'Limited inner-slice support · ' : '3-layer solver · ';
   get('name').textContent = size === 2 ? 'Skewb Diamond' : size === 3 ? 'Face-Turning Octahedron' : `${size} × ${size} FTO`;
   for (const preset of presets) preset.setAttribute('aria-pressed', String(Number(preset.dataset.size) === size));
   if (share) history.replaceState(null, '', `#layers=${size}`);
@@ -131,7 +133,7 @@ const play = move => playTurns([move]);
 
 function solve() {
   if (!puzzle || puzzle.size < 3 || working || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=2', import.meta.url), { type: 'module' });
   solving = true;
   planningSolve = true;
   lock(true);
@@ -323,7 +325,7 @@ get('resize').onsubmit = event => {
 for (const preset of presets) preset.onclick = () => resize(Number(preset.dataset.size));
 get('left').onclick = () => manual(-1);
 get('right').onclick = () => manual(1);
-get('scramble').onclick = () => scramble();
+scrambleButton.onclick = () => scramble();
 outerScramble.onclick = () => scramble(true);
 solveButton.onclick = solve;
 stopButton.onclick = stopSolve;

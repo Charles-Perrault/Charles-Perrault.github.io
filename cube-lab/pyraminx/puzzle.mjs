@@ -72,9 +72,11 @@ export function forEachTransfer(size, axis, layer, direction, visit) {
         }
         for (let column = first; column <= last; column++) {
           const x = 3 * column + offset;
-          const point = [x, y, 3 * size - x - y];
-          const toX = (point[coordinates[0]] - offset) / 3;
-          const toY = (point[coordinates[1]] - offset) / 3;
+          const z = 3 * size - x - y;
+          const coordinate0 = coordinates[0] === 0 ? x : coordinates[0] === 1 ? y : z;
+          const coordinate1 = coordinates[1] === 0 ? x : coordinates[1] === 1 ? y : z;
+          const toX = (coordinate0 - offset) / 3;
+          const toY = (coordinate1 - offset) / 3;
           visit(face * area + index(size, column, row, parity), target * area + index(size, toX, toY, parity));
         }
       }

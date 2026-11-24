@@ -1,4 +1,4 @@
-import { faces, layerAt, planeDistance, Pyraminx, scrambleMoves, sizeIsValid } from './puzzle.mjs';
+import { faces, layerAt, planeDistance, Pyraminx, scrambleMoves, sizeIsValid } from './puzzle.mjs?v=2';
 import { add, cross, dot, FaceRenderer, rotate, scale } from './renderer.mjs';
 
 const get = id => document.getElementById(id);
@@ -186,7 +186,7 @@ function playSolution(now) {
 
 function solvePuzzle() {
   if (!puzzle || working || puzzle.solved) return;
-  const worker = new Worker(new URL('./worker.mjs?v=2', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./worker.mjs?v=3', import.meta.url), { type: 'module' });
   const run = { worker, moves: [], index: 0, credit: 0, last: performance.now(), finished: false };
   solution = run;
   lock(true);

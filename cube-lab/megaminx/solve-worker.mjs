@@ -1,4 +1,4 @@
-import { solveMegaminx } from './solver.mjs?v=3';
+import { solveMegaminx } from './solver.mjs?v=4';
 
 self.onmessage = async ({ data: { size, state } }) => {
   try {
@@ -9,7 +9,7 @@ self.onmessage = async ({ data: { size, state } }) => {
       }
     };
     if (size === 3) solveMegaminx(state, progress, commit);
-    else (await import('./layered-solver.mjs?v=7')).solveLayeredMinx(size, state, progress, commit);
+    else (await import('./layered-solver.mjs?v=8')).solveLayeredMinx(size, state, progress, commit);
     self.postMessage({ done: true });
   } catch (error) {
     self.postMessage({ error: error.message });

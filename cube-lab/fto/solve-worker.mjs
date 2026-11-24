@@ -2,6 +2,7 @@ import { standardHold, toPattern, verifiedSolution } from './omelettehedron-adap
 import { Octahedron } from './puzzle.mjs?v=2';
 import { outerProjection } from './outer-projection.mjs';
 import { orientationCorrection } from './orientation-solver.mjs';
+import { shortSolution } from './short-solve.mjs';
 
 const origin = 'https://omelettehedron.arhan.sh';
 let instance;
@@ -80,11 +81,18 @@ async function getSolver() {
 
 self.onmessage = async ({ data: { size, state } }) => {
   try {
+    if (size > 3) {
+      const short = shortSolution(size, state);
+      if (short) {
+        postMessage({ moves: short });
+        return;
+      }
+    }
     const projected = size === 3 ? state : outerProjection(size, state);
     const pattern = toPattern(projected);
     const solver = await getSolver();
     postMessage({ status: 'Searching for a solution…' });
-    const search = seconds => solver.solvePattern(pattern, { usual: standardHold, seconds, maxLength: 26 });
+    const search = seconds => solver.solvePattern(pattern, { usual: standardHold, seconds, maxLength: 32 });
     let result = search(preparedTier === 'tiny' ? 12 : 55);
     if (!result.solution && !result.error && preparedTier === 'tiny') {
       await prepareTables(solver, 'small', await cachedTables('small'));

@@ -43,7 +43,7 @@ function cutFace(polygon, cutAxes, cuts) {
 const sharedEdge = (face, vertex, next) => faces.findIndex((axis, i) =>
   i !== face && dot(vertex, axis) > 1 - epsilon && dot(next, axis) > 1 - epsilon);
 const limitsFor = (n, count) => Array.from({ length: count }, (_, i) => 1 - (1 - vertexLevel) * (i + 1) / n);
-const bin = (point, normal) => [normal, ...point.map(x => Math.round(x * 1e7))].join(',');
+const bin = (point, normal) => `${normal},${Math.round(point[0] * 1e7)},${Math.round(point[1] * 1e7)},${Math.round(point[2] * 1e7)}`;
 
 function bandIndex(cuts, position) {
   let low = 0, high = cuts.length;

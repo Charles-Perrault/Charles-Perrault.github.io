@@ -1,10 +1,27 @@
-import { Square1, pieces, readRing, sideColors, step } from './puzzle.mjs';
+import { Square1, readRing, sideColors, step } from './puzzle.mjs?v=2';
 
 const find = id => document.getElementById(id);
 const canvas = find('puzzle');
 const controls = document.querySelector('.controls');
 const ctx = canvas.getContext('2d');
-const model = new Square1();
+const split = new URLSearchParams(location.search).has('square2');
+const model = new Square1(split);
+if (split) {
+  for (const element of [document.querySelector('title'), document.querySelector('h1')]) {
+    element.textContent = element.textContent.replace('Square-1', 'Square-2');
+  }
+  for (const element of [canvas, controls]) {
+    element.setAttribute('aria-label', element.getAttribute('aria-label').replace('Square-1', 'Square-2'));
+  }
+  find('solve').hidden = true;
+  const current = document.querySelector('[aria-current="page"]');
+  const square1 = document.createElement('a');
+  square1.href = './';
+  square1.textContent = 'Square-1';
+  current.before(square1);
+  document.querySelector('#square2-link').remove();
+  current.textContent = 'Square-2';
+}
 const pointers = new Map();
 const getTop = find('top'), getBottom = find('bottom'), speed = find('speed');
 const progress = find('progress');
@@ -71,11 +88,14 @@ function meshes(move, fraction) {
   for (const [layer, name] of ['top', 'bottom'].entries()) {
     const top = layer === 0;
     for (const { id, start, width } of readRing(model[name])) {
-      const piece = pieces[id], angle = edgeStart + start * step;
-      const outline = [[0, 0], polar(angle, edgeRadius)];
+      const piece = model.pieces[id], angle = edgeStart + start * step;
+      const flipped = piece.layer !== layer;
+      const homeStart = id % 3;
+      const cornerSide = split ? ((homeStart === 1 ? -1 : homeStart === 0 ? 1 : 0) * (flipped ? -1 : 1)) : 0;
+      const outline = [[0, 0], polar(angle, cornerSide === -1 ? Math.SQRT2 : edgeRadius)];
       if (width === 2) outline.push(polar(angle + step, Math.SQRT2));
-      outline.push(polar(angle + width * step, edgeRadius));
-      const sides = piece.layer === layer ? piece.sides : piece.sides.slice().reverse();
+      outline.push(polar(angle + width * step, cornerSide === 1 ? Math.SQRT2 : edgeRadius));
+      const sides = flipped ? piece.sides.slice().reverse() : piece.sides;
       const turn = point => {
         if (move?.slash && start < 6) return rotateSlice(point, Math.PI * fraction);
         if (!move?.slash && move?.[name]) return rotateLayer(point, move[name] * outer[name] * step * fraction);
@@ -137,12 +157,14 @@ function draw(move, fraction = 0) {
       depth: dot(center, forward), polygon: points.map(project), center, layer, color,
       sticker: color ? points.map(point => project(plus(times(point, 0.92), times(center, 0.08)))) : null,
       shade: 0.07 + 0.25 * (1 - Math.max(0, dot(normal, [-0.2, 0.8, 0.56]) / length)),
+      plasticLight: Math.max(0, dot(normal, [-0.2, 0.8, 0.56]) / length),
     });
   }
   projected.sort((a, b) => a.depth - b.depth);
   for (const face of projected) {
     path(face.polygon);
-    ctx.fillStyle = black;
+    const light = Math.round(32 + 30 * face.plasticLight);
+    ctx.fillStyle = face.sticker ? black : `rgb(${light}, ${light + 3}, ${light + 8})`;
     ctx.strokeStyle = black;
     ctx.lineWidth = 0.7;
     ctx.fill();
@@ -225,7 +247,7 @@ function showSolvePosition(work) {
 }
 
 function solve() {
-  if (busy() || model.solved) return;
+  if (split || busy() || model.solved) return;
   const active = worker ??= new Worker(new URL('./worker.mjs', import.meta.url), { type: 'module' });
   planning = true;
   progress.removeAttribute('value');

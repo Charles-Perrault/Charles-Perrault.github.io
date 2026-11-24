@@ -1,6 +1,6 @@
-import { LayeredMinx } from './layered-minx.mjs?v=3';
+import { LayeredMinx } from './layered-minx.mjs?v=4';
 import { dot, faces, stickers as megaminxStickers } from './puzzle.mjs';
-import { solveMegaminx } from './solver.mjs?v=3';
+import { solveMegaminx } from './solver.mjs?v=4';
 import { simplify } from './solver-model.mjs';
 import { greedyCenterMoves } from './greedy-centers.mjs?v=3';
 

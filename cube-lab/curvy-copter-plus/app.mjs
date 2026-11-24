@@ -83,7 +83,12 @@ function draw(move, fraction = 0) {
     if (poses || move) for (let i = 0; i < outside.length; i += 3) {
       const a = outside[i], b = outside[(Math.min(i + 3, outside.length)) % outside.length];
       const side = [a, b, scale(b, 0.76), scale(a, 0.76)];
-      walls.push({ polygon: side.map(project), depth: dot(add(a, b), eye) * 0.44 });
+      const wallNormal = cross(add(b, scale(a, -1)), add(side[3], scale(a, -1)));
+      const length = Math.hypot(...wallNormal);
+      const light = length ? Math.abs(dot(wallNormal, [0.35, 0.7, 0.6])) / length : 0;
+      const brightness = Math.round(30 + 30 * light);
+      walls.push({ polygon: side.map(project), depth: dot(add(a, b), eye) * 0.44,
+        plastic: `rgb(${brightness}, ${brightness + 3}, ${brightness + 8})` });
     }
     if (dot(normal, add(scale(eye, 5), scale(at, -1))) <= 0) continue;
     painted.push({ id, depth: dot(at, eye), polygon: outside.map(project),
@@ -91,9 +96,9 @@ function draw(move, fraction = 0) {
       shade: 0.06 + 0.22 * (1 - Math.max(0, dot(normal, [0.35, 0.7, 0.6]))) });
   }
   painted.sort((a, b) => a.depth - b.depth);
-  for (const { polygon, sticker, id, shade, mark } of [...walls, ...painted].sort((a, b) => a.depth - b.depth)) {
+  for (const { polygon, sticker, id, shade, mark, plastic } of [...walls, ...painted].sort((a, b) => a.depth - b.depth)) {
     path(polygon);
-    ctx.fillStyle = sticker ? '#101116' : '#171922';
+    ctx.fillStyle = sticker ? '#101116' : plastic;
     ctx.strokeStyle = '#080c12';
     ctx.lineWidth = 0.8;
     ctx.fill();
