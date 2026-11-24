@@ -1,17 +1,17 @@
 import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs';
-import { cross, dot, rotate } from '../pyraminx/renderer.mjs';
+import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 
 const get = id => document.getElementById(id);
 const canvas = get('puzzle'), ctx = canvas.getContext('2d');
 const controls = document.querySelector('.controls'), nav = document.querySelector('nav');
-const variant = get('variant'), size = get('size'), move = get('move'), section = get('section');
+const size = get('size'), move = get('move'), section = get('section'), stop = get('stop');
 const colors = ['#f3f1ea', '#e9c73e', '#d54b49', '#f08e39', '#3da363', '#4486ce', '#9058ce', '#ed85b7'];
 const color = index => colors[index] ?? `hsl(${index * 137.508}, 58%, ${index % 2 ? 68 : 47}%)`;
 const cellLabels = ['+X', '−X', '+Y', '−Y', '+Z', '−Z', '+W', '−W'];
-let puzzle, kind, yaw = 0.69, pitch = 0.49, zoom = 1, drag, project;
+let puzzle, kind, yaw = 0.69, pitch = 0.49, zoom = 1, drag, project, playback;
 let visible = [];
-
-for (const [id, [label]] of Object.entries(variants)) variant.add(new Option(label, id));
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const affected = (tile, turn) => turn.edge === undefined ? inTurn(tile.center, turn) : tile.turns.includes(turn.edge);
 
 function path(points) {
   ctx.beginPath();
@@ -42,15 +42,41 @@ function draw() {
     const x0 = (roomWidth - cols * (side + 12)) / 2 + 6;
     const y0 = top + (roomHeight - rows * (side + 20)) / 2;
     ctx.font = '12px Segoe UI';
+    const position = id => {
+      const cell = Math.floor(id / n ** 3), row = Math.floor(id / n) % n, col = id % n;
+      return [x0 + (cell % cols) * (side + 12) + col * step,
+        y0 + Math.floor(cell / cols) * (side + 20) + 16 + row * step];
+    };
+    const active = playback?.current;
+    const t = playback?.fraction ?? 0;
     for (let cell = 0; cell < 8; cell++) {
       const x = x0 + (cell % cols) * (side + 12), y = y0 + Math.floor(cell / cols) * (side + 20);
       ctx.fillStyle = '#edf2f3';
       ctx.fillText(cellLabels[cell], x, y + 12);
-      for (let row = 0; row < n; row++) for (let col = 0; col < n; col++) {
-        ctx.fillStyle = color(puzzle.state[((cell * n + plane) * n + row) * n + col]);
-        ctx.fillRect(x + col * step, y + 16 + row * step, step * 0.95, step * 0.95);
-      }
     }
+    const drawCell = (id, x, y, opacity = 1) => {
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = color(puzzle.state[id]);
+      ctx.fillRect(x, y, step * 0.95, step * 0.95);
+    };
+    const moving = [];
+    for (let cell = 0; cell < 8; cell++) for (let i = 0; i < n ** 2; i++) {
+      const id = (cell * n + plane) * n ** 2 + i;
+      const [x, y] = position(id);
+      if (!active) { drawCell(id, x, y); continue; }
+      const next = puzzle.destination(id, active.turn, active.direction);
+      if (next === id) { drawCell(id, x, y); continue; }
+      if (Math.floor(next / n ** 2) % n === plane) {
+        const [u, v] = position(next);
+        moving.push([id, x + t * (u - x), y + t * (v - y), 1]);
+      } else {
+        moving.push([id, x, y, 1 - t]);
+      }
+      const previous = puzzle.destination(id, active.turn, -active.direction);
+      if (Math.floor(previous / n ** 2) % n !== plane) moving.push([previous, x, y, t]);
+    }
+    for (const cell of moving) drawCell(...cell);
+    ctx.globalAlpha = 1;
     return;
   }
   const forward = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
@@ -61,16 +87,31 @@ function draw() {
     return [roomWidth / 2 + dot(point, right) * s, top + roomHeight / 2 - dot(point, up) * s];
   };
   visible = [];
-  for (const [id, { normal, polygon, center }] of puzzle.stickers.entries()) {
+  const active = playback?.current;
+  const tiles = [];
+  for (const [id, tile] of puzzle.stickers.entries()) {
+    const angle = active && affected(tile, active.turn)
+      ? playback.fraction * active.direction * 2 * Math.PI / active.turn.order : 0;
+    const transform = point => angle ? rotate(point, active.turn.normal, angle) : point;
+    const { polygon, stickerPolygon } = tile;
+    const normal = transform(tile.normal), center = transform(tile.center);
     if (4 * dot(normal, forward) <= dot(center, normal)) continue;
-    const screen = polygon.map(project);
-    visible.push({ center, screen });
+    const screen = polygon.map(point => project(transform(point)));
+    const sticker = stickerPolygon ?? polygon.map(point => add(scale(point, .96), scale(tile.center, .04)));
+    tiles.push({ id, tile, screen, sticker: sticker.map(point => project(transform(point))),
+      depth: dot(center, forward), shade: .22 * (1 - Math.max(0, dot(normal, [.28, .74, .59]))) });
+  }
+  if (active) tiles.sort((a, b) => a.depth - b.depth);
+  for (const { id, tile, screen, sticker, shade } of tiles) {
+    visible.push({ tile, screen });
     path(screen);
-    ctx.fillStyle = color(puzzle.state[id]);
+    ctx.fillStyle = '#14191f';
     ctx.fill();
-    ctx.strokeStyle = '#101720';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    path(sticker);
+    ctx.fillStyle = puzzle.palette?.[puzzle.state[id]] ?? color(puzzle.state[id]);
+    ctx.fill();
+    ctx.fillStyle = `rgba(4, 10, 20, ${shade})`;
+    ctx.fill();
   }
 }
 
@@ -85,7 +126,10 @@ function resize(id, layers) {
     const next = id === 'hypercube' ? hypercube(layers) : spatialPuzzle(id, layers);
     puzzle = next;
     kind = id;
-    variant.value = id;
+    const current = nav.querySelector(`[data-variant="${id}"]`);
+    nav.querySelector('[aria-current]')?.removeAttribute('aria-current');
+    current.setAttribute('aria-current', 'page');
+    if (current.offsetLeft + current.offsetWidth > nav.clientWidth) nav.scrollLeft = current.offsetLeft;
     size.min = id === 'redi' ? 3 : 2;
     size.value = layers;
     section.max = layers;
@@ -103,28 +147,64 @@ function resize(id, layers) {
   }
 }
 
-function apply(direction) {
-  try {
-    puzzle.turn(puzzle.moves[Number(move.value)], direction);
-    renderState();
-  } catch (error) {
-    get('status').textContent = error.message;
-  }
+const inputs = [...controls.querySelectorAll('button, input, select')].filter(element => element !== stop);
+function finish(message) {
+  playback = null;
+  for (const input of inputs) input.disabled = false;
+  stop.disabled = true;
+  renderState();
+  if (message) get('status').textContent = message;
 }
 
-variant.onchange = () => resize(variant.value, variants[variant.value][1]);
+function play(sequence) {
+  if (playback) return;
+  const run = { current: sequence[0], fraction: 0, index: 0, start: performance.now() };
+  playback = run;
+  for (const input of inputs) input.disabled = true;
+  stop.disabled = false;
+  function frame(now) {
+    if (playback !== run) return;
+    const duration = reducedMotion.matches ? 1 : sequence.length === 1 ? 220 : 100;
+    const t = Math.min(1, (now - run.start) / duration);
+    run.fraction = t * t * (3 - 2 * t);
+    get('status').textContent = `Move ${run.index + 1}/${sequence.length}`;
+    if (t === 1) {
+      try {
+        puzzle.turn(run.current.turn, run.current.direction);
+      } catch (error) {
+        finish(error.message);
+        return;
+      }
+      run.current = sequence[++run.index];
+      if (!run.current) { finish(); return; }
+      run.start = now;
+      run.fraction = 0;
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+function apply(direction) {
+  play([{ turn: puzzle.moves[Number(move.value)], direction }]);
+}
+
 get('resize').onsubmit = event => { event.preventDefault(); resize(kind, size.valueAsNumber); };
 section.oninput = draw;
 get('turn').onclick = () => apply(1);
 get('reverse').onclick = () => apply(-1);
 get('reset').onclick = () => { puzzle.state.set(puzzle.home); renderState(); };
-get('scramble').onclick = () => {
+const scramble = () => Array.from({ length: 20 * size.valueAsNumber }, () => ({
+  turn: puzzle.moves[Math.floor(Math.random() * puzzle.moves.length)], direction: Math.random() < 0.5 ? 1 : -1,
+}));
+get('scramble').onclick = () => play(scramble());
+stop.onclick = () => finish();
+get('instant').onclick = () => {
   try {
     const previousState = puzzle.state.slice();
     try {
-      for (let i = 0; i < 20 * size.valueAsNumber; i++) {
-        puzzle.turn(puzzle.moves[Math.floor(Math.random() * puzzle.moves.length)], Math.random() < 0.5 ? 1 : -1);
-      }
+      for (const { turn, direction } of scramble()) puzzle.turn(turn, direction);
     } catch (error) {
       puzzle.state.set(previousState);
       throw error;
@@ -140,12 +220,13 @@ const eventPoint = event => {
   return [event.clientX - bounds.left, event.clientY - bounds.top];
 };
 function stickerAt([x, y]) {
-  return visible.find(({ screen }) => {
-    const sides = screen.map(([a, b], i) => {
+  return visible.findLast(({ screen }) => {
+    let inside = false;
+    screen.forEach(([a, b], i) => {
       const [c, d] = screen[(i + 1) % screen.length];
-      return (c - a) * (y - b) - (d - b) * (x - a);
+      if ((b > y) !== (d > y) && x < a + (c - a) * (y - b) / (d - b)) inside = !inside;
     });
-    return sides.every(n => n >= 0) || sides.every(n => n <= 0);
+    return inside;
   });
 }
 
@@ -153,7 +234,7 @@ canvas.onpointerdown = event => {
   if (kind === 'hypercube') return;
   canvas.setPointerCapture(event.pointerId);
   const point = eventPoint(event);
-  drag = { point, tile: event.button === 0 ? stickerAt(point) : null };
+  drag = { point, tile: !playback && event.button === 0 ? stickerAt(point)?.tile : null };
 };
 canvas.onpointermove = event => {
   if (!drag || drag.tile) return;
@@ -172,7 +253,7 @@ canvas.onpointerup = event => {
   let score = 0.35;
   let best;
   for (const [id, turn] of puzzle.moves.entries()) {
-    if (!inTurn(center, turn)) continue;
+    if (!affected(drag.tile, turn)) continue;
     const [tx, ty] = project(rotate(center, turn.normal, 0.015));
     const vx = tx - cx, vy = ty - cy, distance = Math.hypot(vx, vy);
     if (distance < 0.01) continue;

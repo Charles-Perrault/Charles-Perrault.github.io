@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>More puzzles · Cube Lab</title>
+  <title>Skewb · Cube Lab</title>
   <link rel="stylesheet" href="../fto/style.css">
-  <link rel="stylesheet" href="../puzzle-switcher.css?v=4">
+  <link rel="stylesheet" href="../puzzle-switcher.css?v=5">
 </head>
 <body>
   <main>
     <canvas id="puzzle" aria-label="Twisty puzzle. Drag to orbit and scroll to zoom."></canvas>
-    <header><h1 id="name">More puzzles</h1></header>
+    <header><h1 id="name">Skewb</h1></header>
     <nav class="puzzle-switcher" aria-label="Puzzles">
       <a href="../">Cube</a>
       <a href="../megaminx/">Minx family</a>
@@ -18,11 +18,14 @@
       <a href="../fto/">FTO</a>
       <a href="../pyraminx/">Pyraminx</a>
       <a href="../square-1/">Square-1</a>
-      <span aria-current="page">More</span>
+      <a href="../square-1/?square2">Square-2</a>
+      <a data-variant="skewb" href="../more-puzzles/?puzzle=skewb">Skewb</a>
+      <a data-variant="redi" href="../more-puzzles/?puzzle=redi">Redi Cube</a>
+      <a data-variant="dodecacopter" href="../more-puzzles/?puzzle=dodecacopter">Dodecacopter</a>
+      <a data-variant="tuttminx" href="../more-puzzles/?puzzle=tuttminx">Tuttminx</a>
+      <a data-variant="hypercube" href="../more-puzzles/?puzzle=hypercube">4D Cube</a>
     </nav>
     <aside class="controls" aria-label="Puzzle controls">
-      <label class="row">Puzzle <select id="variant"></select></label>
-      <a href="../square-1/?square2">Square-2</a>
       <form id="resize">
         <label for="size">Layers</label>
         <div class="row"><input id="size" type="number" step="1" required><button>Resize</button></div>
@@ -33,8 +36,9 @@
         <button id="reverse" type="button">Reverse</button><button id="turn" type="button">Turn</button>
       </div>
       <div class="row">
-        <button id="scramble" type="button">Instant scramble</button><button id="reset" type="button">Reset puzzle</button>
+        <button id="scramble" type="button">Scramble</button><button id="reset" type="button">Reset puzzle</button>
       </div>
+      <div class="row"><button id="instant" type="button">Instant scramble</button><button id="stop" type="button" disabled>Stop</button></div>
     </aside>
     <div class="status"><span id="status" role="status"></span></div>
   </main>
@@ -43,6 +47,6 @@
     .controls select { flex: 1; width: 0; }
     .controls [hidden] { display: none; }
   </style>
-  <script type="module" src="app.mjs"></script>
+  <script type="module" src="app.mjs?v=2"></script>
 </body>
 </html>

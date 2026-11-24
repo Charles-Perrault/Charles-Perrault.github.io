@@ -7,7 +7,7 @@
     <title>Face-Turning Octahedron · Cube Lab</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css?v=2">
-    <link rel="stylesheet" href="../puzzle-switcher.css?v=4">
+    <link rel="stylesheet" href="../puzzle-switcher.css?v=5">
   </head>
   <body>
     <main>
@@ -17,10 +17,15 @@
         <a href="../">Cube</a>
         <a href="../megaminx/">Minx family</a>
         <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
-        <span aria-current="page">FTO</span>
+        <a aria-current="page" href="../fto/">FTO</a>
         <a href="../pyraminx/">Pyraminx</a>
         <a href="../square-1/">Square-1</a>
-        <a href="../more-puzzles/">More</a>
+        <a href="../square-1/?square2">Square-2</a>
+        <a data-variant="skewb" href="../more-puzzles/?puzzle=skewb">Skewb</a>
+        <a data-variant="redi" href="../more-puzzles/?puzzle=redi">Redi Cube</a>
+        <a data-variant="dodecacopter" href="../more-puzzles/?puzzle=dodecacopter">Dodecacopter</a>
+        <a data-variant="tuttminx" href="../more-puzzles/?puzzle=tuttminx">Tuttminx</a>
+        <a data-variant="hypercube" href="../more-puzzles/?puzzle=hypercube">4D Cube</a>
       </nav>
       <aside class="controls" aria-label="Octahedron controls">
         <form id="resize">
@@ -49,7 +54,10 @@
           <button id="scramble" type="button">Scramble</button>
           <button id="reset" type="button">Reset puzzle</button>
         </div>
-        <button id="outer-scramble" type="button" hidden>Scramble outer faces</button>
+        <div class="row">
+          <button id="instant-scramble" type="button">Instant scramble</button>
+          <button id="outer-scramble" type="button" hidden>Scramble outer faces</button>
+        </div>
         <div class="row">
           <button id="solve" type="button">Solve</button>
           <button id="stop-solve" type="button" disabled>Stop</button>
@@ -60,6 +68,6 @@
       <div class="status"><span id="status" role="status">Solved</span><span id="moves">0 moves</span></div>
       <p class="hint">Drag a sticker to turn · Right-drag or drag the background to orbit · Scroll or pinch to zoom</p>
     </main>
-    <script type="module" src="app.mjs?v=3"></script>
+    <script type="module" src="app.mjs?v=4"></script>
   </body>
 </html>

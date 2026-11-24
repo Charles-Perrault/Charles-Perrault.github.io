@@ -1,12 +1,12 @@
 import solids from './solids.mjs';
+import { dodecacopter } from './dodecacopter.mjs';
+import { styleRedi } from './redi-style.mjs';
 import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 
-const phi = (1 + Math.sqrt(5)) / 2;
 const signs = [1, -1];
 const diagonals = signs.flatMap(x => signs.flatMap(y => signs.map(z => [x, y, z])));
 const unit = point => scale(point, 1 / Math.hypot(...point));
 const sub = (a, b) => add(a, scale(b, -1));
-const cyclic = ([x, y, z]) => [[x, y, z], [z, x, y], [y, z, x]];
 const spaced = (n, radius) => Array.from({ length: n - 1 }, (_, i) => radius * (2 * (i + 1) / n - 1));
 
 export const variants = {
@@ -29,11 +29,6 @@ function geometry(kind, n) {
   if (kind === 'redi') {
     const cuts = Array.from({ length: n - 2 }, (_, i) => (1 + (i + 0.5) / (n - 2)) / root);
     return [solids.cube, diagonals.map(v => axis(v, 3, cuts, caps(cuts.length)))];
-  }
-  if (kind === 'dodecacopter') {
-    const cuts = spaced(n, phi);
-    const axes = [...cyclic([1,0,0]), ...signs.flatMap(y => signs.flatMap(z => cyclic([1,y*phi,z*phi**2])))];
-    return [solids.dodecahedron, axes.map(v => axis(v, 2, cuts, Array.from({ length: n }, (_, i) => [i, i])))];
   }
   return [solids.tuttminx, solids.tuttminx.map(([normal, height, polygon]) => {
     const cuts = Array.from({ length: n - 1 }, (_, i) => height - .35 * (1 - i / (n - 1)));
@@ -77,6 +72,7 @@ export function inTurn(point, { normal, cuts, low, high }) {
 }
 
 export function spatialPuzzle(kind, n) {
+  if (kind === 'dodecacopter') return dodecacopter(n);
   const [faces, axes] = geometry(kind, n);
   const radius = Math.max(...faces.flatMap(([, , polygon]) => polygon.map(p => Math.hypot(...p))));
   const normalizedAxes = axes.map(a => ({ ...a, cuts: a.cuts.map(h => h / radius) }));
@@ -97,7 +93,8 @@ export function spatialPuzzle(kind, n) {
   const moves = normalizedAxes.flatMap(({ normal, order, cuts, ranges }, axis) =>
     ranges.map(([low, high]) => ({ normal, order, cuts, low, high, name: `Axis ${axis + 1} · ${low + 1}${low === high ? '' : '–' + (high + 1)}` })));
   const state = home.slice();
-  return { stickers, moves, home, state, turn(move, direction) {
+  const palette = kind === 'redi' ? styleRedi(stickers) : undefined;
+  return { stickers, moves, home, state, palette, turn(move, direction) {
     const { normal, order } = move;
     const angle = direction * 2 * Math.PI / order;
     const next = state.slice();
@@ -132,27 +129,27 @@ export function hypercube(n) {
       }
     }
   }
-  return { n, home, state, moves, turn({ a, b, c, layer }, direction) {
-    const p = [0, 0, 0, 0];
+  const p = [0, 0, 0, 0];
+  function destination(id, { a, b, c, layer }, direction) {
+    const cell = home[id], axis = cell >> 1, positive = !(cell % 2);
+    let offset = id % area;
+    for (let i = 3; i >= 0; i--) {
+      p[i] = i === axis ? (positive ? n - 1 : 0) : offset % n;
+      if (i !== axis) offset = Math.floor(offset / n);
+    }
+    if (p[c] !== layer) return id;
+    const pa = p[a], pb = p[b];
+    p[a] = direction > 0 ? n - 1 - pb : pb;
+    p[b] = direction > 0 ? pa : n - 1 - pa;
+    const destAxis = axis === a ? b : axis === b ? a : axis;
+    const destPositive = axis === (direction > 0 ? b : a) ? !positive : positive;
+    let dest = 0;
+    for (let i = 0; i < 4; i++) if (i !== destAxis) dest = dest * n + p[i];
+    return (2 * destAxis + Number(!destPositive)) * area + dest;
+  }
+  return { n, home, state, moves, destination, turn(move, direction) {
     for (let id = 0; id < count; id++) {
-      const cell = home[id], axis = cell >> 1, positive = !(cell % 2);
-      let offset = id % area;
-      for (let i = 3; i >= 0; i--) {
-        p[i] = i === axis ? (positive ? n - 1 : 0) : offset % n;
-        if (i !== axis) offset = Math.floor(offset / n);
-      }
-      if (p[c] !== layer) {
-        next[id] = state[id];
-        continue;
-      }
-      const pa = p[a], pb = p[b];
-      p[a] = direction > 0 ? n - 1 - pb : pb;
-      p[b] = direction > 0 ? pa : n - 1 - pa;
-      const destAxis = axis === a ? b : axis === b ? a : axis;
-      const destPositive = axis === (direction > 0 ? b : a) ? !positive : positive;
-      let dest = 0;
-      for (let i = 0; i < 4; i++) if (i !== destAxis) dest = dest * n + p[i];
-      next[(2 * destAxis + Number(!destPositive)) * area + dest] = state[id];
+      next[destination(id, move, direction)] = state[id];
     }
     state.set(next);
   } };

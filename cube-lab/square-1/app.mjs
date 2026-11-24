@@ -1,9 +1,11 @@
 import { Square1, readRing, sideColors, step } from './puzzle.mjs?v=2';
+import { depthRenderer } from './depth-renderer.mjs';
 
 const find = id => document.getElementById(id);
 const canvas = find('puzzle');
 const controls = document.querySelector('.controls');
-const ctx = canvas.getContext('2d');
+const drawDepth = depthRenderer(canvas);
+const ctx = drawDepth ? null : canvas.getContext('2d');
 const split = new URLSearchParams(location.search).has('square2');
 const model = new Square1(split);
 if (split) {
@@ -14,13 +16,8 @@ if (split) {
     element.setAttribute('aria-label', element.getAttribute('aria-label').replace('Square-1', 'Square-2'));
   }
   find('solve').hidden = true;
-  const current = document.querySelector('[aria-current="page"]');
-  const square1 = document.createElement('a');
-  square1.href = './';
-  square1.textContent = 'Square-1';
-  current.before(square1);
-  document.querySelector('#square2-link').remove();
-  current.textContent = 'Square-2';
+  find('square1-link').removeAttribute('aria-current');
+  find('square2-link').setAttribute('aria-current', 'page');
 }
 const pointers = new Map();
 const getTop = find('top'), getBottom = find('bottom'), speed = find('speed');
@@ -77,10 +74,16 @@ const middle = [-1, 1].map(sign => {
 
 function meshes(move, fraction) {
   const faces = [];
-  const prism = (polygon, bottom, top, caps, walls, turn, layer) => {
+  const prism = (polygon, bottom, top, caps, walls, turn, layer, hideSeam = false) => {
     const a = polygon.map(([x, z]) => turn([x, bottom, z])), b = polygon.map(([x, z]) => turn([x, top, z]));
-    faces.push({ points: a, color: caps[0], layer }, { points: b.slice().reverse(), color: caps[1], layer });
+    if (layer == null) {
+      for (const [points, color] of [[a, caps[0]], [b.slice().reverse(), caps[1]]]) {
+        const center = mean(points);
+        for (let i = 0; i < points.length; i++) faces.push({ points: [center, points[i], points[(i + 1) % points.length]], color, layer, cap: true });
+      }
+    } else faces.push({ points: a, color: caps[0], layer }, { points: b.slice().reverse(), color: caps[1], layer });
     for (let i = 0; i < polygon.length; i++) {
+      if (hideSeam && walls[i] == null) continue;
       const j = (i + 1) % polygon.length;
       faces.push({ points: [a[i], b[i], b[j], a[j]], color: walls[i], layer });
     }
@@ -108,7 +111,7 @@ function meshes(move, fraction) {
   }
   for (const { polygon, walls, rightHalf } of middle) {
     const turn = point => rightHalf ? rotateSlice(point, (Number(model.flipped) + (move?.slash ? fraction : 0)) * Math.PI) : point;
-    prism(polygon, -0.27 + gap, 0.27 - gap, [null, null], walls, turn, null);
+    prism(polygon, -0.27 + gap, 0.27 - gap, [null, null], walls, turn, null, !move?.slash);
   }
   return faces;
 }
@@ -145,22 +148,47 @@ function draw(move, fraction = 0) {
     canvas.width = Math.round(width * density);
     canvas.height = Math.round(height * density);
   }
-  ctx.setTransform(density, 0, 0, density, 0, 0);
-  ctx.clearRect(0, 0, width, height);
+  ctx?.setTransform(density, 0, 0, density, 0, 0);
+  ctx?.clearRect(0, 0, width, height);
   projected = [];
-  for (const { points, color, layer } of meshes(move, fraction)) {
+  const vertices = [];
+  const closed = !move && model.solved;
+  const triangles = (points, color) => {
+    const clip = points.map(point => {
+      const [x, y] = project(point);
+      const w = 5 - dot(point, forward);
+      return [(2 * x / width - 1) * w, (1 - 2 * y / height) * w, w - 2, w, ...color];
+    });
+    for (let i = 1; i < clip.length - 1; i++) vertices.push(...clip[0], ...clip[i], ...clip[i + 1]);
+  };
+  for (const { points, color, layer, cap } of meshes(move, fraction)) {
+    if (closed && !color) continue;
     const [a, b, c] = points;
     const normal = cross(minus(b, a), minus(c, a));
     if (dot(normal, minus(eye, a)) <= 0) continue;
     const center = mean(points), length = Math.hypot(...normal);
+    const inset = color ? points.map(point => plus(times(point, 0.92), times(center, 0.08))) : null;
+    const plasticLight = Math.max(0, dot(normal, [-0.2, 0.8, 0.56]) / length);
+    const shade = 0.07 + 0.25 * (1 - plasticLight);
     projected.push({
-      depth: dot(center, forward), polygon: points.map(project), center, layer, color,
-      sticker: color ? points.map(point => project(plus(times(point, 0.92), times(center, 0.08)))) : null,
-      shade: 0.07 + 0.25 * (1 - Math.max(0, dot(normal, [-0.2, 0.8, 0.56]) / length)),
-      plasticLight: Math.max(0, dot(normal, [-0.2, 0.8, 0.56]) / length),
+      depth: dot(center, forward), polygon: points.map(project), center, layer, color, cap,
+      sticker: inset?.map(project), shade, plasticLight,
     });
+    if (drawDepth) {
+      const light = 32 + 30 * plasticLight;
+      triangles(points, (color ? [16, 23, 32] : [light, light + 3, light + 8]).map(c => c / 255));
+      if (inset) {
+        const offset = times(normal, 0.002 / length), tint = [8, 12, 22];
+        const rgb = color.slice(1).match(/../g).map((value, i) => (parseInt(value, 16) * (1 - shade) + tint[i] * shade) / 255);
+        triangles(inset.map(point => plus(point, offset)), rgb);
+      }
+    }
   }
   projected.sort((a, b) => a.depth - b.depth);
+  if (drawDepth) {
+    drawDepth(vertices);
+    return;
+  }
   for (const face of projected) {
     path(face.polygon);
     const light = Math.round(32 + 30 * face.plasticLight);
@@ -168,7 +196,7 @@ function draw(move, fraction = 0) {
     ctx.strokeStyle = black;
     ctx.lineWidth = 0.7;
     ctx.fill();
-    ctx.stroke();
+    if (!face.cap) ctx.stroke();
     if (!face.sticker) continue;
     path(face.sticker);
     ctx.fillStyle = face.color;
@@ -311,11 +339,15 @@ function position(event) {
   return [event.clientX - left, event.clientY - top];
 }
 
-function pick(point) {
-  const density = ctx.getTransform().a;
+function pick([x, y]) {
   for (let i = projected.length - 1; i >= 0; i--) {
-    path(projected[i].polygon);
-    if (ctx.isPointInPath(point[0] * density, point[1] * density)) return projected[i];
+    const { polygon } = projected[i];
+    let inside = false;
+    for (const [j, [a, b]] of polygon.entries()) {
+      const [c, d] = polygon[(j + 1) % polygon.length];
+      if ((b > y) !== (d > y) && x < a + (c - a) * (y - b) / (d - b)) inside = !inside;
+    }
+    if (inside) return projected[i];
   }
   return null;
 }

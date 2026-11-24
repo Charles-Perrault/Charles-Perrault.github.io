@@ -7,7 +7,7 @@
     <title>Megaminx · Cube Lab</title>
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css?v=3">
-    <link rel="stylesheet" href="../puzzle-switcher.css?v=4">
+    <link rel="stylesheet" href="../puzzle-switcher.css?v=5">
   </head>
   <body>
     <main class="stage">
@@ -15,12 +15,17 @@
       <header><h1 id="puzzle-name">Megaminx</h1></header>
       <nav class="puzzle-switcher" aria-label="Puzzles">
         <a href="../">Cube</a>
-        <span aria-current="page">Minx family</span>
+        <a aria-current="page" href="../megaminx/">Minx family</a>
         <a href="../curvy-copter-plus/">Curvy Copter Plus</a>
         <a href="../fto/">FTO</a>
         <a href="../pyraminx/">Pyraminx</a>
         <a href="../square-1/">Square-1</a>
-        <a href="../more-puzzles/">More</a>
+        <a href="../square-1/?square2">Square-2</a>
+        <a data-variant="skewb" href="../more-puzzles/?puzzle=skewb">Skewb</a>
+        <a data-variant="redi" href="../more-puzzles/?puzzle=redi">Redi Cube</a>
+        <a data-variant="dodecacopter" href="../more-puzzles/?puzzle=dodecacopter">Dodecacopter</a>
+        <a data-variant="tuttminx" href="../more-puzzles/?puzzle=tuttminx">Tuttminx</a>
+        <a data-variant="hypercube" href="../more-puzzles/?puzzle=hypercube">4D Cube</a>
       </nav>
       <button class="reset-view" id="view" type="button">Reset view</button>
       <div class="controls">

@@ -2,14 +2,19 @@
   position: absolute;
   top: calc(var(--top, var(--edge)) + 29px);
   left: var(--left, var(--edge));
+  max-width: calc(100% - 2 * var(--left, var(--edge)));
   z-index: 2;
   display: flex;
   gap: 4px;
   align-items: center;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 2px;
 }
 
 .puzzle-switcher > :is(a, span) {
   display: inline-flex;
+  flex: none;
   align-items: center;
   min-height: 26px;
   padding: 2px 7px;
@@ -34,17 +39,17 @@
 
 .puzzle-switcher a:focus-visible {
   outline: 2px solid var(--accent, var(--lime));
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
 @media (max-width: 680px) {
   .puzzle-switcher { top: calc(var(--top, var(--edge)) + 39px); }
   .puzzle-switcher > :is(a, span) { min-height: 32px; }
-  .workbench .setup-dock { top: calc(var(--top) + 77px); }
+  .workbench .setup-dock { top: calc(var(--top) + 87px); }
 }
 
 @media (max-width: 520px) {
-  .puzzle-switcher { right: var(--left, var(--edge)); gap: 2px; flex-wrap: wrap; }
+  .puzzle-switcher { gap: 2px; }
   .puzzle-switcher > :is(a, span) { padding-inline: 3px; font-size: 11px; }
 }
 

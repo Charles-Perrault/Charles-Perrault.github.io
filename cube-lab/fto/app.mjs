@@ -11,7 +11,7 @@ const status = get('status'), moveCount = get('moves');
 const solveButton = get('solve'), stopButton = get('stop-solve'), outerScramble = get('outer-scramble');
 const scrambleButton = get('scramble');
 let renderer, puzzle, moves = 0, working = false;
-let solverWorker, solving = false, planningSolve = false, solveFrame = 0;
+let solverWorker, solving = false, scrambling = false, planningSolve = false, solveFrame = 0;
 let yaw = 0.62, pitch = 0.48, zoom = 1;
 let drag;
 const pointers = new Map();
@@ -47,7 +47,7 @@ function lock(active) {
   for (const element of selectors) element.disabled = active;
   solveButton.disabled = active || !puzzle || puzzle.size < 3;
   sliceInput.disabled = active || puzzle?.depth === 1;
-  stopButton.disabled = !solving;
+  stopButton.disabled = !solving && !scrambling;
 }
 
 function updateStatus() {
@@ -91,21 +91,22 @@ function resize(size, share = true) {
   draw();
 }
 
-function playTurns(sequence, solution = false) {
+function playTurns(sequence, solution = false, scramble = false) {
   if (!puzzle || (working && !solution)) return;
   let index = 0;
+  scrambling = scramble;
   lock(true);
   let start = performance.now();
   const describe = () => {
     const { axis, layer } = sequence[index];
     const name = faces[axis].name;
-    status.textContent = solution ? `Move ${index + 1}/${sequence.length}` :
+    status.textContent = solution || scramble ? `Move ${index + 1}/${sequence.length}` :
       layer === 1 ? `Turning ${name}` : `Turning ${name} · Slice ${layer}`;
   };
   describe();
   function animate(now) {
     const move = sequence[index];
-    const fraction = clamp((now - start) / (solution ? 130 : 180), 0, 1);
+    const fraction = clamp((now - start) / (scramble ? 100 : solution ? 130 : 180), 0, 1);
     if (fraction < 1) {
       draw(move, fraction ** 2 * (3 - 2 * fraction));
       solveFrame = requestAnimationFrame(animate);
@@ -122,6 +123,7 @@ function playTurns(sequence, solution = false) {
       return;
     }
     solving = false;
+    scrambling = false;
     lock(false);
     updateStatus();
     draw();
@@ -170,22 +172,28 @@ function solve() {
 }
 
 function stopSolve() {
-  if (!solving) return;
+  if (!solving && !scrambling) return;
   cancelAnimationFrame(solveFrame);
   if (planningSolve) {
     solverWorker?.terminate();
     solverWorker = null;
   }
   planningSolve = false;
+  const message = scrambling ? 'Scramble stopped' : 'Solve stopped';
   solving = false;
+  scrambling = false;
   lock(false);
   updateStatus();
-  status.textContent = 'Solve stopped';
+  status.textContent = message;
   draw();
 }
 
-function scramble(outerOnly = false) {
+function scramble(outerOnly = false, instant = false) {
   if (!puzzle || working) return;
+  if (!instant) {
+    playTurns([...scrambleMoves(puzzle.size, Math.random, outerOnly)], false, true);
+    return;
+  }
   lock(true);
   status.textContent = 'Scrambling…';
   const sequence = scrambleMoves(puzzle.size, Math.random, outerOnly);
@@ -326,6 +334,7 @@ for (const preset of presets) preset.onclick = () => resize(Number(preset.datase
 get('left').onclick = () => manual(-1);
 get('right').onclick = () => manual(1);
 scrambleButton.onclick = () => scramble();
+get('instant-scramble').onclick = () => scramble(false, true);
 outerScramble.onclick = () => scramble(true);
 solveButton.onclick = solve;
 stopButton.onclick = stopSolve;
