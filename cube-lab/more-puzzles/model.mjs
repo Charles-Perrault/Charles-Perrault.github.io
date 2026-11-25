@@ -1,5 +1,5 @@
 import solids from './solids.mjs';
-import { dodecacopter } from './dodecacopter.mjs?v=2';
+import { dodecacopter } from './dodecacopter.mjs?v=3';
 import { styleRedi } from './redi-style.mjs?v=2';
 import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 

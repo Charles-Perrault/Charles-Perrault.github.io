@@ -1,5 +1,5 @@
 import { Square1, readRing, sideColors, step } from './puzzle.mjs?v=2';
-import { depthRenderer } from './depth-renderer.mjs';
+import { depthRenderer } from './depth-renderer.mjs?v=2';
 
 const find = id => document.getElementById(id);
 const canvas = find('puzzle');
@@ -153,11 +153,11 @@ function draw(move, fraction = 0) {
   projected = [];
   const vertices = [];
   const closed = !move && model.solved;
-  const triangles = (points, color) => {
-    const clip = points.map(point => {
+  const triangles = (points, color, uv = points.map(() => [-1, -1])) => {
+    const clip = points.map((point, i) => {
       const [x, y] = project(point);
       const w = 5 - dot(point, forward);
-      return [(2 * x / width - 1) * w, (1 - 2 * y / height) * w, w - 2, w, ...color];
+      return [(2 * x / width - 1) * w, (1 - 2 * y / height) * w, w - 2, w, ...color, ...uv[i]];
     });
     for (let i = 1; i < clip.length - 1; i++) vertices.push(...clip[0], ...clip[i], ...clip[i + 1]);
   };
@@ -176,12 +176,22 @@ function draw(move, fraction = 0) {
     });
     if (drawDepth) {
       const light = 32 + 30 * plasticLight;
-      triangles(points, (color ? [16, 23, 32] : [light, light + 3, light + 8]).map(c => c / 255));
       if (inset) {
-        const offset = times(normal, 0.002 / length), tint = [8, 12, 22];
+        const edge = minus(b, a), axis = times(edge, 1 / Math.hypot(...edge));
+        const across = cross(times(normal, 1 / length), axis);
+        const planar = points.map(point => [dot(minus(point, a), axis), dot(minus(point, a), across)]);
+        const low = [0, 1].map(i => Math.min(...planar.map(p => p[i])));
+        const size = [0, 1].map(i => Math.max(...planar.map(p => p[i])) - low[i]);
+        const uv = drawDepth.mask(planar.map(p => p.map((n, i) => size[i] ? (n - low[i]) / size[i] : 0)));
+        const tint = [8, 12, 22];
         const rgb = color.slice(1).match(/../g).map((value, i) => (parseInt(value, 16) * (1 - shade) + tint[i] * shade) / 255);
-        triangles(inset.map(point => plus(point, offset)), rgb);
-      }
+        if (uv) triangles(points, rgb, uv);
+        else {
+          triangles(points, [16, 23, 32].map(c => c / 255));
+          const offset = times(normal, 0.002 / length);
+          triangles(inset.map(point => plus(point, offset)), rgb);
+        }
+      } else triangles(points, [light, light + 3, light + 8].map(c => c / 255));
     }
   }
   projected.sort((a, b) => a.depth - b.depth);

@@ -1,5 +1,5 @@
 import solids from './solids.mjs';
-import { jumblingDodecacopter } from './dodeca-jumble.mjs';
+import { jumblingDodecacopter } from './dodeca-jumble.mjs?v=2';
 import { add, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 
 const length = point => Math.hypot(...point);

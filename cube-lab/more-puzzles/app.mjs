@@ -1,19 +1,36 @@
-import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs?v=2';
+import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs?v=3';
 import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
+import { CellTextures } from './cell-textures.mjs';
+import { FaceTextures } from './face-textures.mjs';
 
 const get = id => document.getElementById(id);
 const canvas = get('puzzle'), ctx = canvas.getContext('2d');
+const faceCanvas = document.createElement('canvas');
+faceCanvas.setAttribute('aria-hidden', 'true');
+faceCanvas.style.pointerEvents = 'none';
+faceCanvas.hidden = true;
+canvas.after(faceCanvas);
 const controls = document.querySelector('.controls'), nav = document.querySelector('nav');
 const size = get('size'), move = get('move'), section = get('section'), stop = get('stop');
 const speed = get('speed'), jumbleAngle = get('jumble-angle'), jumble = get('jumble');
 const colors = ['#f3f1ea', '#e9c73e', '#d54b49', '#f08e39', '#3da363', '#4486ce', '#9058ce', '#ed85b7'];
 const color = index => colors[index] ?? `hsl(${index * 137.508}, 58%, ${index % 2 ? 68 : 47}%)`;
+const pixel = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+function rgb(value) {
+  pixel.clearRect(0, 0, 1, 1);
+  pixel.fillStyle = value;
+  pixel.fillRect(0, 0, 1, 1);
+  return pixel.getImageData(0, 0, 1, 1).data.slice(0, 3);
+}
 const cellLabels = ['+X', '−X', '+Y', '−Y', '+Z', '−Z', '+W', '−W'];
 let puzzle, kind, order, yaw = 0.69, pitch = 0.49, zoom = 1, drag, project, playback;
 let visible = [];
+let cellTextures, revision = 0;
+let faceTextures, textureView, textureRevision;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const affected = (tile, turn) => turn.edge === undefined ? inTurn(tile.center, turn) :
-  puzzle.prepare ? puzzle.prepare(turn)?.capture.has(tile.part) : tile.turns.includes(turn.edge);
+  turn.capture ? turn.capture.has(tile.part) : puzzle.prepare ? puzzle.prepare(turn)?.capture.has(tile.part) :
+    tile.turns.includes(turn.edge);
 
 function path(polygons) {
   ctx.beginPath();
@@ -38,7 +55,9 @@ function draw() {
   const top = nav.getBoundingClientRect().bottom + 14;
   const roomWidth = mobile ? w : controls.offsetLeft - 12;
   const roomHeight = Math.max(50, (mobile ? controls.offsetTop : h - 28) - top);
+  textureView = null;
   if (kind === 'hypercube') {
+    faceCanvas.hidden = true;
     const cols = roomWidth >= 500 ? 4 : 2, rows = 8 / cols;
     const side = Math.min(roomWidth / cols - 12, roomHeight / rows - 20);
     if (side <= 0) return;
@@ -53,45 +72,62 @@ function draw() {
     };
     const active = playback?.current;
     const t = playback?.fraction ?? 0;
+    const moving = cellTextures.prepare(puzzle, plane, active, revision);
+    ctx.imageSmoothingEnabled = false;
     for (let cell = 0; cell < 8; cell++) {
       const x = x0 + (cell % cols) * (side + 12), y = y0 + Math.floor(cell / cols) * (side + 20);
       ctx.fillStyle = '#edf2f3';
       ctx.fillText(cellLabels[cell], x, y + 12);
+      ctx.drawImage(cellTextures.cells[cell].canvas, x, y + 16, side, side);
+      if (step >= 4) {
+        ctx.beginPath();
+        for (let i = 1; i <= n; i++) {
+          const d = (i - 0.025) * step;
+          ctx.moveTo(x + d, y + 16);
+          ctx.lineTo(x + d, y + 16 + side);
+          ctx.moveTo(x, y + 16 + d);
+          ctx.lineTo(x + side, y + 16 + d);
+        }
+        ctx.strokeStyle = '#111923';
+        ctx.lineWidth = step * 0.05;
+        ctx.stroke();
+      }
     }
     const drawCell = (id, x, y, opacity = 1) => {
       ctx.globalAlpha = opacity;
       ctx.fillStyle = color(puzzle.state[id]);
       ctx.fillRect(x, y, step * 0.95, step * 0.95);
     };
-    const moving = [];
-    for (let cell = 0; cell < 8; cell++) for (let i = 0; i < n ** 2; i++) {
-      const id = (cell * n + plane) * n ** 2 + i;
-      const [x, y] = position(id);
-      if (!active) { drawCell(id, x, y); continue; }
-      const next = puzzle.destination(id, active.turn, active.direction);
-      if (next === id) { drawCell(id, x, y); continue; }
-      if (Math.floor(next / n ** 2) % n === plane) {
-        const [u, v] = position(next);
-        moving.push([id, x + t * (u - x), y + t * (v - y), 1]);
-      } else {
-        moving.push([id, x, y, 1 - t]);
-      }
-      const previous = puzzle.destination(id, active.turn, -active.direction);
-      if (Math.floor(previous / n ** 2) % n !== plane) moving.push([previous, x, y, t]);
+    for (const { id, from, to, fade } of moving) {
+      const [x, y] = position(from), [u, v] = position(to);
+      drawCell(id, x + t * (u - x), y + t * (v - y), fade === 'in' ? t : fade === 'out' ? 1 - t : 1);
     }
-    for (const cell of moving) drawCell(...cell);
     ctx.globalAlpha = 1;
     return;
   }
   const forward = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
   const right = [Math.cos(yaw), 0, -Math.sin(yaw)], up = cross(forward, right);
   const lens = Math.min(roomWidth, roomHeight) * 1.5 * zoom;
+  const center = [roomWidth / 2, top + roomHeight / 2];
   project = point => {
     const s = lens / (4 - dot(point, forward));
-    return [roomWidth / 2 + dot(point, right) * s, top + roomHeight / 2 - dot(point, up) * s];
+    return [center[0] + dot(point, right) * s, center[1] - dot(point, up) * s];
   };
-  visible = [];
   const active = playback?.current;
+  if (faceTextures) {
+    const view = { width: w, height: h, dpr, center, lens, forward, right, up, eye: scale(forward, 4) };
+    if (textureRevision !== revision) {
+      faceTextures.sync(puzzle.state);
+      textureRevision = revision;
+    }
+    if (faceTextures.draw(view, active, playback?.fraction ?? 0)) {
+      textureView = view;
+      faceCanvas.hidden = false;
+      return;
+    }
+  }
+  faceCanvas.hidden = true;
+  visible = [];
   const tiles = [];
   for (const [id, tile] of puzzle.stickers.entries()) {
     if (tile.hiddenSticker) continue;
@@ -125,6 +161,7 @@ function draw() {
 }
 
 function renderState() {
+  revision++;
   get('status').textContent = puzzle.isJumbled?.() ? 'Jumbled' :
     puzzle.state.every((value, i) => value === puzzle.home[i]) ? 'Solved' : 'Scrambled';
   updateJumble();
@@ -154,7 +191,18 @@ function resize(id, layers) {
   if (!Object.hasOwn(variants, id) || !Number.isSafeInteger(layers) || layers < (id === 'redi' ? 3 : 2)) return;
   try {
     const next = id === 'hypercube' ? hypercube(layers) : spatialPuzzle(id, layers);
+    const cells = id === 'hypercube' ? new CellTextures(layers, colors.map(rgb)) : null;
+    if (next.stickers) {
+      try {
+        faceTextures ??= new FaceTextures(faceCanvas);
+        const palette = next.palette ?? Array.from({ length: 32 }, (_, i) => color(i));
+        faceTextures.setPuzzle(next, palette.map(rgb), affected);
+      } catch {
+        faceTextures = null;
+      }
+    }
     puzzle = next;
+    cellTextures = cells;
     kind = id;
     order = layers;
     const current = nav.querySelector(`[data-variant="${id}"]`);
@@ -222,6 +270,7 @@ function play(sequence, randomize = false) {
     if (t === 1) {
       try {
         puzzle.turn(run.current.turn, run.current.direction);
+        revision++;
       } catch (error) {
         finish(error.message);
         return;
@@ -285,6 +334,7 @@ const eventPoint = event => {
   return [event.clientX - bounds.left, event.clientY - bounds.top];
 };
 function stickerAt([x, y]) {
+  if (textureView) return faceTextures.pick([x, y], textureView);
   return visible.findLast(({ screen }) => screen.some(polygon => {
     let inside = false;
     polygon.forEach(([a, b], i) => {

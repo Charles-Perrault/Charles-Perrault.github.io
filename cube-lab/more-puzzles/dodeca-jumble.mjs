@@ -181,6 +181,7 @@ export function jumblingDodecacopter(faces, vertices, moves, palette) {
   }
   return {
     stickers, moves, palette, home, state, options, prepare, isJumbled,
+    poseFor: tile => poses[tile.part],
     transformFor(tile, animated, fraction) {
       const pose = poses[tile.part];
       if (animated?.capture.has(tile.part)) {
