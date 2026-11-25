@@ -43,6 +43,7 @@
         <button id="scramble" type="button">Scramble</button><button id="reset" type="button">Reset puzzle</button>
       </div>
       <div class="row"><button id="instant" type="button">Instant scramble</button><button id="stop" type="button" disabled>Stop</button></div>
+      <button id="solve" type="button" hidden>Solve</button>
       <label class="speed-row">Turn speed <input id="speed" type="number" min="0.01" step="any" value="7" required> turns/sec</label>
     </aside>
     <div class="status"><span id="status" role="status"></span></div>
@@ -52,6 +53,6 @@
     .controls select { flex: 1; width: 0; }
     .controls [hidden] { display: none; }
   </style>
-  <script type="module" src="app.mjs?v=6"></script>
+  <script type="module" src="app.mjs?v=7"></script>
 </body>
 </html>

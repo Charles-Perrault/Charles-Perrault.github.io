@@ -1,3 +1,5 @@
+import { constructiveSolution } from './constructive-solver.mjs';
+import { reduceInnerSlices, isOuterReduced } from './reduction.mjs';
 import { standardHold, toPattern, verifiedSolution } from './omelettehedron-adapter.mjs';
 import { Octahedron } from './puzzle.mjs?v=2';
 import { outerProjection } from './outer-projection.mjs';
@@ -88,6 +90,18 @@ self.onmessage = async ({ data: { size, state } }) => {
         return;
       }
     }
+    let prefix = [];
+    if (size > 3 && !isOuterReduced(size, state)) {
+      postMessage({ status: 'Reducing inner slices…' });
+      const direct = size % 2 === 0 ? constructiveSolution(size, state) : null;
+      if (direct) { postMessage({ moves: direct }); return; }
+      prefix = reduceInnerSlices(size, state);
+      if (!prefix) throw new Error('Could not reduce the inner slices within the search limit.');
+      const draft = new Octahedron(size);
+      draft.state.set(state);
+      for (const move of prefix) draft.turn(move.axis, move.layer, move.direction);
+      state = draft.state;
+    }
     const projected = size === 3 ? state : outerProjection(size, state);
     const pattern = toPattern(projected);
     const solver = await getSolver();
@@ -121,7 +135,7 @@ self.onmessage = async ({ data: { size, state } }) => {
         moves.push(...correction);
       }
     }
-    postMessage({ moves });
+    postMessage({ moves: [...prefix, ...moves] });
   } catch (error) {
     postMessage({ error: error.message });
   }

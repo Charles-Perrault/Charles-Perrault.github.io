@@ -27,6 +27,8 @@ let puzzle, kind, order, yaw = 0.69, pitch = 0.49, zoom = 1, drag, project, play
 let visible = [];
 let cellTextures, revision = 0;
 let faceTextures, textureView, textureRevision;
+let solverWorker;
+const solveButton = get('solve');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const affected = (tile, turn) => turn.edge === undefined ? inTurn(tile.center, turn) :
   turn.capture ? turn.capture.has(tile.part) : puzzle.prepare ? puzzle.prepare(turn)?.capture.has(tile.part) :
@@ -165,6 +167,7 @@ function renderState() {
   get('status').textContent = puzzle.isJumbled?.() ? 'Jumbled' :
     puzzle.state.every((value, i) => value === puzzle.home[i]) ? 'Solved' : 'Scrambled';
   updateJumble();
+  solveButton.disabled = !solveButton.hidden && puzzle.state.every((value, i) => value === puzzle.home[i]);
   draw();
 }
 
@@ -216,6 +219,7 @@ function resize(id, layers) {
     section.value = Math.ceil(layers / 2);
     get('section-control').hidden = id !== 'hypercube';
     get('jumble-controls').hidden = !puzzle.options;
+    solveButton.hidden = id !== 'skewb' && (id !== 'redi' || layers !== 3);
     canvas.setAttribute('aria-label', id === 'hypercube' ? 'Slices of the eight cells of the 4D cube' :
       'Twisty puzzle. Drag a sticker to turn or drag the background to orbit. Scroll to zoom.');
     move.replaceChildren(...puzzle.moves.map(({ name }, i) => new Option(name, i)));
@@ -230,6 +234,8 @@ function resize(id, layers) {
 
 const inputs = [...controls.querySelectorAll('button, input, select')].filter(element => element !== stop && element !== speed);
 function finish(message) {
+  solverWorker?.terminate();
+  solverWorker = null;
   playback = null;
   for (const input of inputs) input.disabled = false;
   stop.disabled = true;
@@ -252,7 +258,7 @@ speed.oninput = () => {
 };
 
 function play(sequence, randomize = false) {
-  if (playback) return;
+  if (playback || !sequence.length) return;
   const current = resolve(sequence[0], randomize);
   if (!current) {
     get('status').textContent = 'This edge is blocked in the current shape.';
@@ -328,6 +334,22 @@ get('instant').onclick = () => {
   } catch (error) {
     get('status').textContent = error.message;
   }
+};
+
+solveButton.onclick = () => {
+  if (playback || solverWorker || solveButton.hidden || solveButton.disabled) return;
+  const worker = new Worker(new URL('./solve-worker.mjs', import.meta.url), { type: 'module' });
+  solverWorker = worker;
+  for (const input of inputs) input.disabled = true;
+  stop.disabled = false;
+  get('status').textContent = 'Planning solution…';
+  worker.onmessage = ({ data }) => {
+    if (solverWorker !== worker) return;
+    if (data.error || !data.moves?.length) { finish(data.error); return; }
+    play(data.moves.map(({ index, direction }) => ({ turn: puzzle.moves[index], direction })));
+  };
+  worker.onerror = () => { if (solverWorker === worker) finish('Could not start the solver.'); };
+  worker.postMessage({ kind, state: puzzle.state });
 };
 
 const eventPoint = event => {

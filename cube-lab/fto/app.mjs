@@ -138,7 +138,7 @@ const play = move => playTurns([move]);
 
 function solve() {
   if (!puzzle || puzzle.size < 3 || working || puzzle.solved) return;
-  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=2', import.meta.url), { type: 'module' });
+  const worker = solverWorker ??= new Worker(new URL('./solve-worker.mjs?v=3', import.meta.url), { type: 'module' });
   solving = true;
   planningSolve = true;
   lock(true);
