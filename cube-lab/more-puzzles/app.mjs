@@ -1,4 +1,4 @@
-import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs?v=3';
+import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs?v=4';
 import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 import { CellTextures } from './cell-textures.mjs';
 import { FaceTextures } from './face-textures.mjs';
