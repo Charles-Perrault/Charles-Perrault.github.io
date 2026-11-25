@@ -1,4 +1,4 @@
-import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs?v=4';
+import { variants, hypercube, inTurn, spatialPuzzle } from './model.mjs?v=5';
 import { add, cross, dot, rotate, scale } from '../pyraminx/renderer.mjs';
 import { CellTextures } from './cell-textures.mjs';
 import { FaceTextures } from './face-textures.mjs';
@@ -211,6 +211,7 @@ function resize(id, layers) {
     if (current.offsetLeft + current.offsetWidth > nav.clientWidth) nav.scrollLeft = current.offsetLeft;
     size.min = id === 'redi' ? 3 : 2;
     size.value = layers;
+    get('resize').hidden = id === 'skewb';
     section.max = layers;
     section.value = Math.ceil(layers / 2);
     get('section-control').hidden = id !== 'hypercube';
@@ -395,4 +396,4 @@ new ResizeObserver(draw).observe(canvas);
 const params = new URLSearchParams(location.search);
 const id = Object.hasOwn(variants, params.get('puzzle')) ? params.get('puzzle') : 'skewb';
 const layers = Number(params.get('layers'));
-resize(id, Number.isSafeInteger(layers) && layers >= (id === 'redi' ? 3 : 2) ? layers : variants[id][1]);
+resize(id, id !== 'skewb' && Number.isSafeInteger(layers) && layers >= (id === 'redi' ? 3 : 2) ? layers : variants[id][1]);

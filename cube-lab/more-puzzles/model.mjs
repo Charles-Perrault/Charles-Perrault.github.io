@@ -7,7 +7,6 @@ const signs = [1, -1];
 const diagonals = signs.flatMap(x => signs.flatMap(y => signs.map(z => [x, y, z])));
 const unit = point => scale(point, 1 / Math.hypot(...point));
 const sub = (a, b) => add(a, scale(b, -1));
-const spaced = (n, radius) => Array.from({ length: n - 1 }, (_, i) => radius * (2 * (i + 1) / n - 1));
 
 export const variants = {
   skewb: ['Skewb', 2],
@@ -22,7 +21,8 @@ function geometry(kind, n) {
   const axis = (normal, order, cuts, ranges) => ({ normal: unit(normal), order, cuts, ranges });
   const caps = count => Array.from({ length: count }, (_, i) => [i + 1, count]);
   if (kind === 'skewb') {
-    const cuts = spaced(n, root).map(h => Math.abs(Math.abs(h) - 1 / root) < 1e-6 ? h + 0.013 : h);
+    if (n !== 2) throw new RangeError('Skewb uses two layers.');
+    const cuts = [0];
     return [solids.cube, diagonals.filter(([x,y,z]) => x * y * z > 0).map(v =>
       axis(v, 3, cuts, [...caps(cuts.length), ...cuts.map((_, i) => [0, i])]))];
   }
