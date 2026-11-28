@@ -1,4 +1,4 @@
-import { constructiveSolution } from './constructive-solver.mjs';
+import { constructiveSolution } from './constructive-solver.mjs?v=2';
 import { reduceInnerSlices, isOuterReduced } from './reduction.mjs';
 import { standardHold, toPattern, verifiedSolution } from './omelettehedron-adapter.mjs';
 import { Octahedron } from './puzzle.mjs?v=2';
@@ -92,8 +92,8 @@ self.onmessage = async ({ data: { size, state } }) => {
     }
     let prefix = [];
     if (size > 3 && !isOuterReduced(size, state)) {
-      postMessage({ status: 'Reducing inner slices…' });
-      const direct = size % 2 === 0 ? constructiveSolution(size, state) : null;
+      postMessage({ status: 'Reducing inner slicesï¿½' });
+      const direct = constructiveSolution(size, state);
       if (direct) { postMessage({ moves: direct }); return; }
       prefix = reduceInnerSlices(size, state);
       if (!prefix) throw new Error('Could not reduce the inner slices within the search limit.');

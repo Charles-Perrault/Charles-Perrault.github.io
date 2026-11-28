@@ -1,4 +1,5 @@
 import { Octahedron, faces, layerAt } from './puzzle.mjs?v=2';
+import { oddSchedules } from './odd-schedules.mjs';
 
 const reverse = word => word.slice().reverse().map(v => v ^ 1);
 const at = (map, id) => map.get(id) ?? id;
@@ -205,12 +206,27 @@ function cycleWords(orbit, model, state) {
 export function constructiveSolution(size, input) {
   if (size > 12) return null;
   const model = geometry(size);
-  seedOrbits(model);
   const core = model.orbits.filter(orbit => orbit.core);
-  const remaining = model.orbits.filter(orbit => !orbit.core);
+  const schedule = oddSchedules[size];
+  let remaining;
+  if (schedule) {
+    remaining = schedule.map(([id, word]) => {
+      const orbit = model.orbits[id];
+      function destination(piece) {
+        let sticker = model.pieces[piece][0];
+        for (const move of word) sticker = at(model.actions[move].forward, sticker);
+        return model.pieceOf[sticker];
+      }
+      const a = orbit.pieces.find(piece => destination(piece) !== piece);
+      const b = destination(a), c = destination(b);
+      orbit.seed = { triple: [a, b, c], word };
+      return orbit;
+    });
+  } else {
+    seedOrbits(model);
+    remaining = model.orbits.filter(orbit => !orbit.core);
+  }
   if (remaining.some(orbit => !orbit.seed)) return null;
-  const first = coreWord(model, input, core);
-  if (!first) return null;
   const draft = new Octahedron(size), plan = [];
   draft.state.set(input);
   function perform(word) {
@@ -220,7 +236,14 @@ export function constructiveSolution(size, input) {
       plan.push(model.moves[index]);
     }
   }
-  perform(first);
+  // Corner turns and the two odd-order centroid orbits have disjoint moves.
+  const coreGroups = schedule ? [core.slice(0, 1), core.slice(1)] : [core];
+  for (const group of coreGroups) {
+    if (!group.length) continue;
+    const word = coreWord(model, draft.state, group);
+    if (!word) return null;
+    perform(word);
+  }
   for (const orbit of remaining) {
     const word = cycleWords(orbit, model, draft.state);
     if (!word) return null;
