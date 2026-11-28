@@ -48,7 +48,14 @@ function geometry(size) {
       if (from !== to) { forward.set(from, to); backward.set(to, from); }
     });
     const id = moves.length;
-    actions.push({ forward, backward, word: [id] }, { forward: backward, backward: forward, word: [id+1] });
+    const cycles = [];
+    for (const [a, b] of forward) {
+      const c = forward.get(b);
+      if (a < b && a < c) cycles.push(a, b, c);
+    }
+    const stickers = Uint32Array.from(cycles);
+    actions.push({ forward, backward, word: [id], stickers },
+      { forward: backward, backward: forward, word: [id+1], stickers });
     moves.push({axis, layer, direction: 1}, {axis, layer, direction: -1});
   }
   const orbitOf = new Int32Array(pieces.length).fill(-1), orbits = [];
@@ -277,11 +284,19 @@ function cycleWords(orbit, model, state) {
   if (target.every((v,i) => v === i)) return [];
   const { triple, word } = orbit.seed;
   const local = new Map(slots.map((id,i) => [id,i]));
-  const rows = actions.map(action => slots.map(id => local.get(pieceOf[at(action.forward,pieces[id][0])])));
+  // Most slices never touch this orbit. Search only distinct local actions
+  // while retaining their real move IDs for the setup and its inverse.
+  const rows = new Map();
+  for (const [move, action] of actions.entries()) {
+    const row = slots.map(id => local.get(pieceOf[at(action.forward, pieces[id][0])]));
+    if (row.every((target, i) => target === i)) continue;
+    const key = row.join(',');
+    if (!rows.has(key)) rows.set(key, { move, row });
+  }
   const N=slots.length, code = ([a,b,c]) => (a*N+b)*N+c;
   const initial = triple.map(id => local.get(id));
   const nodes = new Map([[code(initial), { triple: initial, previous: null, move: -1 }]]);
-  for (const node of nodes.values()) for (const [move,row] of rows.entries()) {
+  for (const node of nodes.values()) for (const { move, row } of rows.values()) {
     const next = node.triple.map(i => row[i]), id = code(next);
     if (!nodes.has(id)) nodes.set(id,{ triple: next, previous: node, move });
   }
@@ -333,25 +348,31 @@ export function constructiveSolution(size, input) {
   const prepared = planGeometry(size);
   if (!prepared) return null;
   const { model, remaining, coreGroups } = prepared;
-  const draft = new Octahedron(size), plan = [];
-  draft.state.set(input);
+  const state = input.slice(), plan = [];
   function perform(word) {
-    for (const index of word) {
-      const {axis,layer,direction} = model.moves[index];
-      draft.turn(axis,layer,direction);
-      plan.push(model.moves[index]);
+    for (const id of word) {
+      const { stickers } = model.actions[id];
+      const reverseDirection = id & 1;
+      for (let i = 0; i < stickers.length; i += 3) {
+        const a = stickers[i], b = stickers[i + 1 + reverseDirection], c = stickers[i + 2 - reverseDirection];
+        const last = state[c];
+        state[c] = state[b];
+        state[b] = state[a];
+        state[a] = last;
+      }
+      plan.push(model.moves[id]);
     }
   }
   for (const group of coreGroups) {
     if (!group.length) continue;
-    const word = coreWord(model, draft.state, group);
+    const word = coreWord(model, state, group);
     if (!word) return null;
     perform(word);
   }
   for (const orbit of remaining) {
-    const word = cycleWords(orbit, model, draft.state);
+    const word = cycleWords(orbit, model, state);
     if (!word) return null;
     perform(word);
   }
-  return draft.solved ? plan : null;
+  return state.every((color, sticker) => color === model.home[sticker]) ? plan : null;
 }

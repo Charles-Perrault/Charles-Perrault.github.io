@@ -2,15 +2,18 @@ import { add, cross, dot, scale, edges, sides, tiles, solved, turn, replay, isSo
 import { scramble } from './solver.mjs';
 import { applyPose, cubePoses, cubeSlots, jumbleMoves, jumbleScramble, optionsAt, partOf, remapColors, transform } from './jumbling.mjs';
 import { colorJumble } from './mixed-petals.mjs';
+import { depthRenderer, triangulate } from './depth-renderer.mjs';
 
 const get = id => document.getElementById(id);
-const canvas = get('puzzle'), ctx = canvas.getContext('2d');
+const canvas = get('puzzle'), drawDepth = depthRenderer(canvas);
+const ctx = drawDepth ? null : canvas.getContext('2d');
 const status = get('status'), list = get('moves'), edgeInput = get('edge');
 const palette = get('palette'), angleInput = get('angle');
 const names = ['White', 'Yellow', 'Green', 'Blue', 'Red', 'Orange'];
 let state = solved.slice(), yaw = 0.64, pitch = 0.47, zoom = 1, ratio = 1;
 let playback, worker, planning = false, frame, gesture, painted = [], painting = false, color = 0;
 let poses = null, options = [];
+let findSticker = () => null;
 const flat = cubePoses();
 const flips = edges.map((_, edge) => optionsAt(flat, edge).find(move => move.target === Math.PI));
 const livePoses = () => poses ?? flat;
@@ -33,8 +36,34 @@ sides.forEach((side, i) => {
 });
 const geometry = tiles.map(tile => {
   const center = scale(tile.polygon.reduce(add), 1 / tile.polygon.length);
-  return { center, inset: tile.polygon.map(v => add(scale(v, 0.85), scale(center, 0.15))) };
+  const normal = sides[tile.face].axis, plane = normal.findIndex(Boolean);
+  const inset = tile.polygon.map(v => add(add(scale(v, 0.85), scale(center, 0.15)), scale(normal, 0.0005)));
+  const tangent = [0, 0, 0];
+  tangent[(plane + 1) % 3] = 1;
+  const bitangent = cross(normal, tangent), markCenter = add(center, scale(normal, 0.001));
+  const mark = Array.from({ length: 12 }, (_, i) => {
+    const angle = Math.PI * i / 6;
+    return add(markCenter, add(scale(tangent, Math.cos(angle) * 0.025), scale(bitangent, Math.sin(angle) * 0.017)));
+  });
+  return { center, inset, mark, triangles: drawDepth ? triangulate(tile.polygon, plane) : [] };
 });
+const wallTriangles = [0, 1, 2, 0, 2, 3];
+const markTriangles = Array.from({ length: 10 }, (_, i) => [0, i + 1, i + 2]).flat();
+const baseColors = sides.map(({ color }) => color.slice(1).match(/../g).map(channel => parseInt(channel, 16) / 255));
+const plasticColor = [16 / 255, 17 / 255, 22 / 255];
+const markColor = [32 / 255, 33 / 255, 39 / 255];
+const coreRadius = 0.96;
+const coreMesh = [];
+function corePoint(row, column) {
+  const latitude = Math.PI * row / 12, longitude = Math.PI * column / 12;
+  return [Math.sin(latitude) * Math.cos(longitude), Math.cos(latitude), Math.sin(latitude) * Math.sin(longitude)];
+}
+for (let row = 0; row < 12; row++) for (let column = 0; column < 24; column++) {
+  const quad = [corePoint(row, column), corePoint(row + 1, column),
+    corePoint(row + 1, column + 1), corePoint(row, column + 1)];
+  const light = 0.035 + 0.13 * Math.max(0, dot(quad[0], [0.35, 0.7, 0.6]));
+  coreMesh.push({ vertices: quad.map(point => scale(point, coreRadius)), color: [light, light + 0.008, light + 0.035] });
+}
 
 function path(points) {
   ctx.beginPath();
@@ -50,18 +79,32 @@ function draw(move, fraction = 0) {
     canvas.width = Math.round(width * ratio);
     canvas.height = Math.round(height * ratio);
   }
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
+  ctx?.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx?.clearRect(0, 0, width, height);
   const eye = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
   const right = [Math.cos(yaw), 0, -Math.sin(yaw)], up = cross(eye, right);
   const size = Math.min(mobile ? width : width - 270, height * (mobile ? 0.55 : 0.93)) * 0.95 * zoom;
+  const centerX = width * (mobile ? 0.5 : 0.42), centerY = height * (mobile ? 0.31 : 0.50);
+  const camera = scale(eye, 5);
+  const vertices = [], hitSurfaces = [];
+  function surface(points, indices, rgb) {
+    const clip = points.map(point => {
+      const w = 5 - dot(point, eye);
+      return [(centerX * 2 / width - 1) * w + dot(point, right) * size * 2 / width,
+        (1 - centerY * 2 / height) * w + dot(point, up) * size * 2 / height,
+        (11 * w - 20) / 9, w, ...rgb];
+    });
+    for (const i of indices) vertices.push(...clip[i]);
+  }
   const project = point => {
     const factor = size / (5 - dot(point, eye));
-    return [width * (mobile ? 0.5 : 0.42) + dot(point, right) * factor,
-      height * (mobile ? 0.31 : 0.50) - dot(point, up) * factor];
+    return [centerX + dot(point, right) * factor, centerY - dot(point, up) * factor];
   };
   const visiblePoses = move ? applyPose(livePoses(), { ...move, angle: move.angle * fraction }) : livePoses();
-  if (poses || move) {
+  const showInterior = Boolean(poses || move);
+  if (showInterior && drawDepth) {
+    for (const { vertices: quad, color } of coreMesh) surface(quad, wallTriangles, color);
+  } else if (showInterior) {
     const [x, y] = project([0, 0, 0]);
     const radius = size * 0.22;
     const core = ctx.createRadialGradient(x - radius * 0.25, y - radius * 0.27, radius * 0.07, x, y, radius);
@@ -75,27 +118,64 @@ function draw(move, fraction = 0) {
   painted = [];
   const walls = [];
   for (const [id, tile] of tiles.entries()) {
-    const { center, inset } = geometry[id];
+    const { center, inset, mark, triangles } = geometry[id];
     const pose = visiblePoses[partOf[id]];
     const position = point => transform(point, pose);
     const normal = position(sides[tile.face].axis), at = position(center);
     const outside = tile.polygon.map(position);
-    if (poses || move) for (let i = 0; i < outside.length; i += 3) {
-      const a = outside[i], b = outside[(Math.min(i + 3, outside.length)) % outside.length];
+    if (showInterior) for (let i = 0; i < outside.length; i += drawDepth ? 1 : 3) {
+      const bIndex = Math.min(i + (drawDepth ? 1 : 3), outside.length) % outside.length;
+      const a = outside[i], b = outside[bIndex];
       const side = [a, b, scale(b, 0.76), scale(a, 0.76)];
       const wallNormal = cross(add(b, scale(a, -1)), add(side[3], scale(a, -1)));
       const length = Math.hypot(...wallNormal);
       const light = length ? Math.abs(dot(wallNormal, [0.35, 0.7, 0.6])) / length : 0;
       const brightness = Math.round(30 + 30 * light);
-      walls.push({ polygon: side.map(project), depth: dot(add(a, b), eye) * 0.44,
-        plastic: `rgb(${brightness}, ${brightness + 3}, ${brightness + 8})` });
+      const polygon = side.map(project);
+      if (drawDepth) {
+        surface(side, wallTriangles, [brightness / 255, (brightness + 3) / 255, (brightness + 8) / 255]);
+        hitSurfaces.push({ polygon, normal: wallNormal, point: a });
+      } else {
+        walls.push({ polygon, depth: dot(add(a, b), eye) * 0.44,
+          plastic: `rgb(${brightness}, ${brightness + 3}, ${brightness + 8})` });
+      }
     }
-    if (dot(normal, add(scale(eye, 5), scale(at, -1))) <= 0) continue;
+    if (dot(normal, add(camera, scale(at, -1))) <= 0) continue;
+    const shade = 0.06 + 0.22 * (1 - Math.max(0, dot(normal, [0.35, 0.7, 0.6])));
+    if (drawDepth) {
+      surface(outside, triangles, plasticColor);
+      surface(inset.map(position), triangles, baseColors[state[id]].map((channel, i) =>
+        channel * (1 - shade) + [4, 12, 23][i] / 255 * shade));
+      if (tile.kind === 'petal') surface(mark.map(position), markTriangles, markColor);
+      hitSurfaces.push({ id, polygon: outside.map(project), normal, point: at });
+      continue;
+    }
     painted.push({ id, depth: dot(at, eye), polygon: outside.map(project),
       sticker: inset.map(p => project(position(p))), mark: tile.kind === 'petal' ? project(at) : null,
-      shade: 0.06 + 0.22 * (1 - Math.max(0, dot(normal, [0.35, 0.7, 0.6]))) });
+      shade });
+  }
+  if (drawDepth) {
+    drawDepth(vertices);
+    findSticker = (x, y) => {
+      const ray = add(scale(eye, -1), add(scale(right, (x - centerX) / size), scale(up, (centerY - y) / size)));
+      const a = dot(ray, ray), b = dot(camera, ray), c = 25 - coreRadius ** 2;
+      const discriminant = b ** 2 - a * c;
+      let nearest = showInterior && discriminant >= 0 ? (-b - Math.sqrt(discriminant)) / a : Infinity;
+      let hit = null;
+      for (const item of hitSurfaces) {
+        const denominator = dot(item.normal, ray);
+        if (Math.abs(denominator) < 1e-10) continue;
+        const distance = dot(item.normal, add(item.point, scale(camera, -1))) / denominator;
+        if (distance <= 0 || distance >= nearest || !inside(item.polygon, x, y)) continue;
+        nearest = distance;
+        hit = item.id === undefined ? null : item;
+      }
+      return hit;
+    };
+    return;
   }
   painted.sort((a, b) => a.depth - b.depth);
+  findSticker = (x, y) => painted.slice().reverse().find(({ polygon }) => inside(polygon, x, y));
   for (const { polygon, sticker, id, shade, mark, plastic } of [...walls, ...painted].sort((a, b) => a.depth - b.depth)) {
     path(polygon);
     ctx.fillStyle = sticker ? '#101116' : plastic;
@@ -116,6 +196,15 @@ function draw(move, fraction = 0) {
       ctx.fill();
     }
   }
+}
+
+function inside(polygon, x, y) {
+  let hit = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [ax, ay] = polygon[i], [bx, by] = polygon[j];
+    if ((ay > y) !== (by > y) && x < (bx - ax) * (y - ay) / (by - ay) + ax) hit = !hit;
+  }
+  return hit;
 }
 
 const angleLabel = angle => {
@@ -363,10 +452,7 @@ canvas.addEventListener('pointerup', event => {
   gesture = undefined;
   if (g?.id !== event.pointerId || g.distance >= 5 || event.button !== 0 || busy()) return;
   const rect = canvas.getBoundingClientRect();
-  const hit = painted.slice().reverse().find(({ polygon }) => {
-    path(polygon);
-    return ctx.isPointInPath((event.clientX - rect.left) * ratio, (event.clientY - rect.top) * ratio);
-  });
+  const hit = findSticker(event.clientX - rect.left, event.clientY - rect.top);
   if (!hit) return;
   if (painting) {
     state[hit.id] = color;
