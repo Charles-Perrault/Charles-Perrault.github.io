@@ -1,5 +1,4 @@
 import { Octahedron, faces, layerAt } from './puzzle.mjs?v=2';
-import { oddSchedules } from './odd-schedules.mjs';
 
 const reverse = word => word.slice().reverse().map(v => v ^ 1);
 const at = (map, id) => map.get(id) ?? id;
@@ -104,6 +103,111 @@ function seedOrbits(model) {
   }
 }
 
+function oddOrbitSchedule(model) {
+  const { actions, pieces, pieceOf, orbitOf, orbits } = model;
+  const candidates = orbits.map(() => new Map());
+  const generators = actions.filter((_, i) => !(i & 1));
+  function record(forward, word) {
+    const affected = new Map();
+    for (const sticker of forward.keys()) {
+      const piece = pieceOf[sticker], id = orbitOf[piece];
+      if (orbits[id].core) return;
+      if (!affected.has(id)) affected.set(id, new Set());
+      affected.get(id).add(piece);
+    }
+    for (const [id, changed] of affected) {
+      if (changed.size !== 3) continue;
+      const destination = piece => pieceOf[at(forward, pieces[piece][0])];
+      const [a] = changed, b = destination(a), c = destination(b);
+      if (a === b || a === c || b === c || destination(c) !== a) continue;
+      const dependencies = [...affected.keys()].filter(other => other !== id).sort((a, b) => a - b);
+      const key = dependencies.join(',');
+      const previous = candidates[id].get(key);
+      if (!previous || word.length < previous.word.length) {
+        candidates[id].set(key, { dependencies, triple: [a, b, c], word });
+      }
+    }
+  }
+  function examine({ forward, word }) {
+    record(forward, word);
+    const seen = new Set(), cycles = [];
+    for (const start of forward.keys()) {
+      if (seen.has(start)) continue;
+      const cycle = [];
+      let sticker = start;
+      do {
+        cycle.push(sticker);
+        seen.add(sticker);
+        sticker = forward.get(sticker);
+      } while (sticker !== start);
+      cycles.push(cycle);
+    }
+    if (cycles.every(cycle => cycle.length === cycles[0]?.length)) return;
+    for (const repeat of [2, 3, 4, 5, 6, 8, 9, 10, 12]) {
+      if (!cycles.some(cycle => repeat % cycle.length === 0)) continue;
+      const powered = new Map();
+      for (const cycle of cycles) {
+        if (repeat % cycle.length === 0) continue;
+        cycle.forEach((sticker, i) => powered.set(sticker, cycle[(i + repeat) % cycle.length]));
+      }
+      if (powered.size) record(powered, Array.from({ length: repeat }, () => word).flat());
+    }
+  }
+  function schedule() {
+    const pending = new Set(orbits.keys());
+    for (const [id, orbit] of orbits.entries()) if (orbit.core) pending.delete(id);
+    const result = [];
+    while (pending.size) {
+      const before = pending.size;
+      for (const id of pending) {
+        let best;
+        for (const seed of candidates[id].values()) {
+          if ((!best || seed.word.length < best.word.length) &&
+              seed.dependencies.every(other => !pending.has(other))) best = seed;
+        }
+        if (!best) continue;
+        result.push({ ...orbits[id], seed: best });
+        pending.delete(id);
+      }
+      if (pending.size === before) return null;
+    }
+    return result.reverse();
+  }
+  const pairs = [], triples = [], seen = new Set();
+  for (const [i, a] of generators.entries()) for (let j = i + 1; j < generators.length; j++) {
+    const pair = commutator(a, generators[j]);
+    if (!pair.forward.size) continue;
+    examine(pair);
+    pairs.push(pair);
+  }
+  const simple = schedule();
+  if (simple) return simple;
+  for (const pair of pairs) {
+    for (const turn of generators) {
+      const triple = commutator(pair, turn);
+      if (!triple.forward.size) continue;
+      const key = [...triple.forward].sort(([a], [b]) => a - b).join(';');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      examine(triple);
+      triples.push(triple);
+    }
+  }
+  const nested = schedule();
+  if (nested) return nested;
+  for (const [i, triple] of triples.entries()) {
+    for (const turn of generators) {
+      const action = commutator(triple, turn);
+      if (action.forward.size) examine(action);
+    }
+    if (i % generators.length === 0) {
+      const result = schedule();
+      if (result) return result;
+    }
+  }
+  return schedule();
+}
+
 function corePattern(slots, model) {
   const { actions, home } = model;
   const index = new Map(slots.map((slot, i) => [slot,i]));
@@ -203,30 +307,32 @@ function cycleWords(orbit, model, state) {
   return result;
 }
 
-export function constructiveSolution(size, input) {
-  if (size > 12) return null;
+let cachedPlanGeometry;
+
+function planGeometry(size) {
+  if (cachedPlanGeometry?.size === size) return cachedPlanGeometry;
   const model = geometry(size);
   const core = model.orbits.filter(orbit => orbit.core);
-  const schedule = oddSchedules[size];
+  const odd = size % 2 !== 0;
   let remaining;
-  if (schedule) {
-    remaining = schedule.map(([id, word]) => {
-      const orbit = model.orbits[id];
-      function destination(piece) {
-        let sticker = model.pieces[piece][0];
-        for (const move of word) sticker = at(model.actions[move].forward, sticker);
-        return model.pieceOf[sticker];
-      }
-      const a = orbit.pieces.find(piece => destination(piece) !== piece);
-      const b = destination(a), c = destination(b);
-      orbit.seed = { triple: [a, b, c], word };
-      return orbit;
-    });
+  if (odd) {
+    remaining = oddOrbitSchedule(model);
   } else {
     seedOrbits(model);
     remaining = model.orbits.filter(orbit => !orbit.core);
   }
-  if (remaining.some(orbit => !orbit.seed)) return null;
+  if (!remaining || remaining.some(orbit => !orbit.seed)) return null;
+  // Corner turns and the two odd-order centroid orbits have disjoint moves.
+  const coreGroups = odd ? [core.slice(0, 1), core.slice(1)] : [core];
+  cachedPlanGeometry = { size, model, remaining, coreGroups };
+  return cachedPlanGeometry;
+}
+
+export function constructiveSolution(size, input) {
+  if (size % 2 === 0 && size > 12) return null;
+  const prepared = planGeometry(size);
+  if (!prepared) return null;
+  const { model, remaining, coreGroups } = prepared;
   const draft = new Octahedron(size), plan = [];
   draft.state.set(input);
   function perform(word) {
@@ -236,8 +342,6 @@ export function constructiveSolution(size, input) {
       plan.push(model.moves[index]);
     }
   }
-  // Corner turns and the two odd-order centroid orbits have disjoint moves.
-  const coreGroups = schedule ? [core.slice(0, 1), core.slice(1)] : [core];
   for (const group of coreGroups) {
     if (!group.length) continue;
     const word = coreWord(model, draft.state, group);

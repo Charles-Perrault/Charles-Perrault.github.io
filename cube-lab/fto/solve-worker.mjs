@@ -1,4 +1,4 @@
-import { constructiveSolution } from './constructive-solver.mjs?v=2';
+import { constructiveSolution } from './constructive-solver.mjs?v=3';
 import { reduceInnerSlices, isOuterReduced } from './reduction.mjs';
 import { standardHold, toPattern, verifiedSolution } from './omelettehedron-adapter.mjs';
 import { Octahedron } from './puzzle.mjs?v=2';
